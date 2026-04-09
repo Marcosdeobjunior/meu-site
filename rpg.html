@@ -1,0 +1,583 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sól de Sóter · Usuário</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/financas.css">
+  <link rel="stylesheet" href="css/rpg.css">
+  <link rel="stylesheet" href="css/rpg-tutorial.css">
+</head>
+<body data-page="rpg">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content">
+    <section class="rpg-page-shell">
+      <div class="rpg-page-header">
+        <div class="rpg-page-eyebrow">Área do Usuário</div>
+        <h1 class="rpg-page-title">Meu <span>Usuário</span></h1>
+        <p class="rpg-page-subtitle">Perfil · Conta · Atributos · Progresso</p>
+      </div>
+
+      <input type="file" id="rpg-avatar-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+
+      <div class="rpg-layout">
+        <div class="rpg-left-column">
+          <div class="rpg-char-card">
+            <div class="rpg-char-banner">
+              <div class="rpg-char-banner-bg"></div>
+              <div class="rpg-char-banner-particles"></div>
+              <div class="rpg-char-banner-runes"></div>
+              <div class="rpg-class-badge" id="rpg-class-badge">Explorador</div>
+            </div>
+
+            <div class="rpg-char-identity">
+              <div class="rpg-char-avatar-wrap" id="rpg-avatar" onclick="document.getElementById('rpg-avatar-input').click()" title="Clique para trocar foto">
+                <img id="rpg-avatar-img" src="" alt="">
+                <span class="avatar-initials" id="rpg-initials">?</span>
+              </div>
+              <div class="rpg-char-identity-info">
+                <div class="rpg-char-name" id="rpg-hero-name">Usuário</div>
+                <div class="rpg-char-title" id="rpg-hero-title">⚔ Viajante · Nível 1</div>
+              </div>
+              <div class="rpg-level-orb"> 
+                <div class="rpg-level-orb-label">NV</div>
+                <div class="rpg-level-orb-num" id="rpg-orb-level">1</div>
+              </div>
+            </div>
+
+            <div class="rpg-char-body">
+              <div class="rpg-xp-section">
+                <div class="rpg-xp-header">
+                  <span class="rpg-xp-label">Experiencia</span>
+                  <span class="rpg-xp-val" id="rpg-xp-label">0 XP</span>
+                </div>
+                <div class="rpg-xp-track">
+                  <div class="rpg-xp-bar" id="rpg-xp-bar" style="width:0%"></div>
+                </div>
+                <div class="rpg-xp-next" id="rpg-xp-next-label">0 XP para o próximo nível</div>
+              </div>
+
+              <div class="rpg-divider"><span class="rpg-divider-rune">✦ ✦ ✦</span></div>
+
+              <span class="rpg-class-lbl-txt">Atributos</span>
+              <div class="rpg-attrs" id="rpg-attrs"></div>
+
+              <div class="rpg-divider"><span class="rpg-divider-rune">✦ ✦ ✦</span></div>
+
+              <div class="rpg-class-select">
+                <span class="rpg-class-lbl-txt">Classe</span>
+                <div class="rpg-classes">
+                  <div class="rpg-class-opt" data-class="scholar" onclick="rpgSetClass('scholar')"><span class="rpg-class-opt-icon">📚</span><div class="rpg-class-opt-name">Sábio</div><div class="rpg-class-opt-meta">0/30 dias</div></div>
+                  <div class="rpg-class-opt" data-class="warrior" onclick="rpgSetClass('warrior')"><span class="rpg-class-opt-icon">⚔</span><div class="rpg-class-opt-name">Guerreiro</div><div class="rpg-class-opt-meta">0/60 treinos</div></div>
+                  <div class="rpg-class-opt" data-class="explorer" onclick="rpgSetClass('explorer')"><span class="rpg-class-opt-icon">🧭</span><div class="rpg-class-opt-name">Explorador</div><div class="rpg-class-opt-meta">0/5 viagens</div></div>
+                  <div class="rpg-class-opt" data-class="artist" onclick="rpgSetClass('artist')"><span class="rpg-class-opt-icon">🎨</span><div class="rpg-class-opt-name">Artista</div><div class="rpg-class-opt-meta">Definição pendente</div></div>
+                  <div class="rpg-class-opt" data-class="mage" onclick="rpgSetClass('mage')"><span class="rpg-class-opt-icon">🔮</span><div class="rpg-class-opt-name">Mago</div><div class="rpg-class-opt-meta">Definição pendente</div></div>
+                  <div class="rpg-class-opt" data-class="ranger" onclick="rpgSetClass('ranger')"><span class="rpg-class-opt-icon">🏹</span><div class="rpg-class-opt-name">Ranger</div><div class="rpg-class-opt-meta">Definição pendente</div></div>
+                </div>
+              </div>
+
+              <div class="rpg-divider"><span class="rpg-divider-rune">✦ ✦ ✦</span></div>
+
+              <div class="rpg-quick-stats">
+                <div class="rpg-qs"><div class="rpg-qs-val" id="rpg-qs-livros">0</div><div class="rpg-qs-lbl">📚 Livros</div></div>
+                <div class="rpg-qs"><div class="rpg-qs-val" id="rpg-qs-cinema">0</div><div class="rpg-qs-lbl">🎬 Filmes</div></div>
+                <div class="rpg-qs"><div class="rpg-qs-val" id="rpg-qs-gym">0</div><div class="rpg-qs-lbl">🏋 Treinos</div></div>
+                <div class="rpg-qs"><div class="rpg-qs-val" id="rpg-qs-tarefas">0</div><div class="rpg-qs-lbl">✅ Tarefas</div></div>
+              </div>
+            </div>
+          </div>
+
+          <section class="rpg-account-panel">
+            <div class="rpg-section-hd">
+              <div class="rpg-section-hd-icon">👤</div>
+              <div class="rpg-section-title">Conta</div>
+              <span class="rpg-section-sub">Sessão e segurança</span>
+            </div>
+            <div class="rpg-account-status" id="rpg-account-status">Carregando status da conta...</div>
+            <div class="rpg-account-actions">
+              <button class="rpg-account-btn" id="rpg-account-logout-btn" type="button">Desconectar</button>
+              <button class="rpg-account-btn danger" id="rpg-account-delete-btn" type="button">Excluir conta</button>
+            </div>
+            <div class="rpg-account-verify" id="rpg-account-verify" hidden></div>
+          </section>
+        </div>
+
+        <div class="rpg-right">
+          <div class="rpg-level-panel">
+            <div class="rpg-level-rune-bg"></div>
+            <div class="rpg-level-row">
+              <div class="rpg-level-big" id="rpg-level-big">1</div>
+              <div class="rpg-level-info">
+                <div class="rpg-level-eyebrow">Nivel atual</div>
+                <div class="rpg-level-title" id="rpg-level-title">Iniciante</div>
+                <div class="rpg-level-subtitle" id="rpg-level-sub">Comece sua jornada</div>
+              </div>
+            </div>
+            <div class="rpg-tutorial-cta">
+              <button class="rpg-tutorial-btn" type="button" onclick="openRpgTutorial()">Tutorial</button>
+            </div>
+            <div class="rpg-xp-sources" id="rpg-xp-sources"></div>
+          </div>
+
+          <div class="rpg-panel">
+            <div class="rpg-section-hd">
+              <div class="rpg-section-hd-icon">🎯</div>
+              <div class="rpg-section-title">Missões do Dia</div>
+              <span class="rpg-section-sub" id="rpg-missions-sub"></span>
+            </div>
+            <div class="rpg-missions" id="rpg-missions"></div>
+          </div>
+
+          <div class="rpg-panel">
+            <div class="rpg-section-hd">
+              <div class="rpg-section-hd-icon">🛡️</div>
+              <div class="rpg-section-title">Habilidades</div>
+              <span class="rpg-section-sub" id="rpg-skills-sub"></span>
+            </div>
+            <div class="rpg-skills-grid" id="rpg-skills-grid"></div>
+          </div>
+
+          <div class="rpg-panel">
+            <div class="rpg-section-hd">
+              <div class="rpg-section-hd-icon">🏆</div>
+              <div class="rpg-section-title">Conquistas</div>
+              <span class="rpg-section-sub" id="rpg-ach-sub"></span>
+            </div>
+            <div class="rpg-ach-grid" id="rpg-achievements"></div>
+          </div>
+
+          <div class="rpg-panel">
+            <div class="rpg-section-hd">
+              <div class="rpg-section-hd-icon">📜</div>
+              <div class="rpg-section-title">Log de Atividades</div>
+              <span class="rpg-section-sub">Últimos eventos</span>
+            </div>
+            <div class="rpg-log" id="rpg-log"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-app-footer></div>
+
+  <div id="rpg-reading-achievements">
+    <div class="rpg-reading-shell">
+      <div class="rpg-reading-head">
+        <button class="rpg-reading-close" type="button" onclick="closeAchievementGroup()">Voltar</button>
+      </div>
+      <div class="rpg-reading-grid" id="rpg-reading-grid"></div>
+    </div>
+  </div>
+
+  <div id="rpg-tutorial">
+    <div class="san-body rpgt-page">
+      <div class="san-intro">
+        <div class="san-intro-head">
+          <div>
+            <div class="san-header-title">Tutorial do <em>Sistema RPG</em></div>
+            <div class="san-header-sub">Entenda XP, atributos, habilidades, classes e como cada área do site alimenta o seu personagem</div>
+            <div class="rpgt-header-note">Guia didático · visual · atualizado com a nova lógica do sistema</div>
+          </div>
+          <button class="san-back-btn" type="button" onclick="closeRpgTutorial()">Voltar</button>
+        </div>
+      </div>
+
+      <div class="rpgt-hero-card">
+        <div class="rpgt-hero-copy">
+          <div>
+            <div class="rpgt-hero-eyebrow">Visao geral</div>
+            <div class="rpgt-hero-title">O RPG transforma uso real do site em <em>progresso de personagem</em></div>
+            <div class="rpgt-hero-desc">A base do sistema agora privilegia avanço mensurável, conclusão, revisão, reflexão, consistência e contexto. Em outras palavras: menos recompensa para cadastro vazio e mais peso para evolução concreta. Habilidades aplicam bônus reais por domínio e classes funcionam como especializações com passivos próprios.</div>
+          </div>
+          <div>
+            <div class="rpgt-hero-pills">
+              <span class="rpgt-pill">XP total</span>
+              <span class="rpgt-pill">Atributos</span>
+              <span class="rpgt-pill">Missões diárias</span>
+              <span class="rpgt-pill">Habilidades úteis</span>
+              <span class="rpgt-pill">Classes com passivos</span>
+              <span class="rpgt-pill">Header + página RPG</span>
+            </div>
+            <div class="rpgt-callout">
+              <strong>Ideia central:</strong> o sistema não quer apenas contar quantidade. Ele quer mostrar em qual direção sua vida digital está evoluindo dentro do ecossistema do site, e recompensar domínio real em vez de volume vazio.
+            </div>
+          </div>
+        </div>
+        <div class="rpgt-hero-art">
+          <div class="rpgt-hero-frame">
+            <video class="rpgt-hero-video" controls playsinline preload="metadata" poster="docs/rpg-pdf-assets/cover.jpg">
+              <source src="img/Sol_de_Soter__Sistema_RPG.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <div class="san-kpi-row" style="margin-top:18px">
+        <div class="san-kpi" style="--kpi-color:#c8a96e">
+          <div class="san-kpi-icon">XP</div>
+          <div class="san-kpi-val" style="color:var(--accent1)">Progresso</div>
+          <div class="san-kpi-lbl">XP total</div>
+          <div class="san-kpi-sub">Soma de tudo o que realmente avança</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#4ab0e8">
+          <div class="san-kpi-icon">INT</div>
+          <div class="san-kpi-val" style="color:var(--accent6)">Leitura</div>
+          <div class="san-kpi-lbl">Atributos</div>
+          <div class="san-kpi-sub">Explicam o tipo de evolução que você construiu</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#5ec4a8">
+          <div class="san-kpi-icon">OK</div>
+          <div class="san-kpi-val" style="color:var(--accent3)">Acao</div>
+          <div class="san-kpi-lbl">Progresso real</div>
+          <div class="san-kpi-sub">Sem progresso real, o XP cai drasticamente</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#7c6fcd">
+          <div class="san-kpi-icon">+XP</div>
+          <div class="san-kpi-val" style="color:var(--accent2)">Bônus</div>
+          <div class="san-kpi-lbl">Missões</div>
+          <div class="san-kpi-sub">Entram como reforço, não como base do sistema</div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-11" style="margin-top:18px">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">SKL</span>Habilidades com utilidade real</div>
+          <div class="rpgt-card-copy">
+            <p>Cada habilidade agora afeta um domínio específico do sistema. Quando desbloqueada, ela deixa de ser decoração e passa a alterar o XP final do seu progresso.</p>
+            <p>Exemplo: leitura reforça a Livraria, mente afiada melhora Estudo e Revisão, estrategista amplifica Tarefas e corpo de ferro valoriza a Academia.</p>
+          </div>
+          <div class="rpgt-callout">
+            <strong>Leitura rápida:</strong> habilidades são passivos por domínio. Quanto maior o nível da habilidade, maior o multiplicador aplicado naquele tipo de progresso.
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">CLS</span>Classes como especialização</div>
+          <div class="rpgt-card-copy">
+            <p>As classes não são mais apenas cosméticas. Cada uma exige uma meta concreta e, depois de liberada, concede um foco passivo ao personagem.</p>
+            <p>Sábio fortalece leitura, estudo e revisão. Guerreiro fortalece academia e execução. Explorador reforça viagens. As demais classes agora também têm identidade e condição de desbloqueio.</p>
+          </div>
+          <div class="rpgt-callout">
+            <strong>Resumo:</strong> classe define sua especialização ativa; habilidade define o refinamento técnico do domínio.
+          </div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-12">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">FX</span>Fluxo do sistema</div>
+          <div class="rpgt-svg-wrap">
+            <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="rpgt-flow" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#7c6fcd"/>
+                  <stop offset="100%" stop-color="#c8a96e"/>
+                </linearGradient>
+                <marker id="rpgt-flow-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0 0L12 6L0 12Z" fill="#c8a96e"/>
+                </marker>
+              </defs>
+              <rect width="1000" height="500" fill="#0f1018"/>
+              <rect x="46" y="54" width="214" height="82" rx="20" fill="#181929" stroke="#3e345e"/>
+              <text x="153" y="88" text-anchor="middle" fill="#f3efe7" font-size="26" font-family="Segoe UI">Páginas do site</text>
+              <text x="153" y="116" text-anchor="middle" fill="#a8a1ba" font-size="17" font-family="Segoe UI">livros, sonhos, tarefas, financas</text>
+              <rect x="394" y="54" width="214" height="82" rx="20" fill="#181929" stroke="#3e345e"/>
+              <text x="501" y="88" text-anchor="middle" fill="#f3efe7" font-size="26" font-family="Segoe UI">Dados salvos</text>
+              <text x="501" y="116" text-anchor="middle" fill="#a8a1ba" font-size="17" font-family="Segoe UI">progresso real de cada modulo</text>
+              <rect x="742" y="54" width="214" height="82" rx="20" fill="#181929" stroke="#3e345e"/>
+              <text x="849" y="88" text-anchor="middle" fill="#f3efe7" font-size="26" font-family="Segoe UI">Motor RPG</text>
+              <text x="849" y="116" text-anchor="middle" fill="#a8a1ba" font-size="17" font-family="Segoe UI">calculo unico de XP e atributos</text>
+              <rect x="94" y="222" width="230" height="84" rx="20" fill="#141f1e" stroke="#2f7362"/>
+              <text x="209" y="256" text-anchor="middle" fill="#f3efe7" font-size="25" font-family="Segoe UI">XP total</text>
+              <text x="209" y="286" text-anchor="middle" fill="#9edaca" font-size="17" font-family="Segoe UI">soma de todas as fontes</text>
+              <rect x="384" y="222" width="232" height="84" rx="20" fill="#221826" stroke="#8b4761"/>
+              <text x="500" y="256" text-anchor="middle" fill="#f3efe7" font-size="25" font-family="Segoe UI">Atributos</text>
+              <text x="500" y="286" text-anchor="middle" fill="#e6b8c6" font-size="17" font-family="Segoe UI">tipo de evolucao que voce construiu</text>
+              <rect x="676" y="222" width="230" height="84" rx="20" fill="#201c12" stroke="#9a7a44"/>
+              <text x="791" y="256" text-anchor="middle" fill="#f3efe7" font-size="25" font-family="Segoe UI">Nivel</text>
+              <text x="791" y="286" text-anchor="middle" fill="#e5d0a5" font-size="17" font-family="Segoe UI">barra + titulo + progressao</text>
+              <rect x="208" y="390" width="584" height="58" rx="22" fill="url(#rpgt-flow)" opacity=".18" stroke="#8470a8"/>
+              <text x="500" y="427" text-anchor="middle" fill="#f3efe7" font-size="28" font-family="Segoe UI">A mesma base alimenta o header e a pagina RPG</text>
+              <path d="M260 95H394" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M608 95H742" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M849 136V190" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M849 190H791" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M849 190H500" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M500 190V222" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M791 190V222" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M849 190H209" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+              <path d="M209 190V222" stroke="url(#rpgt-flow)" stroke-width="6" stroke-linecap="round" marker-end="url(#rpgt-flow-arrow)"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">TXT</span>Leitura rapida</div>
+          <div class="rpgt-card-copy">
+            <p>O sistema deixou de ser uma soma rasa de cadastros concluidos. Agora ele interpreta mais contexto: progresso parcial, qualidade do registro, complexidade da tarefa e presenca de reflexao.</p>
+            <p>Na pratica, isso faz o personagem refletir melhor o comportamento do usuario no site inteiro.</p>
+          </div>
+          <div class="rpgt-callout">
+            <strong>Resumo:</strong> progresso real entra no XP total; o atributo revela que tipo de progresso foi esse.
+          </div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-11">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">MAP</span>Mapa mental do sistema</div>
+          <div class="rpgt-svg-wrap">
+            <svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="rpgt-map-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0 0L12 6L0 12Z" fill="#c8a96e"/>
+                </marker>
+              </defs>
+              <rect width="1000" height="560" fill="#10111b"/>
+              <circle cx="500" cy="280" r="94" fill="#191a29" stroke="#c8a96e" stroke-width="3"/>
+              <text x="500" y="270" text-anchor="middle" fill="#f3efe7" font-size="34" font-family="Segoe UI">Sistema RPG</text>
+              <text x="500" y="308" text-anchor="middle" fill="#c8a96e" font-size="18" font-family="Segoe UI">XP geral + atributos</text>
+              <g font-family="Segoe UI">
+                <rect x="70" y="72" width="220" height="74" rx="18" fill="#1a1827" stroke="#7c6fcd"/>
+                <text x="180" y="104" text-anchor="middle" fill="#f3efe7" font-size="24">Livros + Mangas</text>
+                <text x="180" y="128" text-anchor="middle" fill="#bfb4ea" font-size="16">intelecto + sabedoria</text>
+                <rect x="392" y="58" width="220" height="74" rx="18" fill="#141f1e" stroke="#5ec4a8"/>
+                <text x="502" y="90" text-anchor="middle" fill="#f3efe7" font-size="24">Tarefas + Academia</text>
+                <text x="502" y="114" text-anchor="middle" fill="#a8dfd0" font-size="16">disciplina + forca</text>
+                <rect x="712" y="72" width="220" height="74" rx="18" fill="#1b151f" stroke="#e06b8b"/>
+                <text x="822" y="104" text-anchor="middle" fill="#f3efe7" font-size="24">Estudos</text>
+                <text x="822" y="128" text-anchor="middle" fill="#f4c7d4" font-size="16">intelecto + sabedoria</text>
+                <rect x="70" y="414" width="220" height="74" rx="18" fill="#1b1512" stroke="#e8864a"/>
+                <text x="180" y="446" text-anchor="middle" fill="#f3efe7" font-size="24">Viagens + Cinema</text>
+                <text x="180" y="470" text-anchor="middle" fill="#f3cfb7" font-size="16">exploracao + repertorio</text>
+                <rect x="392" y="428" width="220" height="74" rx="18" fill="#151f24" stroke="#4ab0e8"/>
+                <text x="502" y="460" text-anchor="middle" fill="#f3efe7" font-size="24">Sonhos + Financas</text>
+                <text x="502" y="484" text-anchor="middle" fill="#b9ddf3" font-size="16">sabedoria + disciplina</text>
+                <rect x="712" y="414" width="220" height="74" rx="18" fill="#1b1726" stroke="#7c6fcd"/>
+                <text x="822" y="446" text-anchor="middle" fill="#f3efe7" font-size="24">Wishlist</text>
+                <text x="822" y="470" text-anchor="middle" fill="#c7beef" font-size="16">sabedoria leve</text>
+              </g>
+              <path d="M290 146L430 230" stroke="#7c6fcd" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+              <path d="M502 132V186" stroke="#5ec4a8" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+              <path d="M712 146L572 230" stroke="#e06b8b" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+              <path d="M290 414L430 330" stroke="#e8864a" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+              <path d="M502 428V374" stroke="#4ab0e8" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+              <path d="M712 414L572 330" stroke="#7c6fcd" stroke-width="4" marker-end="url(#rpgt-map-arrow)"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">UPD</span>O que mudou na pratica</div>
+          <ul class="rpgt-list">
+            <li>Livros, mangas e estudos continuam fortes, mas agora contam melhor a qualidade do progresso.</li>
+            <li>Tarefas complexas valem mais do que checklists superficiais.</li>
+            <li>Sonhos, financas e wishlist passaram a participar da leitura de Sabedoria e Disciplina.</li>
+            <li>Missoes diarias continuam existindo, mas ficaram claramente posicionadas como bonus.</li>
+            <li>Header e pagina RPG usam exatamente a mesma base de calculo.</li>
+          </ul>
+          <div class="rpgt-callout">
+            <strong>Resultado:</strong> o personagem responde melhor ao jeito como o usuario vive dentro do site, e nao apenas ao volume de cliques.
+          </div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-12">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">XP</span>Como o XP e calculado agora</div>
+          <table class="rpgt-formula-table">
+            <thead>
+              <tr>
+                <th>Modulo</th>
+                <th>Leitura principal</th>
+                <th>Formula resumida</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Livros</td><td>Páginas, conclusão, nota e observação</td><td>páginas x 0,12 + 16 ao concluir + bônus de reflexão</td></tr>
+              <tr><td>Cinema</td><td>Filme, episodios, documentario e comentario</td><td>filme = 16; serie = episodios x 7 + bonus de conclusao e comentario</td></tr>
+              <tr><td>Mangas</td><td>Capitulos, conclusao e observacao</td><td>capitulos x 3,5 + 10 ao concluir + bonus de reflexao</td></tr>
+              <tr><td>Estudos</td><td>Horas, conclusao e revisao</td><td>horas x 18 + 10 se concluido + 6 em revisao</td></tr>
+              <tr><td>Tarefas</td><td>Prioridade, complexidade, prazo</td><td>base por prioridade + bonus de estrutura + bonus no prazo</td></tr>
+              <tr><td>Sonhos</td><td>Metas, planejamento, realizacao</td><td>base + bonus por metas concluidas + planejamento + sonho realizado</td></tr>
+              <tr><td>Viagens</td><td>Conclusao e planejamento</td><td>42 por viagem concluida + 6 se a viagem estiver bem planejada</td></tr>
+              <tr><td>Financas</td><td>Transacoes, poupanca e regras</td><td>movimentos + poupanca + recorrencias + bonus de reserva</td></tr>
+              <tr><td>Wishlist</td><td>Itens completos, aquisicoes e listas</td><td>item + aquisicao + grupos + bonus por meta e criterio</td></tr>
+              <tr><td>Missoes</td><td>Bonus diario</td><td>entra direto no XP total quando a missao do dia e concluida</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">BAL</span>Regra de balanceamento</div>
+          <div class="rpgt-card-copy">
+            <p>Cadastrar algo vazio rende pouco. Avancar de verdade rende bem. Concluir rende mais. Refletir, revisar e planejar fortalecem especialmente Sabedoria.</p>
+            <p>Essa regra impede que o sistema seja facilmente inflado por uso superficial.</p>
+          </div>
+          <div class="rpgt-figure" style="margin-top:14px">
+            <img src="docs/rpg-pdf-assets/tasks-complexity.jpg" alt="Complexidade de tarefas">
+          </div>
+          <div class="rpgt-caption">Tarefas complexas e bem executadas agora pesam mais do que checklists rasos.</div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-11">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">ATR</span>Atributos sem confusao</div>
+          <div class="rpgt-mini-grid">
+            <div class="rpgt-mini-card"><h4>Intelecto</h4><p>Aprender, absorver conteudo e expandir repertorio.</p></div>
+            <div class="rpgt-mini-card"><h4>Forca</h4><p>Treino, vigor e consistencia fisica.</p></div>
+            <div class="rpgt-mini-card"><h4>Sabedoria</h4><p>Reflexao, criterio, revisao e boa tomada de decisao.</p></div>
+            <div class="rpgt-mini-card"><h4>Disciplina</h4><p>Constancia, rotina e conclusao do que importa.</p></div>
+            <div class="rpgt-mini-card"><h4>Exploracao</h4><p>Descoberta, repertorio e expansao de horizonte.</p></div>
+            <div class="rpgt-mini-card"><h4>Prestigio</h4><p>Leitura sintetica da jornada global do personagem.</p></div>
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">SAB</span>Mapa de Sabedoria</div>
+          <div class="rpgt-svg-wrap">
+            <svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="rpgt-wis-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0 0L12 6L0 12Z" fill="#c8a96e"/>
+                </marker>
+              </defs>
+              <rect width="1000" height="520" fill="#10111a"/>
+              <text x="500" y="48" text-anchor="middle" fill="#f3efe7" font-size="28" font-family="Segoe UI">Mapa de Sabedoria</text>
+              <text x="500" y="76" text-anchor="middle" fill="#9bcce8" font-size="16" font-family="Segoe UI">No sistema novo, Sabedoria deixa de ser so leitura + estudo</text>
+              <circle cx="500" cy="244" r="72" fill="#13202b" stroke="#4ab0e8" stroke-width="3"/>
+              <text x="500" y="240" text-anchor="middle" fill="#f3efe7" font-size="28" font-family="Segoe UI">Sabedoria</text>
+              <text x="500" y="268" text-anchor="middle" fill="#9bcce8" font-size="16" font-family="Segoe UI">interpretar e decidir bem</text>
+              <g font-family="Segoe UI" fill="#f3efe7" font-size="20">
+                <rect x="92" y="96" width="184" height="56" rx="16" fill="#1a1827" stroke="#7c6fcd"/>
+                <text x="184" y="131" text-anchor="middle">Livros com reflexao</text>
+                <rect x="724" y="96" width="184" height="56" rx="16" fill="#151f24" stroke="#4ab0e8"/>
+                <text x="816" y="131" text-anchor="middle">Estudos com revisao</text>
+                <rect x="92" y="344" width="184" height="56" rx="16" fill="#161f1c" stroke="#5ec4a8"/>
+                <text x="184" y="379" text-anchor="middle">Sonhos planejados</text>
+                <rect x="724" y="344" width="184" height="56" rx="16" fill="#1b1512" stroke="#c8a96e"/>
+                <text x="816" y="379" text-anchor="middle">Financas conscientes</text>
+                <rect x="408" y="396" width="184" height="56" rx="16" fill="#1b1726" stroke="#e06b8b"/>
+                <text x="500" y="431" text-anchor="middle">Wishlist com criterio</text>
+              </g>
+              <path d="M276 144L430 216" stroke="#7c6fcd" stroke-width="4" marker-end="url(#rpgt-wis-arrow)"/>
+              <path d="M724 144L570 216" stroke="#4ab0e8" stroke-width="4" marker-end="url(#rpgt-wis-arrow)"/>
+              <path d="M276 344L432 278" stroke="#5ec4a8" stroke-width="4" marker-end="url(#rpgt-wis-arrow)"/>
+              <path d="M724 344L568 278" stroke="#c8a96e" stroke-width="4" marker-end="url(#rpgt-wis-arrow)"/>
+              <path d="M500 396V318" stroke="#e06b8b" stroke-width="4" marker-end="url(#rpgt-wis-arrow)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-11">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">WK</span>Exemplo de semana real</div>
+          <div class="rpgt-two-col">
+            <div>
+              <ul class="rpgt-list">
+                <li>Ler 120 paginas de um livro e escrever observacoes</li>
+                <li>Concluir 1 tarefa alta com subtarefas e dentro do prazo</li>
+                <li>Registrar 3 horas de estudo com revisao</li>
+                <li>Atualizar um sonho com novas metas</li>
+                <li>Cadastrar uma nova regra recorrente nas financas</li>
+                <li>Registrar 1 treino</li>
+                <li>Concluir uma missao diaria</li>
+              </ul>
+            </div>
+            <div>
+              <ul class="rpgt-list">
+                <li>Livros geram XP e puxam Intelecto.</li>
+                <li>Observacao escrita empurra Sabedoria.</li>
+                <li>Tarefa no prazo aumenta Disciplina.</li>
+                <li>Estudo com revisao fortalece Intelecto e Sabedoria.</li>
+                <li>Financas recorrentes fortalecem Sabedoria e Disciplina.</li>
+                <li>Treino mantem Forca.</li>
+                <li>Missao diaria injeta bonus direto no XP total.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">MEM</span>Regra rapida para memorizar</div>
+          <div class="rpgt-card-copy">
+            <p><strong>Aprender</strong> sobe Intelecto. <strong>Concluir</strong> sobe Disciplina. <strong>Treinar</strong> sobe Forca. <strong>Explorar</strong> sobe Exploracao. <strong>Refletir, revisar e planejar</strong> sobe Sabedoria.</p>
+          </div>
+          <div class="rpgt-figure" style="margin-top:14px">
+            <img src="docs/rpg-pdf-assets/xp-overview.jpg" alt="Visao geral do XP">
+          </div>
+          <div class="rpgt-caption">A leitura visual do progresso continua simples, mas a base ficou mais inteligente.</div>
+        </div>
+      </div>
+
+      <div class="san-charts-row rpgt-row-11">
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">CHK</span>Checklist final de leitura</div>
+          <div class="rpgt-svg-wrap">
+            <svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker id="rpgt-check-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0 0L12 6L0 12Z" fill="#c8a96e"/>
+                </marker>
+              </defs>
+              <rect width="1000" height="560" fill="#0f1018"/>
+              <g font-family="Segoe UI">
+                <rect x="340" y="34" width="320" height="72" rx="22" fill="#181929" stroke="#c8a96e"/>
+                <text x="500" y="78" text-anchor="middle" fill="#f3efe7" font-size="28">Uma acao foi registrada</text>
+                <rect x="330" y="146" width="340" height="72" rx="22" fill="#181929" stroke="#7c6fcd"/>
+                <text x="500" y="190" text-anchor="middle" fill="#f3efe7" font-size="28">Existe progresso real?</text>
+                <rect x="72" y="280" width="260" height="74" rx="20" fill="#1b1512" stroke="#e8864a"/>
+                <text x="202" y="314" text-anchor="middle" fill="#f3efe7" font-size="24">Nao</text>
+                <text x="202" y="340" text-anchor="middle" fill="#f3cfb7" font-size="16">quase nenhum XP</text>
+                <rect x="668" y="280" width="260" height="74" rx="20" fill="#141f1e" stroke="#5ec4a8"/>
+                <text x="798" y="314" text-anchor="middle" fill="#f3efe7" font-size="24">Sim</text>
+                <text x="798" y="340" text-anchor="middle" fill="#b6e4d6" font-size="16">entra no XP total</text>
+                <rect x="334" y="408" width="332" height="72" rx="22" fill="#151f24" stroke="#4ab0e8"/>
+                <text x="500" y="440" text-anchor="middle" fill="#f3efe7" font-size="24">Qual e a natureza da acao?</text>
+                <text x="500" y="465" text-anchor="middle" fill="#badbf0" font-size="16">aprender, treinar, concluir, explorar ou refletir?</text>
+                <path d="M500 106V146" stroke="#c8a96e" stroke-width="5" marker-end="url(#rpgt-check-arrow)" />
+                <path d="M500 218V250" stroke="#7c6fcd" stroke-width="5" marker-end="url(#rpgt-check-arrow)" />
+                <path d="M500 250V318H332" stroke="#7c6fcd" stroke-width="5" fill="none" marker-end="url(#rpgt-check-arrow)" />
+                <path d="M500 250V318H668" stroke="#7c6fcd" stroke-width="5" fill="none" marker-end="url(#rpgt-check-arrow)" />
+                <path d="M798 354V408H500" stroke="#5ec4a8" stroke-width="5" fill="none" marker-end="url(#rpgt-check-arrow)" />
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="san-card">
+          <div class="san-card-title"><span class="san-card-title-icon">WIS</span>Se voce quer upar Sabedoria</div>
+          <ul class="rpgt-list">
+            <li>Faca estudo com revisao.</li>
+            <li>Escreva observacoes em livros.</li>
+            <li>Atualize sonhos com metas concretas.</li>
+            <li>Use financas para planejar, nao so registrar.</li>
+            <li>Trate a wishlist como ferramenta de criterio, nao impulso.</li>
+          </ul>
+          <div class="rpgt-callout">
+            <strong>Se algo parecer injusto:</strong> verifique se houve progresso real, se existiu conclusao ou so cadastro vazio e se havia reflexao ou planejamento. Essa e a lente correta do sistema novo.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/rpg.js"></script>
+</body>
+</html>
+
+
+

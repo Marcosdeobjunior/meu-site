@@ -1,0 +1,7 @@
+@import url("./biblioteca-tracker.css");
+
+body[data-page="livros"] {
+  --tracker-accent: #dabb79;
+  --tracker-accent-2: #87ddc8;
+  --tracker-accent-3: #f390bf;
+}

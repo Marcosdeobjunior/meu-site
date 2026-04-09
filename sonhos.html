@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sol de Sóter · Sonhos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/sonhos.css">
+</head>
+<body data-page="sonhos">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="main sonhos-content">
+  <!-- ---------- SONHOS ---------- -->
+  <!-- Modal de sonho -->
+
+  <!-- ---------- SONHO HUB ---------- -->
+  <div id="sn-hub">
+    <!-- Hero -->
+    <div class="hub-hero" id="hub-hero">
+      <img class="hub-hero-img" id="hub-hero-img" src="" alt="">
+      <div class="hub-hero-mesh"></div>
+      <div class="hub-hero-overlay"></div>
+      <div class="hub-hero-side"></div>
+      <div class="hub-hero-lines"></div>
+      <div class="hub-accent-bar"></div>
+
+      <div class="hub-nav">
+        <button class="hub-back-btn" onclick="snHubClose()">
+          <svg class="icon-arrow-left" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Sonhos</span>
+        </button>
+        <div class="hub-nav-actions">
+          <button class="hub-nav-btn done-btn" id="hub-nav-done-btn" onclick="hubToggleRealizado()">
+            <span id="hub-nav-done-icon" class="state-icon" aria-hidden="true"></span><span id="hub-nav-done-lbl">Realizado</span>
+          </button>
+          <button class="hub-nav-btn edit" id="hub-edit-toggle-btn" onclick="hubDrawerOpen()">
+            ✎ <span id="hub-edit-btn-lbl">Editar</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hub-hero-content">
+        <div class="hub-icon-bubble" id="hub-icon">✨</div>
+        <div class="hub-title-block">
+          <div class="hub-cat-badge" id="hub-cat-badge">Pessoal</div>
+          <div class="hub-title" id="hub-title">Sonho</div>
+          <div class="hub-hero-meta" id="hub-hero-meta"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- -- DRAWER DE EDIÇÃO -- -->
+    <div id="hub-drawer-bd" onclick="hubDrawerClose()"></div>
+    <div id="hub-drawer">
+      <div class="hd-stripe"></div>
+      <div class="hd-head">
+        <div class="hd-head-icon">✎</div>
+        <div class="hd-head-info">
+          <div class="hd-head-title" id="hd-head-title">Editar sonho</div>
+          <div class="hd-head-sub">Alterações salvas ao clicar em salvar</div>
+        </div>
+        <button class="hd-close-btn" onclick="hubDrawerClose()" title="Fechar">✕</button>
+      </div>
+      <div class="hd-body">
+        <div class="hd-cover-zone" id="hd-cover-zone" onclick="document.getElementById('hd-img-input').click()">
+          <img class="hd-cover-img" id="hd-cover-img" src="" alt="">
+          <div class="hd-cover-hint">
+            <div class="hd-cover-hint-icon">🖼️</div>
+            <div class="hd-cover-hint-txt">Trocar imagem de capa</div>
+          </div>
+          <button class="hd-cover-remove" id="hd-cover-remove" onclick="event.stopPropagation();hubDrawerRemoveImg()" title="Remover imagem">✕</button>
+        </div>
+        <input type="file" id="hd-img-input" accept="image/*" style="display:none" onchange="hubDrawerHandleImg(event)">
+        <div class="hd-field">
+          <div class="hd-field-lbl">Imagem via web</div>
+          <div class="hd-row">
+            <input class="hd-inp" id="hd-img-web" placeholder="Cole a URL da imagem" onkeydown="if(event.key==='Enter')hubDrawerApplyWebImg()">
+            <button class="hub-section-action" type="button" onclick="hubDrawerApplyWebImg()">Usar URL</button>
+          </div>
+        </div>
+        <div class="hd-section">
+          <div class="hd-section-lbl">Identidade</div>
+          <div class="hd-row">
+            <div class="hd-field hd-emoji-field">
+              <div class="hd-field-lbl">Ícone</div>
+              <input class="hd-inp hd-emoji-inp" id="hd-icon" maxlength="4" placeholder="✨">
+            </div>
+            <div class="hd-field" style="flex:1">
+              <div class="hd-field-lbl">Título *</div>
+              <input class="hd-inp" id="hd-titulo" placeholder="Nome do sonho?">
+            </div>
+          </div>
+          <div class="hd-row">
+            <div class="hd-field">
+              <div class="hd-field-lbl">Categoria</div>
+              <select class="hd-inp" id="hd-categoria">
+                <option value="pessoal">🌙 Pessoal</option>
+                <option value="carreira">💼 Carreira</option>
+                <option value="financeiro">💰 Financeiro</option>
+                <option value="saude">🫀 Saúde</option>
+                <option value="familia">🏡 Família</option>
+                <option value="aventura">🧭 Aventura</option>
+                <option value="criativo">🎨 Criativo</option>
+                <option value="espiritual">🕊️ Espiritual</option>
+              </select>
+            </div>
+            <div class="hd-field">
+              <div class="hd-field-lbl">Horizonte</div>
+              <select class="hd-inp" id="hd-horizonte">
+                <option>1 ano</option><option>3 anos</option>
+                <option>5 anos</option><option>10 anos</option>
+                <option>Longo prazo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="hd-section">
+          <div class="hd-section-lbl">Motivação</div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Por que este sonho importa?</div>
+            <textarea class="hd-inp" id="hd-desc" placeholder="Escreva o porquê deste sonho. Isso vai te manter focado nos momentos difíceis?"></textarea>
+          </div>
+        </div>
+        <div class="hd-section">
+          <div class="hd-section-lbl">Cronograma</div>
+          <div class="hd-row">
+            <div class="hd-field">
+              <div class="hd-field-lbl">📅 Início</div>
+              <input class="hd-inp" id="hd-inicio" type="date">
+            </div>
+            <div class="hd-field">
+              <div class="hd-field-lbl">🏁 Prazo final</div>
+              <input class="hd-inp" id="hd-fim" type="date">
+            </div>
+          </div>
+        </div>
+
+        <div class="hd-section">
+          <div class="hd-section-lbl">Meta financeira</div>
+          <div class="hd-row">
+            <div class="hd-field">
+              <div class="hd-field-lbl">Custo total (R$)</div>
+              <input class="hd-inp" id="hd-custo" type="number" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="hd-field">
+              <div class="hd-field-lbl">Já acumulado (R$)</div>
+              <input class="hd-inp" id="hd-acumulado" type="number" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+        </div>
+
+        <div class="hd-section">
+          <div class="hd-section-lbl">Intenção diária</div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">O que você fará HOJE por este sonho?</div>
+            <input class="hd-inp" id="hd-intencao" placeholder="Ex: pesquisar 3 cursos sobre o tema">
+          </div>
+        </div>
+
+        <div class="hd-section">
+          <div class="hd-section-lbl">Nota pessoal</div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Reflexões, obstáculos, ideias?</div>
+            <textarea class="hd-inp" id="hd-nota" placeholder="Espaço livre para anotar o que vier à mente sobre este sonho" style="min-height:72px"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="hd-footer">
+        <button class="hd-save-btn" onclick="hubDrawerSalvar()">💾 Salvar alterações</button>
+        <div class="hd-footer-row">
+          <button class="hd-cancel-btn" onclick="hubDrawerClose()">Cancelar</button>
+          <button class="hd-del-btn"    onclick="hubDrawerDeletar()">🗑️ Excluir sonho</button>
+        </div>
+      </div>
+    </div>
+    <!-- Body -->
+    <div class="hub-body">
+      <!-- LEFT -->
+      <div>
+        <!-- Descrição -->
+        <div class="hub-section" id="hub-desc-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">✨</div>
+            <span class="hub-section-label">Sobre este sonho</span>
+          </div>
+          <div id="hub-desc-text"></div>
+        </div>
+
+        <!-- Metas -->
+        <div class="hub-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">🎯</div>
+            <span class="hub-section-label">Metas & Passos</span>
+            <button class="hub-section-action" onclick="hubToggleMetaForm()">+ Nova meta</button>
+          </div>
+
+          <!-- Add form -->
+          <div class="hub-meta-add-form" id="hub-meta-form">
+            <div class="hub-meta-add-row">
+              <input class="hub-meta-inp" id="hub-meta-texto" placeholder="Descreva a meta ou passo?" style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey)hubAddMeta()">
+            </div>
+            <div class="hub-meta-add-row">
+              <select class="hub-meta-inp prio-sel" id="hub-meta-prioridade">
+                <option value="alta">🔴 Alta prioridade</option>
+                <option value="media" selected>🟡 Média prioridade</option>
+                <option value="baixa">🟢 Baixa prioridade</option>
+              </select>
+              <input class="hub-meta-inp" id="hub-meta-inicio" type="date" title="Data de início">
+              <input class="hub-meta-inp" id="hub-meta-prazo"  type="date" title="Prazo">
+            </div>
+            <div class="hub-meta-add-btns">
+              <button class="btn btn-primary" style="flex:1" onclick="hubAddMeta()">✚ Adicionar meta</button>
+              <button class="btn btn-ghost"   onclick="hubToggleMetaForm()">Cancelar</button>
+            </div>
+          </div>
+
+          <div class="hub-meta-list" id="hub-meta-list"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT (sidebar) -->
+      <div>
+        <!-- Progress ring -->
+        <div class="hub-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">?</div>
+            <span class="hub-section-label">Progresso</span>
+          </div>
+          <div class="hub-ring-wrap">
+            <svg class="hub-ring-svg" width="110" height="110" viewBox="0 0 110 110">
+              <defs>
+                <linearGradient id="hub-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stop-color="#7c6fcd"/>
+                  <stop offset="100%" stop-color="#c8a96e"/>
+                </linearGradient>
+              </defs>
+              <circle class="hub-ring-bg"   cx="55" cy="55" r="44"/>
+              <circle class="hub-ring-fill" cx="55" cy="55" r="44"
+                id="hub-ring-fill"
+                stroke-dasharray="276.46"
+                stroke-dashoffset="276.46"
+                transform="rotate(-90 55 55)"/>
+              <text class="hub-ring-pct-text"  x="55" y="52" id="hub-ring-pct">0%</text>
+              <text class="hub-ring-sub-text"  x="55" y="68" id="hub-ring-sub">metas</text>
+            </svg>
+            <div class="hub-ring-stats" id="hub-ring-stats"></div>
+          </div>
+        </div>
+
+        <!-- Cronograma -->
+        <div class="hub-section" id="hub-dates-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">🗓️</div>
+            <span class="hub-section-label">Cronograma</span>
+          </div>
+          <div class="hub-dates-grid" id="hub-dates-grid"></div>
+          <div class="hub-tl-wrap" id="hub-tl-wrap" style="display:none">
+            <div class="hub-tl-bar">
+              <div class="hub-tl-fill"  id="hub-tl-fill"  style="width:0%"></div>
+              <div class="hub-tl-today" id="hub-tl-today" style="left:50%"></div>
+            </div>
+            <div class="hub-tl-labels" id="hub-tl-labels"></div>
+          </div>
+        </div>
+
+        <!-- Prioridade -->
+        <div class="hub-section" id="hub-prio-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">📌</div>
+            <span class="hub-section-label">Por prioridade</span>
+          </div>
+          <div class="hub-prio-rows" id="hub-prio-rows"></div>
+        </div>
+
+        <!-- Marcar realizado -->
+        <div class="hub-section">
+          <button class="hub-done-btn pending" id="hub-done-btn" onclick="hubToggleRealizado()">
+            <span id="hub-done-icon" class="state-icon" aria-hidden="true"></span>
+            <span id="hub-done-lbl">Marcar como realizado</span>
+          </button>
+        </div>
+
+        <!-- Intenção do dia -->
+        <div class="hub-section" id="hub-intencao-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">🌅</div>
+            <span class="hub-section-label">Intenção de hoje</span>
+          </div>
+          <div id="hub-intencao-display" class="hub-intencao-display"></div>
+          <button class="hub-section-action" style="width:100%;text-align:center;margin-top:10px" onclick="hubDrawerOpen()">✎ Definir intenção</button>
+        </div>
+
+        <!-- Nota rápida -->
+        <div class="hub-section" id="hub-nota-section" style="display:none">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">📝</div>
+            <span class="hub-section-label">Última nota</span>
+          </div>
+          <div id="hub-nota-display" class="hub-nota-display"></div>
+        </div>
+
+        <!-- Jornada: dias desde início -->
+        <div class="hub-section" id="hub-jornada-section" style="display:none">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">⏳</div>
+            <span class="hub-section-label">Jornada</span>
+          </div>
+          <div id="hub-jornada-content"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="hub-bottom-row">
+      <div class="hub-section" id="hub-finance-section">
+        <div class="hub-section-hd">
+          <div class="hub-section-hd-icon">💰</div>
+          <span class="hub-section-label">Meta financeira</span>
+        </div>
+        <div class="hub-fin-stats">
+          <div class="hub-fin-stat"><span>Restante</span><strong id="hub-fin-restante">R$ 0,00</strong></div>
+          <div class="hub-fin-stat"><span>Média mensal</span><strong id="hub-fin-media">R$ 0,00</strong></div>
+          <div class="hub-fin-stat"><span>Previsão</span><strong id="hub-fin-prev">-</strong></div>
+        </div>
+        <svg id="hub-fin-chart" viewBox="0 0 420 140" preserveAspectRatio="none"></svg>
+        <div class="hub-fin-legend">
+          <span><i class="hub-fin-dot aporte"></i>Aporte mensal</span>
+          <span><i class="hub-fin-dot acum"></i>Acumulado</span>
+        </div>
+        <div class="hub-fin-add">
+          <input class="hub-meta-inp" id="hub-fin-mes" type="month" title="M?s do aporte">
+          <input class="hub-meta-inp" id="hub-fin-valor" type="number" min="0" step="0.01" placeholder="Valor aportado">
+          <button class="btn btn-primary" onclick="hubAddDeposito()">+ Registrar</button>
+        </div>
+        <div class="hub-fin-list" id="hub-fin-list"></div>
+      </div>
+    </div>
+
+    <!-- -- DICAS & MELHORIAS -- -->
+    <div class="hub-tips-wrap">
+      <div class="hub-tips-hd">
+        <div class="hub-tips-hd-icon">💡</div>
+        <div>
+          <div class="hub-tips-hd-title">Dicas para este sonho</div>
+          <div class="hub-tips-hd-sub">Sugestões personalizadas com base no seu progresso</div>
+        </div>
+      </div>
+      <div class="hub-tips-grid" id="hub-tips-grid"></div>
+    </div>
+  </div>
+
+  <!-- ---------- SONHOS ANALYTICS ---------- -->
+  <div id="sn-analytics">
+    <div class="san-header">
+    </div>
+    <div class="san-body">
+      <div class="san-intro">
+        <div class="san-intro-head">
+          <div class="page-title">Analytics de <span>Sonhos</span></div>
+          <button class="san-back-btn" onclick="snCloseAnalytics()">
+            <svg class="icon-arrow-left" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Voltar</span>
+          </button>
+        </div>
+        <div class="page-subtitle" id="san-header-sub">Vis?o geral de todos os seus sonhos</div>
+      </div>
+
+      <div class="san-kpi-row" id="san-kpi-row"></div>
+
+      <div class="san-charts-row">
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">📈</div>Progresso por sonho</div>
+          <div class="san-bar-chart" id="san-progress-bars"></div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🧩</div>Distribuição por categoria</div>
+          <div class="san-donut-wrap">
+            <svg class="san-donut-svg" width="130" height="130" viewBox="0 0 130 130" id="san-donut-svg"></svg>
+            <div class="san-legend-wrap" id="san-donut-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="san-charts-row-3">
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🫀</div>Saúde dos sonhos</div>
+          <div class="san-health-ring-wrap">
+            <div>
+              <svg width="90" height="90" viewBox="0 0 90 90" id="san-health-svg"></svg>
+              <div class="san-score-lbl" id="san-score-lbl">Score</div>
+            </div>
+            <div class="san-health-factors" id="san-health-factors"></div>
+          </div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">⏰</div>Mais perto do prazo</div>
+          <div class="san-rank-list" id="san-deadline-list"></div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🛰️</div>Por horizonte temporal</div>
+          <div class="san-bar-chart" id="san-horizonte-bars"></div>
+        </div>
+      </div>
+
+      <div class="san-charts-row">
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🎯</div>Metas por prioridade</div>
+          <div class="san-bar-chart" id="san-metas-prio"></div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🏆</div>Top sonhos por progresso</div>
+          <div class="san-rank-list" id="san-top-progress"></div>
+        </div>
+      </div>
+
+      <div class="san-charts-row-3">
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">⚠️</div>Risco de atraso (preditivo)</div>
+          <div class="san-rank-list" id="san-risk-list"></div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">💸</div>Meta financeira integrada</div>
+          <div class="san-rank-list" id="san-finance-list"></div>
+        </div>
+        <div class="san-card">
+          <div class="san-card-title"><div class="san-card-title-icon">🗓️</div>Resumo mensal automático</div>
+          <div class="san-month-summary" id="san-month-summary"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="sn-modal-backdrop" id="sn-modal" onclick="snCloseModalOutside(event)">
+    <div class="sn-modal" style="position:relative">
+      <button class="sn-modal-close" onclick="snCloseModal()">✕</button>
+      <!-- Cover upload zone -->
+      <div class="sn-modal-cover-zone" id="sn-modal-cover-zone" onclick="document.getElementById('sn-img-input').click()">
+        <img id="sn-modal-cover-img" src="" alt="">
+        <div class="sn-modal-cover-hint">
+          <div class="sn-modal-cover-hint-icon">🖼️</div>
+          <div class="sn-modal-cover-hint-text">Clique para enviar imagem</div>
+        </div>
+      </div>
+      <input type="file" id="sn-img-input" accept="image/*" style="display:none" onchange="snHandleImg(event)">
+      <div class="form-row sn-modal-url-row">
+        <input class="inp" id="sn-img-web" placeholder="Cole a URL da imagem da web" onkeydown="if(event.key==='Enter')snApplyWebImg()">
+        <button class="btn btn-ghost" type="button" onclick="snApplyWebImg()">Usar URL</button>
+      </div>
+      <div class="sn-modal-body">
+        <div class="sn-modal-title" id="sn-modal-label">Novo <em>Sonho</em></div>
+        <div class="form-row" style="margin-bottom:12px">
+          <input class="inp" id="sn-m-titulo" placeholder="Título do sonho *" style="font-weight:600;font-size:15px">
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <input class="inp" id="sn-m-icon" placeholder="Emoji ✨" maxlength="4" style="max-width:80px;flex:unset;text-align:center;font-size:18px">
+          <select class="inp" id="sn-m-horizonte">
+            <option>1 ano</option>
+            <option>3 anos</option>
+            <option>5 anos</option>
+            <option>10 anos</option>
+            <option>Longo prazo</option>
+          </select>
+          <select class="inp" id="sn-m-categoria">
+            <option value="pessoal">🌙 Pessoal</option>
+            <option value="carreira">💼 Carreira</option>
+            <option value="financeiro">💰 Financeiro</option>
+            <option value="saude">🫀 Saúde</option>
+            <option value="familia">🏡 Família</option>
+            <option value="aventura">🧭 Aventura</option>
+            <option value="criativo">🎨 Criativo</option>
+            <option value="espiritual">🕊️ Espiritual</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <textarea class="inp" id="sn-m-desc" placeholder="Descreva seu sonho. O que ele significa para você? Como vai se sentir ao realizá-lo?" style="min-height:84px"></textarea>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:9px;font-family:var(--font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">📅 Início do sonho</div>
+            <input class="inp" id="sn-m-data-inicio" type="date" style="width:100%">
+          </div>
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:9px;font-family:var(--font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">🏁 Prazo / Conclusão</div>
+            <input class="inp" id="sn-m-data-fim" type="date" style="width:100%">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:9px;font-family:var(--font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">💰 Custo total (R$)</div>
+            <input class="inp" id="sn-m-custo" type="number" min="0" step="0.01" style="width:100%" placeholder="0,00">
+          </div>
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:9px;font-family:var(--font-mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px">🏦 Já acumulado (R$)</div>
+            <input class="inp" id="sn-m-acumulado" type="number" min="0" step="0.01" style="width:100%" placeholder="0,00">
+          </div>
+        </div>
+        <!-- Metas no modal -->
+        <div style="font-size:9px;font-family:var(--font-mono);letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Metas / Passos</div>
+        <div id="sn-modal-metas-list" style="margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px;margin-bottom:20px">
+          <input class="sn-meta-input" id="sn-m-nova-meta" placeholder="+ Adicionar meta ou passo?" onkeydown="if(event.key==='Enter')snModalAddMeta()">
+          <button class="sn-meta-add-btn" onclick="snModalAddMeta()">+</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="snSalvar()">💾 &nbsp;Salvar</button>
+          <button class="btn btn-ghost" onclick="snCloseModal()">Cancelar</button>
+          <button class="btn btn-danger" id="sn-del-btn" onclick="snDeletar()" style="display:none">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="page active" id="page-sonhos">
+    <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title">Meus <span>Sonhos</span></div>
+        <div class="page-subtitle">Visualize, planeje e conquiste cada sonho da sua vida</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="snOpenAnalytics()" style="display:flex;align-items:center;gap:6px">📊 Analytics</button>
+        <button class="btn btn-primary" onclick="snOpenModal()">✨ &nbsp;Novo Sonho</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="sonhos-stats" id="sonhos-stats">
+      <div class="card"><div class="card-title">Total</div><div class="card-big-num" id="sn-stat-total">0</div></div>
+      <div class="card"><div class="card-title">Realizados</div><div class="card-big-num" style="color:var(--accent3)" id="sn-stat-feitos">0</div></div>
+      <div class="card"><div class="card-title">Metas concluídas</div><div class="card-big-num" style="color:var(--accent1)" id="sn-stat-metas">0</div></div>
+      <div class="card"><div class="card-title">Progresso geral</div><div class="card-big-num" style="color:var(--accent2)" id="sn-stat-pct">0%</div></div>
+    </div>
+
+    <!-- Grid -->
+    <div class="sonhos-grid" id="sonhos-grid">
+      <div class="empty" style="grid-column:span 3"><div class="empty-icon">✨</div>Adicione seu primeiro sonho!</div>
+    </div>
+  </section>
+
+  <!-- ---------- VIAGENS ---------- -->
+  </main>
+
+  <div data-app-footer></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/sonhos.js"></script>
+</body>
+</html>

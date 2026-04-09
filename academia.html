@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sol de Sóter · Academia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/academia.css">
+</head>
+<body data-page="academia">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content">
+    <section class="gym-page">
+      <div class="wrap">
+        <div class="ph">
+          <div>
+            <h1>Minha <em>Academia</em></h1>
+            <p>treino · dieta · evolução</p>
+          </div>
+        </div>
+
+        <div class="top-row">
+          <div class="card profile-card">
+            <div class="card-hd">
+              <span class="card-lbl">Perfil</span>
+              <button class="btn btn-ghost btn-sm" id="btn-edit-profile"><i class="fas fa-pen"></i> Editar</button>
+            </div>
+            <div class="profile-photo-wrap">
+              <div class="profile-photo" id="profile-photo-trigger">
+                <img id="profile-photo-img" src="" alt="">
+                <div class="profile-photo-placeholder" id="profile-photo-placeholder">
+                  <i class="fas fa-camera"></i>
+                  <span>Foto corpo inteiro</span>
+                </div>
+                <div class="profile-photo-overlay"><span><i class="fas fa-camera"></i><br>Alterar foto</span></div>
+              </div>
+              <input type="file" id="profile-photo-input" accept="image/*">
+            </div>
+            <div class="profile-info">
+              <div class="profile-name" id="profile-name-display">Marcos</div>
+              <div class="info-row">
+                <span class="info-label">Idade</span>
+                <span class="info-val" id="disp-age">25 anos</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Peso atual</span>
+                <div class="weight-input-row">
+                  <input type="number" id="weight-input" step="0.1" min="30" max="300" placeholder="kg">
+                  <button class="btn btn-gold btn-sm" id="btn-update-weight">Atualizar</button>
+                </div>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Altura</span>
+                <span class="info-val" id="disp-height">1,75 m</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">IMC</span>
+                <span class="info-val" id="disp-imc">—</span>
+              </div>
+              <div class="info-row" style="border-bottom:none;flex-direction:column;align-items:flex-start;gap:10px">
+                <span class="info-label">Dias de treino</span>
+                <div class="train-days" id="train-days">
+                  <button class="day-pill" data-day="0">Dom</button>
+                  <button class="day-pill" data-day="1">Seg</button>
+                  <button class="day-pill" data-day="2">Ter</button>
+                  <button class="day-pill" data-day="3">Qua</button>
+                  <button class="day-pill" data-day="4">Qui</button>
+                  <button class="day-pill" data-day="5">Sex</button>
+                  <button class="day-pill" data-day="6">Sáb</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card weight-card">
+            <div class="card-hd">
+              <span class="card-lbl">Histórico de Peso</span>
+              <span id="weight-trend" style="font-size:11px;font-family:var(--fm);color:var(--muted)"></span>
+            </div>
+            <div class="weight-stats">
+              <div class="wstat">
+                <div class="wstat-val" id="ws-current" style="color:var(--gold)">—</div>
+                <div class="wstat-lbl">Atual</div>
+              </div>
+              <div class="wstat">
+                <div class="wstat-val" id="ws-start">—</div>
+                <div class="wstat-lbl">Início</div>
+              </div>
+              <div class="wstat">
+                <div class="wstat-val" id="ws-diff">—</div>
+                <div class="wstat-lbl">Variação</div>
+              </div>
+              <div class="wstat">
+                <div class="wstat-val" id="ws-goal" style="color:var(--teal)">—</div>
+                <div class="wstat-lbl">Meta</div>
+              </div>
+            </div>
+            <div class="chart-area">
+              <canvas id="weight-chart"></canvas>
+            </div>
+            <div class="gym-streak-panel tier-dormant" id="gym-streak-panel">
+              <div class="gym-streak-medal">
+                <div class="gym-streak-medal-inner">
+                  <div class="gym-streak-value">Sequência</div>
+                  <div class="gym-streak-count" id="gym-streak-count">0</div>
+                </div>
+              </div>
+              <div class="gym-streak-copy">
+                <div class="gym-streak-kicker">Rota do Guerreiro</div>
+                <div class="gym-streak-title" id="gym-streak-title">Dormante</div>
+                <div class="gym-streak-desc" id="gym-streak-desc">Complete os treinos dos dias marcados para iniciar sua sequência.</div>
+                <div class="gym-streak-progress">
+                  <div class="gym-streak-track"><div class="gym-streak-fill" id="gym-streak-fill"></div></div>
+                  <div class="gym-streak-meta" id="gym-streak-meta">0/60 treinos</div>
+                </div>
+              </div>
+            </div>
+            <div class="progress-rings" id="progress-rings" style="padding-bottom:16px">
+              <div class="ring-wrap">
+                <div class="ring-val" id="ring-treinos-val">0</div>
+                <svg class="ring-svg" width="54" height="54" viewBox="0 0 54 54">
+                  <circle class="ring-bg" cx="27" cy="27" r="22"></circle>
+                  <circle class="ring-fill" id="ring-treinos" cx="27" cy="27" r="22" stroke="#c8a96e" stroke-dasharray="138.2" stroke-dashoffset="138.2"></circle>
+                </svg>
+                <div class="ring-lbl">Treinos/mês</div>
+              </div>
+              <div class="ring-wrap">
+                <div class="ring-val" id="ring-meta-val">0%</div>
+                <svg class="ring-svg" width="54" height="54" viewBox="0 0 54 54">
+                  <circle class="ring-bg" cx="27" cy="27" r="22"></circle>
+                  <circle class="ring-fill" id="ring-meta" cx="27" cy="27" r="22" stroke="#5ec4a8" stroke-dasharray="138.2" stroke-dashoffset="138.2"></circle>
+                </svg>
+                <div class="ring-lbl">Meta peso</div>
+              </div>
+              <div class="ring-wrap">
+                <div class="ring-val" id="ring-streak-val">0</div>
+                <svg class="ring-svg" width="54" height="54" viewBox="0 0 54 54">
+                  <circle class="ring-bg" cx="27" cy="27" r="22"></circle>
+                  <circle class="ring-fill" id="ring-streak" cx="27" cy="27" r="22" stroke="#e8864a" stroke-dasharray="138.2" stroke-dashoffset="138.2"></circle>
+                </svg>
+                <div class="ring-lbl">Sequência</div>
+              </div>
+              <div class="ring-wrap">
+                <div class="ring-val" id="ring-ex-val">0</div>
+                <svg class="ring-svg" width="54" height="54" viewBox="0 0 54 54">
+                  <circle class="ring-bg" cx="27" cy="27" r="22"></circle>
+                  <circle class="ring-fill" id="ring-ex" cx="27" cy="27" r="22" stroke="#7c6fcd" stroke-dasharray="138.2" stroke-dashoffset="138.2"></circle>
+                </svg>
+                <div class="ring-lbl">Exercícios</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mid-row">
+          <div class="card" style="overflow:hidden">
+            <div class="card-hd">
+              <span class="card-lbl">Minha Dieta</span>
+              <span id="diet-kcal-display" style="font-family:var(--fm);font-size:11px;color:var(--amber)">0 kcal</span>
+            </div>
+            <div class="meal-grid" id="meal-grid"></div>
+            <div class="diet-kcal-bar">
+              <span class="kcal-total">Total: <strong id="kcal-num">0</strong> kcal</span>
+              <div class="kcal-bar-bg"><div class="kcal-bar-fill" id="kcal-bar" style="width:0%"></div></div>
+              <span style="font-size:10px;font-family:var(--fm);color:var(--muted)" id="kcal-goal-lbl">/ 2000</span>
+            </div>
+          </div>
+
+          <div class="card day-workout">
+            <div class="card-hd">
+              <span class="card-lbl">Exercícios do Dia</span>
+              <span class="today-tag" id="today-tag">—</span>
+            </div>
+            <div id="day-workout-body"></div>
+          </div>
+        </div>
+
+        <div class="bottom-row">
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-lbl">Ficha Completa</span>
+              <div class="card-act">
+                <button class="btn btn-gold btn-sm" id="btn-add-ex2"><i class="fas fa-plus"></i> Adicionar</button>
+              </div>
+            </div>
+            <div class="ex-filters" id="ex-filters">
+              <span class="ex-filter-chip active" data-tag="all">Todos</span>
+              <span class="ex-filter-chip" data-tag="peito">Peito</span>
+              <span class="ex-filter-chip" data-tag="costas">Costas</span>
+              <span class="ex-filter-chip" data-tag="pernas">Pernas</span>
+              <span class="ex-filter-chip" data-tag="ombros">Ombros</span>
+              <span class="ex-filter-chip" data-tag="triceps">Tríceps</span>
+              <span class="ex-filter-chip" data-tag="biceps">Bíceps</span>
+              <span class="ex-filter-chip" data-tag="abdomen">Abdômen</span>
+              <span class="ex-filter-chip" data-tag="cardio">Cardio</span>
+              <span class="ex-filter-chip" data-tag="outro">Outro</span>
+            </div>
+            <div class="ex-grid" id="ex-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-app-footer></div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <div class="overlay" id="exercise-hub">
+    <div class="gym-hub-card">
+      <div class="gym-hub-hero">
+        <div class="gym-hub-hero-bg" id="gym-hub-hero-bg"></div>
+        <div class="gym-hub-hero-overlay"></div>
+        <div class="gym-hub-nav">
+          <button class="gym-hub-back-btn" type="button" data-close="exercise-hub">← Voltar</button>
+          <button class="gym-hub-edit-btn" type="button" id="gym-hub-edit-btn">✎ Editar</button>
+        </div>
+        <div class="gym-hub-hero-content">
+          <div class="gym-hub-icon" id="gym-hub-icon">🏋️</div>
+          <div class="gym-hub-title-wrap">
+            <div class="gym-hub-badge" id="gym-hub-badge">Treino</div>
+            <div class="gym-hub-title" id="gym-hub-title">Exercício</div>
+            <div class="gym-hub-meta" id="gym-hub-meta"></div>
+          </div>
+        </div>
+      </div>
+      <div class="gym-hub-body">
+        <div class="gym-hub-grid">
+          <div class="gym-hub-panel">
+            <div class="gym-hub-panel-title">Resumo</div>
+            <div class="gym-hub-metrics">
+              <div class="gym-hub-metric">
+                <div class="k">Carga atual</div>
+                <div class="v" id="gym-hub-current-load">—</div>
+                <div class="s">configurada</div>
+              </div>
+              <div class="gym-hub-metric">
+                <div class="k">Sessões</div>
+                <div class="v" id="gym-hub-session-count">0</div>
+                <div class="s">registradas</div>
+              </div>
+              <div class="gym-hub-metric">
+                <div class="k">Melhor carga</div>
+                <div class="v" id="gym-hub-best-load">—</div>
+                <div class="s">histórico</div>
+              </div>
+              <div class="gym-hub-metric">
+                <div class="k">Última sessão</div>
+                <div class="v" id="gym-hub-last-date">—</div>
+                <div class="s">registrada</div>
+              </div>
+            </div>
+          </div>
+          <div class="gym-hub-panel">
+            <div class="gym-hub-panel-title">Evolução da Carga</div>
+            <div class="gym-hub-chart-wrap">
+              <canvas id="gym-hub-chart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="gym-hub-grid gym-hub-grid-bottom">
+          <div class="gym-hub-panel">
+            <div class="gym-hub-panel-title">Informações do treino</div>
+            <div class="gym-hub-info-list" id="gym-hub-info-list"></div>
+          </div>
+          <div class="gym-hub-panel">
+            <div class="gym-hub-panel-title">Histórico</div>
+            <div class="gym-hub-history" id="gym-hub-history"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-profile">
+    <div class="modal">
+      <div class="modal-hd"><h3>Editar Perfil</h3><button class="mclose" data-close="modal-profile"><i class="fas fa-times"></i></button></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Nome</label><input type="text" class="fi" id="p-name" placeholder="Seu nome"></div>
+        <div class="fg"><label class="fl">Idade</label><input type="number" class="fi" id="p-age" placeholder="25" min="10" max="100"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Altura (m)</label><input type="number" class="fi" id="p-height" placeholder="1.75" step="0.01" min="1" max="2.5"></div>
+        <div class="fg"><label class="fl">Peso Meta (kg)</label><input type="number" class="fi" id="p-goal-weight" placeholder="80" step="0.1"></div>
+      </div>
+      <div class="fg"><label class="fl">Meta de kcal/dia</label><input type="number" class="fi" id="p-kcal-goal" placeholder="2000" min="500" max="6000"></div>
+      <div class="modal-acts">
+        <button class="btn btn-ghost btn-sm" data-close="modal-profile">Cancelar</button>
+        <button class="btn btn-gold" id="btn-save-profile"><i class="fas fa-save"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-ex">
+    <div class="modal">
+      <div class="modal-hd"><h3 id="modal-ex-title">Novo Exercício</h3><button class="mclose" data-close="modal-ex"><i class="fas fa-times"></i></button></div>
+      <div class="img-preview" id="ex-img-preview" title="Clique para adicionar imagem">
+        <img id="ex-img-preview-img" src="" alt="" style="display:none">
+        <span id="ex-img-preview-label"><i class="fas fa-image" style="margin-right:6px"></i>Clique para adicionar imagem</span>
+      </div>
+      <input type="file" id="ex-img-input" accept="image/*" style="display:none">
+      <div class="fg"><label class="fl">Nome do Exercício *</label><input type="text" class="fi" id="ex-name" placeholder="Ex: Supino Reto"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Grupo Muscular</label>
+          <select class="fsel" id="ex-tag">
+            <option value="peito">Peito</option>
+            <option value="costas">Costas</option>
+            <option value="pernas">Pernas</option>
+            <option value="ombros">Ombros</option>
+            <option value="triceps">Tríceps</option>
+            <option value="biceps">Bíceps</option>
+            <option value="abdomen">Abdômen</option>
+            <option value="cardio">Cardio</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Dias de Treino</label>
+          <div class="ex-days-picker" id="ex-days">
+            <button class="ex-day-chip" type="button" data-day="0">Dom</button>
+            <button class="ex-day-chip" type="button" data-day="1">Seg</button>
+            <button class="ex-day-chip" type="button" data-day="2">Ter</button>
+            <button class="ex-day-chip" type="button" data-day="3">Qua</button>
+            <button class="ex-day-chip" type="button" data-day="4">Qui</button>
+            <button class="ex-day-chip" type="button" data-day="5">Sex</button>
+            <button class="ex-day-chip" type="button" data-day="6">Sáb</button>
+          </div>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Séries</label><input type="number" class="fi" id="ex-sets" placeholder="4" min="1" max="20"></div>
+        <div class="fg"><label class="fl">Repetições</label><input type="text" class="fi" id="ex-reps" placeholder="Ex: 12, 10, 8"></div>
+      </div>
+      <div class="fg"><label class="fl">Carga (kg)</label><input type="text" class="fi" id="ex-load" placeholder="Ex: 60kg ou —"></div>
+      <div class="fg"><label class="fl">Observações</label><textarea class="fta" id="ex-notes" placeholder="Técnica, progressão..."></textarea></div>
+      <div class="modal-acts">
+        <button class="btn btn-rose btn-sm" id="ex-del-btn" style="display:none;margin-right:auto"><i class="fas fa-trash"></i> Excluir</button>
+        <button class="btn btn-ghost btn-sm" data-close="modal-ex">Cancelar</button>
+        <button class="btn btn-gold" id="btn-save-ex"><i class="fas fa-save"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal-meal">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-hd"><h3>Adicionar Alimento</h3><button class="mclose" data-close="modal-meal"><i class="fas fa-times"></i></button></div>
+      <input type="hidden" id="meal-target">
+      <div class="fg"><label class="fl">Nome *</label><input type="text" class="fi" id="meal-item-name" placeholder="Ex: Ovo mexido, Frango grelhado..."></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Quantidade</label><input type="text" class="fi" id="meal-item-qty" placeholder="Ex: 2 unid, 150g"></div>
+        <div class="fg"><label class="fl">Calorias (kcal)</label><input type="number" class="fi" id="meal-item-kcal" placeholder="0" min="0"></div>
+      </div>
+      <div class="modal-acts">
+        <button class="btn btn-ghost btn-sm" data-close="modal-meal">Cancelar</button>
+        <button class="btn btn-gold" id="btn-save-meal"><i class="fas fa-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/academia.js"></script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sol de S&oacute;ter - Wishlist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/wishlist.css">
+</head>
+<body data-page="wishlist">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content">
+    <section class="ws-page">
+      <div class="ws-ph">
+        <div>
+          <h1 class="ws-pt">Minha <em>Wishlist</em></h1>
+          <p class="ws-ps">desejos &middot; metas &middot; conquistas</p>
+        </div>
+        <div class="ws-ha">
+          <button class="ws-btn ws-btn-p" id="btn-add" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Novo Item
+          </button>
+        </div>
+      </div>
+
+      <div class="ws-stats">
+        <div class="ws-st">
+          <div class="ws-stl">Total de Itens</div>
+          <div class="ws-stv" id="s-total">0</div>
+          <div class="ws-sts">na lista</div>
+        </div>
+        <div class="ws-st">
+          <div class="ws-stl">Alta Prioridade</div>
+          <div class="ws-stv ws-accent-rose" id="s-alta">0</div>
+          <div class="ws-sts">urgentes</div>
+        </div>
+        <div class="ws-st">
+          <div class="ws-stl">Aquisições</div>
+          <div class="ws-stv ws-accent-violet" id="s-done">0</div>
+          <div class="ws-sts">registradas</div>
+        </div>
+        <div class="ws-st">
+          <div class="ws-stl">Valor Total</div>
+          <div class="ws-stv ws-accent-gold ws-money" id="s-valor">R$ 0</div>
+          <div class="ws-sts">estimado</div>
+        </div>
+      </div>
+
+      <div class="ws-tabs" role="tablist" aria-label="Navegacao da wishlist">
+        <button class="ws-tab is-active" id="ws-tab-wishlist" type="button" data-tab="wishlist" role="tab" aria-selected="true">Wishlist</button>
+        <button class="ws-tab" id="ws-tab-listas" type="button" data-tab="listas" role="tab" aria-selected="false">Listas</button>
+      </div>
+
+      <div class="ws-view is-active" id="ws-view-wishlist" data-view="wishlist">
+      <div class="ws-lay">
+        <div class="ws-main-area">
+          <div class="ws-toolbar">
+            <div class="ws-search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input class="ws-search-inp" id="search" placeholder="Buscar itens..." type="text">
+            </div>
+            <div class="ws-filter-wrap">
+              <button class="ws-btn-filter" id="wishlist-filter-btn" type="button" aria-expanded="false" aria-controls="wishlist-filter-panel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Filtro
+                <span class="ws-filter-badge" id="wishlist-filter-badge">0</span>
+              </button>
+              <div class="ws-filter-panel" id="wishlist-filter-panel">
+                <div class="ws-filter-section-title">Ordenar</div>
+                <div class="ws-filter-chips" data-filter-group="sort">
+                  <button class="ws-filter-chip selected" type="button" data-filter-value="date">Mais recentes</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="name">Nome A-Z</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="price-asc">Menor preco</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="price-desc">Maior preco</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="priority">Prioridade</button>
+                </div>
+                <div class="ws-filter-divider"></div>
+                <div class="ws-filter-section-title">Status</div>
+                <div class="ws-filter-chips" data-filter-group="status">
+                  <button class="ws-filter-chip selected" type="button" data-filter-value="all">Todos</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="estoque">Em estoque</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="baixo">Estoque baixo</button>
+                </div>
+                <div class="ws-filter-section-title">Prioridade</div>
+                <div class="ws-filter-chips" data-filter-group="priority">
+                  <button class="ws-filter-chip selected" type="button" data-filter-value="all">Todas</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="alta">Alta</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="media">Media</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="baixa">Baixa</button>
+                </div>
+                <div class="ws-filter-section-title">Categoria</div>
+                <div class="ws-filter-chips" data-filter-group="category">
+                  <button class="ws-filter-chip selected" type="button" data-filter-value="all">Todas</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Tecnologia">Tech</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Roupas">Moda</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Livros">Livros</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Games">Games</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Casa">Casa</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Esporte">Esporte</button>
+                  <button class="ws-filter-chip" type="button" data-filter-value="Outros">Outros</button>
+                </div>
+                <div class="ws-filter-actions">
+                  <button class="ws-btn ws-btn-g" id="wishlist-filter-clear" type="button">Limpar</button>
+                  <button class="ws-btn ws-btn-p" id="wishlist-filter-apply" type="button">Aplicar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ws-igrid" id="igrid"></div>
+          <div class="ws-pagination" id="ws-items-pagination"></div>
+        </div>
+
+        <aside class="ws-sidebar">
+          <section class="ws-panel">
+            <div class="ws-panel-title">Por Prioridade</div>
+            <div class="ws-prow"><span class="ws-plabel"><span class="ws-pdot ws-dot-rose"></span>Alta</span><span class="ws-pval" id="p-alta">0</span></div>
+            <div class="ws-prow"><span class="ws-plabel"><span class="ws-pdot ws-dot-gold"></span>Media</span><span class="ws-pval" id="p-media">0</span></div>
+            <div class="ws-prow"><span class="ws-plabel"><span class="ws-pdot ws-dot-green"></span>Baixa</span><span class="ws-pval" id="p-baixa">0</span></div>
+            <div class="ws-prow ws-top-sep">
+              <span class="ws-plabel"><span class="ws-pdot ws-dot-violet"></span>Aquisições</span>
+              <span class="ws-pval" id="p-done">0</span>
+            </div>
+          </section>
+
+          <section class="ws-panel">
+            <div class="ws-panel-title">Por Categoria</div>
+            <div id="cat-breakdown"></div>
+          </section>
+
+          <section class="ws-panel">
+            <div class="ws-panel-title">Mais Caros</div>
+            <div id="top-list"></div>
+          </section>
+
+          <section class="ws-panel">
+            <div class="ws-panel-title">Histórico de Aquisições</div>
+            <div id="acq-history"></div>
+          </section>
+        </aside>
+      </div>
+      </div>
+
+      <div class="ws-view" id="ws-view-listas" data-view="listas">
+        <div class="ws-lists-head">
+          <div>
+            <div class="ws-section-eyebrow">Agrupamentos</div>
+            <h3 class="ws-section-title">Listas de Itens</h3>
+          </div>
+          <button class="ws-btn ws-btn-p" id="ws-list-add-btn" type="button">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nova Lista
+          </button>
+        </div>
+        <div class="ws-lists-grid" id="ws-lists-grid"></div>
+        <div class="ws-pagination" id="ws-lists-pagination"></div>
+      </div>
+    </section>
+  </main>
+
+  <div data-app-footer></div>
+  <div id="tc"></div>
+
+  <div class="ws-mo" id="mo">
+    <div class="ws-md">
+      <div class="ws-mdh">
+        <h3 class="ws-mdt" id="mo-title">Novo Item</h3>
+        <button class="ws-mdc" id="mo-close" type="button">&#10005;</button>
+      </div>
+      <form id="wform" autocomplete="off">
+        <div class="ws-fr">
+          <div class="ws-fg"><label class="ws-fl">Nome do Item *</label><input type="text" class="ws-fi" id="f-name" placeholder="Ex: AirPods Pro" required></div>
+          <div class="ws-fg"><label class="ws-fl">Emoji</label><input type="text" class="ws-fi" id="f-emoji" placeholder="&#127911;" maxlength="4"></div>
+        </div>
+        <div class="ws-fr">
+          <div class="ws-fg">
+            <label class="ws-fl">Categoria</label>
+            <select class="ws-fs" id="f-cat">
+              <option value="Tecnologia">&#128187; Tecnologia</option>
+              <option value="Roupas">&#128087; Roupas / Moda</option>
+              <option value="Livros">&#128218; Livros</option>
+              <option value="Games">&#127918; Games</option>
+              <option value="Casa">&#127968; Casa / Decoracao</option>
+              <option value="Esporte">&#9917; Esporte / Saude</option>
+              <option value="Outros">&#10024; Outros</option>
+            </select>
+          </div>
+          <div class="ws-fg">
+            <label class="ws-fl">Prioridade</label>
+            <select class="ws-fs" id="f-prio">
+              <option value="alta">&#128308; Alta</option>
+              <option value="media" selected>&#128993; Media</option>
+              <option value="baixa">&#128994; Baixa</option>
+            </select>
+          </div>
+        </div>
+        <div class="ws-fr">
+          <div class="ws-fg"><label class="ws-fl">Preco Estimado (R$)</label><input type="number" class="ws-fi" id="f-price" placeholder="0,00" min="0" step="0.01"></div>
+          <div class="ws-fg"><label class="ws-fl">Estoque</label><input type="number" class="ws-fi" id="f-stock" placeholder="1" min="1" step="1"></div>
+        </div>
+        <div class="ws-fg"><label class="ws-fl">Loja / Site</label><input type="text" class="ws-fi" id="f-store" placeholder="Ex: Amazon, iPlace..."></div>
+        <div class="ws-fg"><label class="ws-fl">Link do Produto</label><input type="url" class="ws-fi" id="f-link" placeholder="https://..."></div>
+        <div class="ws-fg"><label class="ws-fl">Imagem (URL ou Emoji grande)</label><input type="text" class="ws-fi" id="f-img" placeholder="https://... ou &#127911;"></div>
+        <div class="ws-fg"><label class="ws-fl">Observacoes</label><textarea class="ws-fta" id="f-notes" placeholder="Detalhes, variacoes, cores..."></textarea></div>
+        <div class="ws-ma">
+          <button type="button" class="ws-btn ws-btn-d" id="btn-del" hidden>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+            Excluir
+          </button>
+          <button type="button" class="ws-btn ws-btn-g" id="btn-can">Cancelar</button>
+          <button type="submit" class="ws-btn ws-btn-p" id="btn-sub">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Adicionar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="ws-mo" id="ws-list-modal">
+    <div class="ws-md ws-list-md">
+      <div class="ws-mdh">
+        <div>
+          <h3 class="ws-mdt" id="ws-list-modal-title">Quarto</h3>
+          <p class="ws-list-modal-subtitle" id="ws-list-modal-subtitle">Itens agrupados</p>
+        </div>
+        <div class="ws-list-modal-actions">
+          <button class="ws-btn ws-btn-g" id="ws-list-modal-edit" type="button">Editar Lista</button>
+          <button class="ws-mdc" id="ws-list-modal-close" type="button">&#10005;</button>
+        </div>
+      </div>
+      <div class="ws-list-modal-grid" id="ws-list-modal-grid"></div>
+    </div>
+  </div>
+
+  <div class="ws-mo" id="ws-list-edit-modal">
+    <div class="ws-md ws-list-edit-md">
+      <div class="ws-mdh">
+        <h3 class="ws-mdt" id="ws-list-edit-title">Nova Lista</h3>
+        <button class="ws-mdc" id="ws-list-edit-close" type="button">&#10005;</button>
+      </div>
+      <form id="ws-list-form" autocomplete="off">
+        <div class="ws-fr">
+          <div class="ws-fg">
+            <label class="ws-fl">Nome da Lista *</label>
+            <input type="text" class="ws-fi" id="ws-list-name" placeholder="Ex: Quarto" required>
+          </div>
+          <div class="ws-fg">
+            <label class="ws-fl">Icone</label>
+            <input type="text" class="ws-fi" id="ws-list-icon" placeholder="🛏" maxlength="4">
+          </div>
+        </div>
+        <div class="ws-fg">
+          <label class="ws-fl">Descricao</label>
+          <input type="text" class="ws-fi" id="ws-list-description" placeholder="Itens e ideias para este ambiente ou tema">
+        </div>
+        <div class="ws-fg">
+          <label class="ws-fl">Itens da Wishlist</label>
+          <div class="ws-list-picker" id="ws-list-picker"></div>
+        </div>
+        <div class="ws-ma">
+          <button type="button" class="ws-btn ws-btn-d" id="ws-list-delete" hidden>Excluir</button>
+          <button type="button" class="ws-btn ws-btn-g" id="ws-list-cancel">Cancelar</button>
+          <button type="submit" class="ws-btn ws-btn-p" id="ws-list-submit">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Criar Lista
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/wishlist.js"></script>
+</body>
+</html>

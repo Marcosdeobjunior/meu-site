@@ -1,0 +1,7 @@
+@import url("./biblioteca-tracker.css");
+
+body[data-page="mangas"] {
+  --tracker-accent: #c8a8ff;
+  --tracker-accent-2: #93d8ff;
+  --tracker-accent-3: #ffa5ca;
+}

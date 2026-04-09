@@ -1,0 +1,7 @@
+@import url("./biblioteca-tracker.css");
+
+body[data-page="cinema"] {
+  --tracker-accent: #e4b56f;
+  --tracker-accent-2: #84d8ff;
+  --tracker-accent-3: #ff9bc5;
+}

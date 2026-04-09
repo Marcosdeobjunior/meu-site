@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sól de Sóter</title>
+  <script>
+    (function () {
+      var allow = sessionStorage.getItem("soter_allow_index");
+      if (allow !== "1") {
+        window.location.replace("apresentacao.html");
+        return;
+      }
+    }());
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body data-page="home">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content index-shell">
+    <section class="overview-hero reveal-up">
+      <div class="overview-copy">
+        <div class="overview-eyebrow">Espaço pessoal ativo</div>
+        <h1>Olá, <em id="home-hero-name">bem-vindo</em>. Seu universo está aqui.</h1>
+        <p class="overview-summary">
+          Sól de Sóter reúne biblioteca, sonhos, viagens, finanças, planejamento, revisão e evolução pessoal em um só sistema.
+        </p>
+        <div class="overview-actions">
+          <a class="primary-action" href="rpg.html">Abrir Usuário</a>
+          <a class="secondary-action" href="tarefas.html">Ver Planejamento</a>
+          <a class="secondary-action" href="livros.html">Ir para Biblioteca</a>
+        </div>
+        <div class="hero-kpis">
+          <div class="hero-kpi">
+            <span class="hero-kpi-label">Módulos</span>
+            <strong class="hero-kpi-value" data-stat="modules">10</strong>
+          </div>
+          <div class="hero-kpi">
+            <span class="hero-kpi-label">Registros</span>
+            <strong class="hero-kpi-value" data-stat="records">0</strong>
+          </div>
+          <div class="hero-kpi">
+            <span class="hero-kpi-label">Notificações</span>
+            <strong class="hero-kpi-value" data-stat="notifications">0</strong>
+          </div>
+          <div class="hero-kpi">
+            <span class="hero-kpi-label">Nível RPG</span>
+            <strong class="hero-kpi-value" data-stat="rpg-level">1</strong>
+          </div>
+        </div>
+        <div class="hero-footnote">
+          <span id="homeDate"></span>
+        </div>
+      </div>
+
+      <aside class="overview-panel">
+        <div class="overview-panel-head">
+          <span class="status-dot"></span>
+          Estado atual do sistema
+        </div>
+        <div class="overview-orbit">
+          <div class="orbit-core">
+            <img src="img/soldesoter_logo.png" alt="Sól de Sóter">
+          </div>
+          <div class="orbit-node orbit-node-1">Biblioteca</div>
+          <div class="orbit-node orbit-node-2">Planejamento</div>
+          <div class="orbit-node orbit-node-3">Evolução</div>
+          <div class="orbit-node orbit-node-4">Pessoal</div>
+        </div>
+        <div class="overview-stack">
+          <article>
+            <span>Biblioteca</span>
+            <strong data-stat="library">0 itens</strong>
+          </article>
+          <article>
+            <span>Pessoal</span>
+            <strong data-stat="personal">0 frentes</strong>
+          </article>
+          <article>
+            <span>Execução</span>
+            <strong data-stat="execution">0 fluxos</strong>
+          </article>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section-block reveal-up">
+      <div class="section-header">
+        <div class="section-kicker">Constelações</div>
+        <h2>As áreas centrais do seu ecossistema</h2>
+        <p>Cada frente do sistema alimenta a home com métricas, progresso e contexto rápido.</p>
+      </div>
+      <div class="constellation-grid">
+        <article class="constellation-card tone-library">
+          <div class="constellation-icon">📚</div>
+          <h3>Biblioteca</h3>
+          <p>Livros, cinema e mangás vivem em um acervo só, com histórico e continuidade.</p>
+          <strong data-stat="library-detail">0 mídias</strong>
+        </article>
+        <article class="constellation-card tone-personal">
+          <div class="constellation-icon">🌙</div>
+          <h3>Pessoal</h3>
+          <p>Sonhos, viagens, wishlist e finanças conectam desejo, planejamento e execução.</p>
+          <strong data-stat="personal-detail">0 metas</strong>
+        </article>
+        <article class="constellation-card tone-planning">
+          <div class="constellation-icon">✅</div>
+          <h3>Planejamento</h3>
+          <p>Tarefas, revisão e treino transformam intenção em rotina consistente.</p>
+          <strong data-stat="planning-detail">0 frentes</strong>
+        </article>
+        <article class="constellation-card tone-evolution">
+          <div class="constellation-icon">⚔️</div>
+          <h3>Evolução</h3>
+          <p>O RPG consolida esforço, nível, atributos, conquistas e leitura do seu avanço.</p>
+          <strong data-stat="evolution-detail">0 sistemas</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block reveal-up">
+      <div class="section-header compact">
+        <div class="section-kicker">Acesso Rápido</div>
+        <h2>Módulos em destaque</h2>
+      </div>
+      <div class="module-grid">
+        <a class="module-card module-card-feature module-card-emphasis" href="rpg.html">
+          <img src="img/conquista-evolucao.png" alt="Usuário RPG">
+          <div class="module-copy">
+            <span class="module-tag">Usuário</span>
+            <h3>Nível, atributos e conquistas</h3>
+            <p>Acompanhe classe, XP, skills, achievements e estado geral do personagem.</p>
+            <strong>Nível <span id="hs-level">1</span> · <span id="hs-rpg-title">Iniciante</span></strong>
+          </div>
+        </a>
+        <a class="module-card" href="livros.html">
+          <img src="img/conquista-leitura.png" alt="Livraria">
+          <div class="module-copy">
+            <span class="module-tag">Biblioteca</span>
+            <h3>Livraria</h3>
+            <p>Monitore leituras, páginas, notas e continuidade do que está em progresso.</p>
+            <strong><span id="hs-livros">0</span> livros</strong>
+          </div>
+        </a>
+        <a class="module-card" href="cinema.html">
+          <img src="img/conquista-cinema.png" alt="Cinema">
+          <div class="module-copy">
+            <span class="module-tag">Biblioteca</span>
+            <h3>Cinema</h3>
+            <p>Filmes e séries com status, reviews e andamento em uma mesma trilha.</p>
+            <strong><span id="hs-filmes">0</span> títulos</strong>
+          </div>
+        </a>
+        <a class="module-card" href="sonhos.html">
+          <img src="img/conquista-sonhos.png" alt="Sonhos">
+          <div class="module-copy">
+            <span class="module-tag">Pessoal</span>
+            <h3>Sonhos</h3>
+            <p>Transforme desejos em metas, cronogramas e progresso concreto.</p>
+            <strong data-stat="dreams">0 sonhos</strong>
+          </div>
+        </a>
+        <a class="module-card" href="viagens.html">
+          <img src="img/conquista-viagens.png" alt="Viagens">
+          <div class="module-copy">
+            <span class="module-tag">Pessoal</span>
+            <h3>Viagens</h3>
+            <p>Mapeie destinos, custos, datas e desejos de rota num só painel.</p>
+            <strong><span id="hs-viagens">0</span> viagens</strong>
+          </div>
+        </a>
+        <a class="module-card" href="wishlist.html">
+          <img src="img/conquista-wishlist.png" alt="Wishlist">
+          <div class="module-copy">
+            <span class="module-tag">Pessoal</span>
+            <h3>Wishlist</h3>
+            <p>Priorize desejos, categorize aquisições e acompanhe o que virou conquista.</p>
+            <strong data-stat="wishlist">0 desejos</strong>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="split-showcase reveal-up">
+      <div class="showcase-panel">
+        <div class="section-header compact">
+          <div class="section-kicker">Em andamento</div>
+          <h2>O que está aberto agora</h2>
+        </div>
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-icon">📖</div>
+            <div id="home-lendo">
+              <h3>Nenhum livro</h3>
+              <p>Sem leitura ativa no momento.</p>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon">🎬</div>
+            <div id="home-cinema">
+              <h3>Nenhum título</h3>
+              <p>Sem filme ou série em andamento.</p>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon">🗓️</div>
+            <div id="home-tarefa">
+              <h3>Sem tarefas</h3>
+              <p>Nenhuma tarefa pendente por agora.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-panel">
+        <div class="section-header compact">
+          <div class="section-kicker">Ritmo</div>
+          <h2>Rotas rápidas do dia</h2>
+        </div>
+        <div class="route-track">
+          <div class="route-step">
+            <span>01</span>
+            <strong>Humor do dia</strong>
+            <p>Registre rapidamente como você está agora.</p>
+            <div class="mood-section" id="moodBtns">
+              <button class="mood-btn" onclick="setMood(this,'😴')">😴</button>
+              <button class="mood-btn" onclick="setMood(this,'😐')">😐</button>
+              <button class="mood-btn" onclick="setMood(this,'🙂')">🙂</button>
+              <button class="mood-btn" onclick="setMood(this,'😄')">😄</button>
+              <button class="mood-btn" onclick="setMood(this,'🤩')">🤩</button>
+              <button class="mood-btn" onclick="setMood(this,'😤')">😤</button>
+              <button class="mood-btn" onclick="setMood(this,'😟')">😟</button>
+            </div>
+            <p>Humor atual: <span id="moodDisplay">—</span></p>
+          </div>
+          <div class="route-step">
+            <span>02</span>
+            <strong>Nota rápida</strong>
+            <p>Guarde uma lembrança, foco ou intenção do momento.</p>
+            <textarea class="inp" id="quickNote" placeholder="Escreva algo para lembrar..." style="width:100%;min-height:92px;margin-top:10px" oninput="saveNote()"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block reveal-up">
+      <div class="section-header compact">
+        <div class="section-kicker">Panorama</div>
+        <h2>Indicadores rápidos</h2>
+      </div>
+      <div class="quick-tiles" id="quickTiles">
+        <div class="quick-tile" onclick="window.location.href='livros.html'">
+          <div class="tile-icon">📚</div>
+          <div class="tile-name">Livros</div>
+          <div class="tile-val" id="ht-livros">0</div>
+        </div>
+        <div class="quick-tile" onclick="window.location.href='cinema.html'">
+          <div class="tile-icon">🎬</div>
+          <div class="tile-name">Filmes</div>
+          <div class="tile-val" id="ht-cinema">0</div>
+        </div>
+        <div class="quick-tile" onclick="window.location.href='mangas.html'">
+          <div class="tile-icon">📖</div>
+          <div class="tile-name">Mangás</div>
+          <div class="tile-val" id="ht-mangas">0</div>
+        </div>
+        <div class="quick-tile" onclick="window.location.href='tarefas.html'">
+          <div class="tile-icon">✅</div>
+          <div class="tile-name">Tarefas</div>
+          <div class="tile-val" id="ht-tarefas">0</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="split-showcase reveal-up">
+      <div class="showcase-panel">
+        <div class="section-header compact">
+          <div class="section-kicker">Resumo pessoal</div>
+          <h2>Frentes ativas</h2>
+        </div>
+        <div class="quick-tiles" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">
+          <div class="quick-tile">
+            <div class="tile-name">Sonhos</div>
+            <div class="tile-val" id="hs-dreams">0</div>
+          </div>
+          <div class="quick-tile">
+            <div class="tile-name">Tarefas</div>
+            <div class="tile-val" id="hs-tasks">0</div>
+          </div>
+          <div class="quick-tile">
+            <div class="tile-name">Wishlist</div>
+            <div class="tile-val" id="hs-wishlist">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-panel">
+        <div class="section-header compact">
+          <div class="section-kicker">Planejamento</div>
+          <h2>Estado das tarefas</h2>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="quick-tile" style="flex:1;min-width:140px">
+            <div class="tile-name">Concluídas</div>
+            <div class="tile-val" id="hs-tarefas-done">0</div>
+          </div>
+          <div class="quick-tile" style="flex:1;min-width:140px">
+            <div class="tile-name">Pendentes</div>
+            <div class="tile-val" id="hs-tarefas-pend">0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="split-showcase reveal-up">
+      <div class="showcase-panel" onclick="window.location.href='rpg.html'" style="cursor:pointer">
+        <div class="section-header compact">
+          <div class="section-kicker">RPG</div>
+          <h2>Seu avanço atual</h2>
+        </div>
+        <div style="font-size:38px;margin-bottom:18px;filter:drop-shadow(0 0 12px rgba(200,169,110,.3))">⚔️</div>
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--accent1);margin-bottom:8px" id="hs-level-2">1</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="hs-rpg-title-2">Iniciante</div>
+        <div style="height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden">
+          <div id="hs-xp-bar-2" style="height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent1));border-radius:4px;width:0%"></div>
+        </div>
+      </div>
+
+      <div class="showcase-panel">
+        <div class="section-header compact">
+          <div class="section-kicker">Base integrada</div>
+          <h2>Como a home se organiza</h2>
+        </div>
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-icon">📚</div>
+            <div>
+              <h3>Biblioteca viva</h3>
+              <p>Livros, filmes e mangás alimentam acervo, conquistas e progresso.</p>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon">🌙</div>
+            <div>
+              <h3>Vida pessoal</h3>
+              <p>Sonhos, viagens, finanças e desejos entram no mesmo fluxo de organização.</p>
+            </div>
+          </div>
+          <div class="signal-item">
+            <div class="signal-icon">⚡</div>
+            <div>
+              <h3>Execução contínua</h3>
+              <p>Tarefas, revisão e treino ajudam a transformar intenção em rotina.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-app-footer></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

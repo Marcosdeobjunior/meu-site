@@ -1,0 +1,474 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sol de Sóter · Finanças</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/financas.css">
+</head>
+<body data-page="financas">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content">
+    <section class="fin-page">
+      <div class="fin-wrap">
+        <div class="fin-ph">
+          <div class="fin-ph-left">
+            <h1>Minhas <em>Finanças</em></h1>
+            <p>analytics · calendário · projeção de saldo</p>
+          </div>
+          <div class="fin-ph-right">
+            <button class="fin-analytics-btn" id="btn-open-fin-analytics">📊 Analytics</button>
+            <button class="fin-btn fin-btn-gold" id="btn-add-tx"><i class="fas fa-plus"></i> Transação</button>
+          </div>
+        </div>
+
+        <div class="fin-grid-bottom">
+          <div class="fin-card">
+            <div class="fin-card-hd">
+              <span class="fin-card-lbl">Calendário Financeiro</span>
+              <div class="fin-cal-legend">
+                <span class="fin-cal-legend-in">● Entrada</span>
+                <span class="fin-cal-legend-out">● Saída</span>
+                <span class="fin-cal-legend-future">◌ Futuro</span>
+              </div>
+            </div>
+            <div class="fin-cal-wrap">
+              <div class="fin-cal-nav">
+                <button class="fin-cal-nav-btn" id="cal-prev"><i class="fas fa-chevron-left"></i></button>
+                <div>
+                  <div class="fin-cal-month" id="cal-title">—</div>
+                </div>
+                <div class="fin-cal-nav-actions">
+                  <button class="fin-cal-today-btn" id="cal-today">Hoje</button>
+                  <button class="fin-cal-nav-btn" id="cal-next"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+              <div class="fin-cal-grid" id="cal-grid"></div>
+            </div>
+          </div>
+
+          <div class="fin-side-summary">
+            <div class="fin-tiles">
+              <div class="fin-tile fin-t-gold">
+                <div class="fin-tile-lbl">Saldo Atual</div>
+                <div class="fin-tile-val fin-neu" id="st-saldo">R$ 0</div>
+                <div class="fin-tile-sub" id="st-saldo-sub">—</div>
+                <i class="fas fa-wallet fin-tile-icon"></i>
+              </div>
+            </div>
+
+            <div class="fin-best-day-banner" id="best-day-banner">
+              <div class="fin-bd-pulse">💰</div>
+              <div class="fin-bd-info">
+                <div class="fin-bd-title">Melhor dia para compra</div>
+                <div class="fin-bd-day" id="bd-day-text">Calculando...</div>
+                <div class="fin-bd-sub" id="bd-day-sub">Adicione transações para ver a projeção</div>
+              </div>
+              <div class="fin-bd-bars" id="bd-bars"></div>
+            </div>
+
+            <div class="fin-savings-card" id="fin-savings-card" role="button" tabindex="0" aria-label="Editar meta da poupança">
+              <div class="fin-savings-head">
+                <div class="fin-savings-title">Poupança</div>
+                <div class="fin-savings-badge" id="fin-savings-badge">0%</div>
+              </div>
+              <div class="fin-savings-amount" id="fin-savings-amount">R$ 0,00</div>
+              <div class="fin-savings-sub" id="fin-savings-sub">Transferido para a poupança e fora do saldo disponível</div>
+              <div class="fin-savings-goal-row">
+                <div class="fin-savings-goal-label">Meta</div>
+                <div class="fin-savings-goal-display" id="fin-savings-goal-display">Clique para editar</div>
+                <input class="fin-savings-goal-input" id="fin-savings-goal-input" type="number" min="0" step="0.01" placeholder="0,00" aria-label="Meta da poupança">
+              </div>
+              <div class="fin-savings-bar">
+                <div class="fin-savings-fill" id="fin-savings-fill" style="width:0%"></div>
+              </div>
+              <div class="fin-savings-meta">
+                <span id="fin-savings-meta-left">Meta atual</span>
+                <span id="fin-savings-meta-right">R$ 0,00</span>
+              </div>
+            </div>
+            <div class="fin-actions-card">
+              <div class="fin-actions-title">Ações</div>
+              <div class="fin-actions-list">
+                <button class="fin-actions-btn" id="fin-manage-categories" type="button">
+                  <i class="fas fa-tags"></i>
+                  <span>Gerenciar categorias</span>
+                </button>
+                <button class="fin-actions-btn" id="fin-manage-recurring" type="button">
+                  <i class="fas fa-repeat"></i>
+                  <span>Gerenciar recorrências</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-app-footer></div>
+
+  <div id="fin-analytics">
+    <div class="san-body">
+      <div class="san-intro">
+        <div class="san-intro-head">
+          <div>
+            <div class="san-header-title">Analytics de <em>Finanças</em></div>
+            <div class="san-header-sub">Visão completa das entradas, saídas e projeções do seu mês</div>
+          </div>
+          <button class="san-back-btn" type="button" id="btn-close-fin-analytics">Voltar</button>
+        </div>
+      </div>
+
+      <div class="san-kpi-row fin-san-kpi-row">
+        <div class="san-kpi" style="--kpi-color:#5ec4a8">
+          <div class="san-kpi-icon">↓</div>
+          <div class="san-kpi-val fin-pos" id="st-in">R$ 0</div>
+          <div class="san-kpi-lbl">Entradas (mês)</div>
+          <div class="san-kpi-sub" id="st-in-sub">0 transações</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#e06b8b">
+          <div class="san-kpi-icon">↑</div>
+          <div class="san-kpi-val fin-neg" id="st-out">R$ 0</div>
+          <div class="san-kpi-lbl">Saídas (mês)</div>
+          <div class="san-kpi-sub" id="st-out-sub">0 transações</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#7c6fcd">
+          <div class="san-kpi-icon">↗</div>
+          <div class="san-kpi-val" id="st-proj" style="color:var(--fin-violet)">R$ 0</div>
+          <div class="san-kpi-lbl">Saldo Projetado</div>
+          <div class="san-kpi-sub">fim do mês</div>
+        </div>
+        <div class="san-kpi" style="--kpi-color:#e8864a">
+          <div class="san-kpi-icon">%</div>
+          <div class="san-kpi-val" id="st-eco" style="color:var(--fin-amber)">0%</div>
+          <div class="san-kpi-lbl">Economia</div>
+          <div class="san-kpi-sub" id="st-eco-sub">este mês</div>
+        </div>
+      </div>
+
+      <div class="san-charts-row">
+        <div class="san-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">📈</span>Fluxo de Caixa</div>
+          <div class="fin-analytics-card-tools">
+            <div class="fin-seg" id="seg-chart">
+              <button class="fin-seg-btn active" data-v="month">Mês</button>
+              <button class="fin-seg-btn" data-v="6m">6 meses</button>
+              <button class="fin-seg-btn" data-v="year">Ano</button>
+            </div>
+          </div>
+          <div class="fin-chart-wrap"><canvas class="fin-chart" id="chart-flux" height="200"></canvas></div>
+        </div>
+        <div class="san-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">◈</span>Saldo Acumulado no Mês</div>
+          <div class="fin-chart-wrap"><canvas class="fin-chart" id="chart-balance" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <div class="san-charts-row">
+        <div class="san-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">📋</span>Transações</div>
+          <div class="fin-analytics-card-tools">
+            <div class="fin-seg" id="seg-tx">
+              <button class="fin-seg-btn active" data-v="all">Todas</button>
+              <button class="fin-seg-btn" data-v="in">Entradas</button>
+              <button class="fin-seg-btn" data-v="out">Saídas</button>
+            </div>
+          </div>
+          <div class="fin-tx-list" id="tx-list"></div>
+        </div>
+        <div class="san-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">🎯</span>Por Categoria (Saídas)</div>
+          <div class="fin-cat-list" id="cat-list"></div>
+        </div>
+      </div>
+
+      <div class="fin-analytics-divider"></div>
+
+      <div class="san-charts-row">
+        <div class="san-card fin-analytics-savings-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">🏦</span>Poupança</div>
+          <div class="fin-analytics-savings-head">
+            <div>
+              <div class="fin-analytics-savings-amount" id="st-save-amount">R$ 0</div>
+              <div class="fin-analytics-savings-sub fin-analytics-savings-sub-inline" id="st-save-sub">Nenhuma transferência para poupança ainda.</div>
+            </div>
+            <div class="fin-analytics-savings-badge" id="st-save-pct">0%</div>
+          </div>
+          <div class="fin-analytics-savings-bar">
+            <div class="fin-analytics-savings-fill" id="st-save-fill" style="width:0%"></div>
+          </div>
+          <div class="fin-analytics-savings-meta">
+            <span id="st-save-left">Acumulado</span>
+            <span id="st-save-right">Meta R$ 0,00</span>
+          </div>
+        </div>
+        <div class="san-card fin-analytics-savings-average-card" style="flex:0 0 260px">
+          <div class="san-card-title"><span class="san-card-title-icon">📈</span>Média mensal</div>
+          <div class="fin-analytics-savings-average-value" id="st-save-average">R$ 0,00</div>
+          <div class="fin-analytics-savings-average-sub">Média dos aportes mensais realizados na poupança.</div>
+        </div>
+      </div>
+
+      <div class="san-charts-row">
+        <div class="san-card fin-analytics-savings-stat-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">📥</span>Transferido no mês</div>
+          <div class="fin-analytics-savings-stat-value" id="st-save-month">R$ 0,00</div>
+          <div class="fin-chart-wrap fin-analytics-savings-chart-wrap"><canvas class="fin-chart" id="chart-save-history" height="180"></canvas></div>
+        </div>
+        <div class="san-card fin-analytics-savings-stat-card" style="flex:1">
+          <div class="san-card-title"><span class="san-card-title-icon">🎯</span>Faltam</div>
+          <div class="fin-analytics-savings-stat-value" id="st-save-missing">R$ 0,00</div>
+          <div class="fin-analytics-savings-proj-meta">
+            <span id="st-save-days">0 dias</span>
+            <span id="st-save-date">Sem projeção</span>
+          </div>
+          <div class="fin-chart-wrap fin-analytics-savings-chart-wrap"><canvas class="fin-chart" id="chart-save-projection" height="180"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-toasts" id="toasts"></div>
+
+  <div class="fin-overlay" id="modal-tx">
+    <div class="fin-modal">
+      <div class="fin-modal-hd">
+        <h3 id="mtx-title">Nova Transação</h3>
+        <button class="fin-mclose" id="mtx-close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="fin-type-toggle">
+        <button class="fin-tt-btn active-in" id="tt-in" data-type="in"><i class="fas fa-arrow-down"></i> Entrada</button>
+        <button class="fin-tt-btn" id="tt-out" data-type="out"><i class="fas fa-arrow-up"></i> Saída</button>
+        <button class="fin-tt-btn" id="tt-save" data-type="save"><i class="fas fa-piggy-bank"></i> Poupança</button>
+      </div>
+
+      <div class="fin-fg">
+        <label class="fin-fl">Descrição *</label>
+        <input type="text" class="fin-fi" id="mtx-desc" placeholder="Ex: Salário, Aluguel, Mercado...">
+      </div>
+
+      <div class="fin-frow">
+        <div class="fin-fg">
+          <label class="fin-fl">Valor (R$) *</label>
+          <input type="number" class="fin-fi" id="mtx-val" min="0.01" step="0.01" placeholder="0,00">
+        </div>
+        <div class="fin-fg">
+          <label class="fin-fl">Data *</label>
+          <input type="date" class="fin-fi" id="mtx-date">
+        </div>
+      </div>
+
+      <div class="fin-frow">
+        <div class="fin-fg">
+          <label class="fin-fl">Categoria</label>
+          <select class="fin-fsel" id="mtx-cat"></select>
+        </div>
+        <div class="fin-fg">
+          <label class="fin-fl">Recorrência</label>
+          <select class="fin-fsel" id="mtx-rec">
+            <option value="">Única</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fin-fg">
+        <label class="fin-fl">Observação</label>
+        <textarea class="fin-fta" id="mtx-note" placeholder="Detalhes opcionais..."></textarea>
+      </div>
+
+      <div class="fin-modal-acts">
+        <button class="fin-btn fin-btn-rose fin-btn-sm" id="mtx-del" style="display:none;margin-right:auto"><i class="fas fa-trash"></i> Excluir</button>
+        <button class="fin-btn fin-btn-ghost fin-btn-sm" id="mtx-cancel">Cancelar</button>
+        <button class="fin-btn fin-btn-gold" id="mtx-save"><i class="fas fa-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-overlay" id="modal-categories">
+    <div class="fin-modal fin-modal-wide">
+      <div class="fin-modal-hd">
+        <h3>Gerenciar Categorias</h3>
+        <button class="fin-mclose" id="mc-close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="fin-cat-manager-grid">
+        <section class="fin-cat-manager-section">
+          <div class="fin-cat-manager-title">Entradas</div>
+          <div class="fin-cat-manager-list" id="fin-cat-manager-in"></div>
+          <div class="fin-cat-manager-add">
+            <input type="text" class="fin-fi" id="fin-cat-new-in" placeholder="Nova categoria de entrada">
+            <button class="fin-btn fin-btn-ghost fin-btn-sm" id="fin-cat-add-in" type="button"><i class="fas fa-plus"></i> Adicionar</button>
+          </div>
+        </section>
+
+        <section class="fin-cat-manager-section">
+          <div class="fin-cat-manager-title">Saídas</div>
+          <div class="fin-cat-manager-list" id="fin-cat-manager-out"></div>
+          <div class="fin-cat-manager-add">
+            <input type="text" class="fin-fi" id="fin-cat-new-out" placeholder="Nova categoria de saída">
+            <button class="fin-btn fin-btn-ghost fin-btn-sm" id="fin-cat-add-out" type="button"><i class="fas fa-plus"></i> Adicionar</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="fin-cat-manager-note">A categoria Poupança é fixa para transferências de reserva.</div>
+
+      <div class="fin-modal-acts">
+        <button class="fin-btn fin-btn-ghost fin-btn-sm" id="mc-cancel">Cancelar</button>
+        <button class="fin-btn fin-btn-gold" id="mc-save"><i class="fas fa-save"></i> Salvar categorias</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-overlay" id="modal-recurring">
+    <div class="fin-modal fin-modal-recurring">
+      <div class="fin-modal-hd">
+        <h3>Gerenciar Recorrências</h3>
+        <button class="fin-mclose" id="mr-close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="fin-recurring-layout">
+        <aside class="fin-recurring-sidebar">
+          <div class="fin-recurring-sidebar-head">
+            <div class="fin-cat-manager-title">Regras</div>
+            <button class="fin-btn fin-btn-ghost fin-btn-sm" id="mr-new" type="button"><i class="fas fa-plus"></i> Nova</button>
+          </div>
+          <div class="fin-recurring-list" id="fin-recurring-list"></div>
+        </aside>
+
+        <section class="fin-recurring-editor">
+          <div class="fin-frow">
+            <div class="fin-fg">
+              <label class="fin-fl">Nome da regra</label>
+              <input type="text" class="fin-fi" id="mr-name" placeholder="Ex: Salário mensal">
+            </div>
+            <div class="fin-fg">
+              <label class="fin-fl">Início da regra</label>
+              <input type="date" class="fin-fi" id="mr-start-date">
+            </div>
+          </div>
+
+          <div class="fin-fg">
+            <label class="fin-fl">Descrição da transação</label>
+            <input type="text" class="fin-fi" id="mr-description" placeholder="Ex: Salário, adiantamento, bônus...">
+          </div>
+
+          <div class="fin-frow">
+            <div class="fin-fg">
+              <label class="fin-fl">Tipo</label>
+              <select class="fin-fsel" id="mr-type">
+                <option value="in">Entrada</option>
+                <option value="out">Saída</option>
+                <option value="save">Poupança</option>
+              </select>
+            </div>
+            <div class="fin-fg">
+              <label class="fin-fl">Valor</label>
+              <input type="number" class="fin-fi" id="mr-value" min="0.01" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+
+          <div class="fin-frow">
+            <div class="fin-fg">
+              <label class="fin-fl">Categoria</label>
+              <select class="fin-fsel" id="mr-category"></select>
+            </div>
+            <div class="fin-fg">
+              <label class="fin-fl">Modelo da regra</label>
+              <select class="fin-fsel" id="mr-pattern">
+                <option value="nth_counted_day">Nº dia útil com sábado contando</option>
+                <option value="fixed_day">Dia fixo com ajuste</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fin-recurring-logic">
+            <div class="fin-recurring-logic-head">Construtor da regra</div>
+
+            <div class="fin-recurring-if" id="mr-pattern-nth">
+              <div class="fin-recurring-sentence">
+                <span class="fin-recurring-token">SE</span>
+                <span>a regra for</span>
+                <strong>nº dia útil do mês</strong>
+              </div>
+              <div class="fin-frow">
+                <div class="fin-fg">
+                  <label class="fin-fl">Número contado</label>
+                  <input type="number" class="fin-fi" id="mr-nth" min="1" max="31" step="1" value="5">
+                </div>
+                <div class="fin-fg">
+                  <label class="fin-fl">Mover quando cair em</label>
+                  <select class="fin-fsel" id="mr-shift">
+                    <option value="previous_business_day">Dia útil anterior</option>
+                    <option value="next_business_day">Próximo dia útil</option>
+                  </select>
+                </div>
+              </div>
+              <label class="fin-recurring-check"><input type="checkbox" id="mr-count-saturday" checked> E sábado conta na contagem</label>
+              <label class="fin-recurring-check"><input type="checkbox" id="mr-avoid-holiday" checked> E feriado não pode ser dia de pagamento</label>
+            </div>
+
+            <div class="fin-recurring-if" id="mr-pattern-fixed" hidden>
+              <div class="fin-recurring-sentence">
+                <span class="fin-recurring-token">SE</span>
+                <span>a regra for</span>
+                <strong>dia fixo do mês</strong>
+              </div>
+              <div class="fin-frow">
+                <div class="fin-fg">
+                  <label class="fin-fl">Dia do mês</label>
+                  <input type="number" class="fin-fi" id="mr-day" min="1" max="31" step="1" value="20">
+                </div>
+                <div class="fin-fg">
+                  <label class="fin-fl">Mover quando cair em</label>
+                  <select class="fin-fsel" id="mr-fixed-shift">
+                    <option value="previous_business_day">Dia útil anterior</option>
+                    <option value="next_business_day">Próximo dia útil</option>
+                  </select>
+                </div>
+              </div>
+              <label class="fin-recurring-check"><input type="checkbox" id="mr-avoid-weekend" checked> E sábado/domingo não podem ser dia de pagamento</label>
+              <label class="fin-recurring-check"><input type="checkbox" id="mr-fixed-avoid-holiday"> E feriado também deve ajustar</label>
+            </div>
+          </div>
+
+          <div class="fin-fg">
+            <label class="fin-fl">Feriados da regra</label>
+            <textarea class="fin-fta fin-recurring-holidays" id="mr-holidays" placeholder="Um por linha, no formato YYYY-MM-DD"></textarea>
+          </div>
+
+          <div class="fin-fg">
+            <label class="fin-fl">Observação</label>
+            <textarea class="fin-fta fin-recurring-note" id="mr-note" placeholder="Explique a lógica desta recorrência..."></textarea>
+          </div>
+
+          <div class="fin-modal-acts">
+            <button class="fin-btn fin-btn-rose fin-btn-sm" id="mr-delete" type="button" style="display:none;margin-right:auto"><i class="fas fa-trash"></i> Excluir</button>
+            <button class="fin-btn fin-btn-ghost fin-btn-sm" id="mr-cancel" type="button">Cancelar</button>
+            <button class="fin-btn fin-btn-gold" id="mr-save" type="button"><i class="fas fa-save"></i> Salvar regra</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/financas.js"></script>
+</body>
+</html>
+

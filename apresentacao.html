@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sól de Sóter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/apresentacao.css">
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div id="splash">
+    <div id="starfield"></div>
+    <div class="nebula" style="width:500px;height:500px;background:rgba(124,111,205,.18);top:-100px;left:-100px"></div>
+    <div class="nebula" style="width:400px;height:400px;background:rgba(200,169,110,.1);bottom:-50px;right:-80px"></div>
+    <div class="nebula" style="width:300px;height:300px;background:rgba(94,196,168,.07);top:40%;left:60%"></div>
+
+    <div class="splash-content">
+      <div class="splash-eyebrow">✦ ESPAÇO PESSOAL ✦</div>
+      <div class="splash-title"><em>Sól</em> de Sóter</div>
+      <div class="splash-subtitle">o universo que vive em você</div>
+      <div class="splash-divider"></div>
+      <button class="btn-enter" type="button" onclick="enterSite()"><span>✦ &nbsp; Entrar &nbsp; ✦</span></button>
+    </div>
+
+    <div class="splash-bottom">SOL DE SOTER · ESPAÇO PESSOAL</div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/apresentacao.js"></script>
+</body>
+</html>
+

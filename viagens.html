@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Viagens &mdash; Sol de S&oacute;ter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/viagens.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body data-page="viagens">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content">
+    <div class="ph">
+      <div>
+        <h1 class="pt">Minhas <em>Viagens</em></h1>
+        <p class="ps">tracker &middot; mapa &middot; planejamento</p>
+      </div>
+      <div class="ha">
+        <button class="btn btn-p" id="btn-add" type="button">+ Nova Viagem</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="st"><div class="stl">Total Destinos</div><div class="stv" id="s-total">0</div><div class="sts">registrados</div></div>
+      <div class="st"><div class="stl">Wishlist</div><div class="stv" id="s-wish" style="color:var(--a4)">0</div><div class="sts">desejados</div></div>
+      <div class="st"><div class="stl">Or&ccedil;amento Total</div><div class="stv" id="s-budget" style="color:var(--a3);font-size:18px;margin-top:5px">R$ 0</div><div class="sts">planejado</div></div>
+      <div class="st"><div class="stl">Cidades/Pa&iacute;ses</div><div class="stv" id="s-cities">0</div><div class="sts">registrados</div></div>
+    </div>
+
+    <div class="lay">
+      <div class="cp">
+        <div class="cph"><span class="cptit">Lista de Viagens</span><span class="cpcnt" id="c-cnt">0 destinos</span></div>
+        <div class="list-tools">
+          <input class="inp" id="travel-search" type="text" placeholder="🔍 Buscar...">
+          <div class="filter-wrap" id="travel-filter-wrap">
+            <button class="btn-filter" id="travel-filter-btn" type="button">⚙ Filtros <span class="filter-badge" id="travel-filter-badge">0</span></button>
+            <div class="filter-panel" id="travel-filter-panel">
+              <div class="filter-section-title">Tipo de Local</div>
+              <div class="filter-chips">
+                <button class="filter-chip" type="button" data-panel-filter="all">Todos</button>
+                <button class="filter-chip" type="button" data-panel-filter="Desejo">Wishlist</button>
+                <button class="filter-chip" type="button" data-panel-filter="Cidade/Pais">Cidade/Pais</button>
+                <button class="filter-chip" type="button" data-panel-filter="Restaurante">Restaurante</button>
+                <button class="filter-chip" type="button" data-panel-filter="Hotel">Hotel</button>
+                <button class="filter-chip" type="button" data-panel-filter="Museu">Museu</button>
+                <button class="filter-chip" type="button" data-panel-filter="Parque">Parque</button>
+                <button class="filter-chip" type="button" data-panel-filter="Ponto Turistico">P. Turistico</button>
+                <button class="filter-chip" type="button" data-panel-filter="Outro">Outro</button>
+              </div>
+              <div class="filter-actions">
+                <button class="btn btn-g" id="travel-filter-clear" type="button">Limpar</button>
+                <button class="btn btn-p" id="travel-filter-apply" type="button">Aplicar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cl" id="cards"></div>
+        <div class="pg" id="pag" style="display:none">
+          <button class="pb" id="p-prev" type="button">&#8249;</button>
+          <span class="pi" id="p-info">1/1</span>
+          <button class="pb" id="p-next" type="button">&#8250;</button>
+        </div>
+      </div>
+
+      <div class="mp">
+        <div class="cph"><span class="cptit">Mapa das Viagens</span><span class="cpcnt" id="m-cnt">0 pins</span></div>
+        <div id="map"></div>
+        <div class="ml">
+          <div class="mli"><div class="mld" style="background:#10b981"></div>Cidade/Pa&iacute;s</div>
+          <div class="mli"><div class="mld" style="background:#f97316"></div>Restaurante</div>
+          <div class="mli"><div class="mld" style="background:#3b82f6"></div>Hotel</div>
+          <div class="mli"><div class="mld" style="background:#eab308"></div>Museu/P.T.</div>
+          <div class="mli"><div class="mld" style="background:#22c55e"></div>Parque</div>
+          <div class="mli"><div class="mld" style="background:#ec4899"></div>Desejo</div>
+          <div class="mli"><div class="mld" style="background:#a855f7"></div>Montanha</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div data-app-footer></div>
+
+  <div id="tc"></div>
+
+  <div class="mo" id="mo-travel">
+    <div class="md">
+      <div class="mdh">
+        <h3 class="mdt" id="mo-title">Nova Viagem</h3>
+        <button class="mdc" id="mo-close" type="button">&#10005;</button>
+      </div>
+      <form id="tform" autocomplete="off">
+        <div class="fg"><label class="fl">Destino *</label><input type="text" class="fi" id="f-dest" placeholder="Ex: T&oacute;quio, Jap&atilde;o" required></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Tipo de Local</label>
+            <select class="fs" id="f-type">
+              <option value="">Selecione...</option>
+              <option value="Desejo">Desejo (Wishlist)</option>
+              <option value="Cidade/Pais">Cidade/Pa&iacute;s</option>
+              <option value="Restaurante">Restaurante</option>
+              <option value="Museu">Museu</option>
+              <option value="Parque">Parque</option>
+              <option value="Hotel">Hotel</option>
+              <option value="Ponto Turistico">Ponto Tur&iacute;stico</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Or&ccedil;amento (R$)</label><input type="number" class="fi" id="f-bud" min="0" step="0.01" placeholder="0,00"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Data In&iacute;cio</label><input type="date" class="fi" id="f-s"></div>
+          <div class="fg"><label class="fl">Data T&eacute;rmino</label><input type="date" class="fi" id="f-e"></div>
+        </div>
+        <div class="fg"><label class="fl">Descri&ccedil;&atilde;o</label><textarea class="fta" id="f-desc" placeholder="Experi&ecirc;ncias, dicas, pontos de interesse..."></textarea></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Imagem (URL)</label><input type="url" class="fi" id="f-iurl" placeholder="https://..."></div>
+          <div class="fg"><label class="fl">Imagem (Arquivo)</label><input type="file" class="fi" id="f-ifile" accept="image/*" style="padding:7px 10px;cursor:pointer;"></div>
+        </div>
+        <input type="hidden" id="f-idata">
+        <div class="ma">
+          <button type="button" class="btn btn-d" id="btn-del" style="display:none;margin-right:auto">Excluir</button>
+          <button type="button" class="btn btn-g" id="btn-can">Cancelar</button>
+          <button type="submit" class="btn btn-p" id="btn-sub">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="mo" id="mo-data">
+    <div class="md" style="max-width:380px">
+      <div class="mdh">
+        <h3 class="mdt">Gerenciar Dados</h3>
+        <button class="mdc" id="mo-data-close" type="button">&#10005;</button>
+      </div>
+      <div class="do">
+        <button class="dob" id="btn-exp" type="button">
+          <span class="dob-ico">Exportar</span>
+          <span>Exportar</span><small>Baixar backup JSON</small>
+        </button>
+        <button class="dob" id="btn-imp" type="button">
+          <span class="dob-ico">Importar</span>
+          <span>Importar</span><small>Carregar backup JSON</small>
+        </button>
+      </div>
+      <input type="file" id="f-json" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/viagens.js"></script>
+</body>
+</html>

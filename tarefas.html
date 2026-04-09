@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
+  <title>Sol de Sóter · Planejamento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css">
+  <link rel="stylesheet" href="css/app-shell.css">
+  <link rel="stylesheet" href="css/sonhos.css">
+  <link rel="stylesheet" href="css/tarefas.css">
+</head>
+<body data-page="tarefas">
+  <canvas id="bg-canvas"></canvas>
+  <div data-app-header></div>
+
+  <main class="app-content tarefas-content">
+    <section class="page" id="page-tarefas">
+    <!-- Header -->
+    <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px">
+      <div>
+        <div class="page-title">Meu <span>Planejamento</span></div>
+        <div class="page-subtitle">Calendário, foco e gestão de tarefas</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="tkOpenAnalytics()" style="display:flex;align-items:center;gap:6px">📊 Analytics</button>
+        <button class="btn btn-primary" onclick="tkModalOpenForDate(tkCalState.selected)">✦ &nbsp;Nova Tarefa</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid-4" style="margin-bottom:28px">
+      <div class="card"><div class="card-title">Total</div><div class="card-big-num" id="tk-total">0</div></div>
+      <div class="card"><div class="card-title">Pendentes</div><div class="card-big-num" style="color:var(--accent5)" id="tk-pend">0</div></div>
+      <div class="card"><div class="card-title">Concluídas</div><div class="card-big-num" style="color:var(--accent3)" id="tk-done">0</div></div>
+      <div class="card"><div class="card-title">Progresso</div><div class="card-big-num" style="color:var(--accent2)" id="tk-pct">0%</div></div>
+    </div>
+
+    <!-- ── LINHA: LISTA COM ABAS (esquerda, 3fr) + FOCO DE HOJE (direita, 1fr) ── -->
+    <div class="tk-top-row" style="margin-bottom:28px">
+
+      <!-- Lista com abas (ocupa mais espaço) -->
+      <div class="tk-list-section">
+        <div class="tk-list-hd">
+          <div class="tk-list-tabs" id="tk-list-tabs">
+            <button class="tk-list-tab active" data-tab="pendentes"  onclick="tkListSetTab('pendentes')">⏳ Pendentes <span class="tk-tab-count" id="tktc-pendentes"></span></button>
+            <button class="tk-list-tab"        data-tab="hoje"       onclick="tkListSetTab('hoje')">📅 Hoje <span class="tk-tab-count" id="tktc-hoje"></span></button>
+            <button class="tk-list-tab"        data-tab="vencidas"   onclick="tkListSetTab('vencidas')">🔴 Vencidas <span class="tk-tab-count" id="tktc-vencidas"></span></button>
+            <button class="tk-list-tab"        data-tab="sem-data"   onclick="tkListSetTab('sem-data')">🕳 Sem data <span class="tk-tab-count" id="tktc-sem-data"></span></button>
+            <button class="tk-list-tab"        data-tab="concluidas" onclick="tkListSetTab('concluidas')">✅ Concluídas <span class="tk-tab-count" id="tktc-concluidas"></span></button>
+            <button class="tk-list-tab"        data-tab="todas"      onclick="tkListSetTab('todas')">📋 Todas <span class="tk-tab-count" id="tktc-todas"></span></button>
+          </div>
+          <span class="tk-list-count" id="tk-list-count"></span>
+        </div>
+        <div class="tk-list-grid" id="tk-list-grid"></div>
+        <div class="tk-list-pagination" id="tk-list-pagination"></div>
+      </div>
+
+      <!-- Foco de hoje (coluna direita, menor) -->
+      <div class="tk-focus-wrap" id="tk-focus-wrap">
+        <div class="tk-focus-hd">
+          <div class="tk-focus-hd-left">
+            <div class="tk-focus-icon">⚡</div>
+            <div>
+              <div class="tk-focus-title">Foco de Hoje</div>
+              <div class="tk-focus-sub" id="tk-focus-sub">—</div>
+            </div>
+          </div>
+          <button class="tk-focus-add-btn" onclick="tkModalOpenForDate(tkToday())">+ Hoje</button>
+        </div>
+        <div class="tk-focus-list" id="tk-focus-list" style="display:flex;flex-direction:column;gap:8px">
+          <div class="tk-focus-empty">Nenhuma tarefa para hoje 🎉</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── CALENDÁRIO FULL WIDTH ── -->
+    <div class="tk-cal-wrap">
+      <div class="tk-cal-nav">
+        <button class="tk-cal-arrow" onclick="tkCalPrev()">‹</button>
+        <div>
+          <div class="tk-cal-title" id="tk-cal-title">—</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="tk-cal-today-btn" onclick="tkCalGoToday()">Hoje</button>
+          <button class="tk-cal-arrow" onclick="tkCalNext()">›</button>
+          <button class="tk-focus-add-btn" onclick="tkModalOpenForDate(tkCalState.selected)" style="height:34px">+ Tarefa</button>
+        </div>
+      </div>
+      <div class="tk-cal-dow-row">
+        <div class="tk-cal-dow">Domingo</div><div class="tk-cal-dow">Segunda</div>
+        <div class="tk-cal-dow">Terça</div><div class="tk-cal-dow">Quarta</div>
+        <div class="tk-cal-dow">Quinta</div><div class="tk-cal-dow">Sexta</div>
+        <div class="tk-cal-dow">Sábado</div>
+      </div>
+      <div class="tk-cal-days" id="tk-cal-days"></div>
+    </div>
+  </section>
+  </main>
+
+  <div data-app-footer></div>
+
+  <div id="task-hub">
+    <div class="hub-hero" id="taskh-hero">
+      <img class="hub-hero-img" id="taskh-hero-img" src="" alt="">
+      <div class="hub-hero-mesh"></div>
+      <div class="hub-hero-overlay"></div>
+      <div class="hub-hero-side"></div>
+      <div class="hub-hero-lines"></div>
+      <div class="hub-accent-bar" id="taskh-accent-bar"></div>
+      <div class="hub-nav">
+        <button class="hub-back-btn" onclick="taskHubClose()"><span class="taskh-symbol" aria-hidden="true">&larr;</span><span>Voltar</span></button>
+        <div class="hub-nav-actions">
+          <button class="hub-nav-btn done-btn" id="taskh-nav-done" onclick="taskHubToggleDone()">
+            <span class="taskh-symbol" id="taskh-nav-done-icon" aria-hidden="true">&#9675;</span><span id="taskh-nav-done-lbl">Concluir</span>
+          </button>
+          <button class="hub-nav-btn edit" onclick="taskHubDrawerOpen()">&#9998; Editar</button>
+        </div>
+      </div>
+      <div class="hub-hero-content">
+        <div class="hub-icon-bubble" id="taskh-icon">&#10022;</div>
+        <div class="hub-title-block">
+          <div class="hub-cat-badge" id="taskh-badge">Tarefa</div>
+          <div class="hub-title" id="taskh-title">Tarefa</div>
+          <div class="hub-hero-meta" id="taskh-meta"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer backdrop + drawer -->
+    <div id="taskh-drawer-bd" onclick="taskHubDrawerClose()"></div>
+    <div id="taskh-drawer">
+      <div class="hd-stripe"></div>
+      <div class="hd-head">
+        <div class="hd-head-icon" id="taskh-drawer-icon">&#10022;</div>
+        <div class="hd-head-info">
+          <div class="hd-head-title" id="taskh-drawer-title">Editar tarefa</div>
+          <div class="hd-head-sub">Alterações salvas ao clicar em salvar</div>
+        </div>
+        <button class="hd-close-btn" onclick="taskHubDrawerClose()">&#10005;</button>
+      </div>
+      <div class="hd-body">
+        <div class="hd-section">
+          <div class="hd-section-lbl">Tarefa</div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Nome</div>
+            <input class="hd-inp" id="tkd-nome" placeholder="Descrição da tarefa *">
+          </div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Detalhes / observação</div>
+            <textarea class="hd-inp" id="tkd-nota" placeholder="Contexto, links, lembretes…" style="min-height:76px"></textarea>
+          </div>
+        </div>
+        <div class="hd-section">
+          <div class="hd-section-lbl">Classificação</div>
+          <div class="hd-row">
+            <div class="hd-field">
+              <div class="hd-field-lbl">Prioridade</div>
+              <select class="hd-inp" id="tkd-prior">
+                <option value="alta">🔴 Alta</option>
+                <option value="media">🟡 Média</option>
+                <option value="baixa">🟢 Baixa</option>
+              </select>
+            </div>
+            <div class="hd-field">
+              <div class="hd-field-lbl">Categoria</div>
+              <select class="hd-inp" id="tkd-cat">
+                <option>Pessoal</option><option>Trabalho</option>
+                <option>Estudos</option><option>Saúde</option><option>Outros</option>
+              </select>
+            </div>
+          </div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Cor de destaque</div>
+            <div class="tk-modal-colors" id="tkd-colors"></div>
+          </div>
+        </div>
+        <div class="hd-section">
+        <div class="hd-section-lbl">Cronograma</div>
+        <div class="hd-row">
+          <div class="hd-field">
+            <div class="hd-field-lbl">Data</div>
+            <input class="hd-inp" id="tkd-data" type="date">
+            </div>
+            <div class="hd-field">
+              <div class="hd-field-lbl">Hora</div>
+              <input class="hd-inp" id="tkd-hora" type="time">
+            </div>
+          </div>
+          <div class="hd-field">
+            <div class="hd-field-lbl">Recorrência</div>
+            <select class="hd-inp" id="tkd-recorrencia">
+              <option value="none">Não recorrente</option>
+              <option value="daily">Diariamente</option>
+              <option value="weekly">Semanalmente</option>
+              <option value="monthly">Mensalmente</option>
+              <option value="semiannual">Semestralmente</option>
+              <option value="yearly">Anualmente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="hd-footer">
+        <button class="hd-save-btn" onclick="taskHubDrawerSalvar()">✓ Salvar alterações</button>
+        <div class="hd-footer-row">
+          <button class="hd-cancel-btn" onclick="taskHubDrawerClose()">Cancelar</button>
+          <button class="hd-del-btn" onclick="taskHubDelete()">🗑 Excluir tarefa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="hub-body">
+      <!-- LEFT -->
+      <div>
+        <!-- Descrição / Nota -->
+        <div class="hub-section" id="taskh-nota-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">✦</div>
+            <span class="hub-section-label">Detalhes</span>
+          </div>
+          <div id="taskh-nota-display"></div>
+        </div>
+        <!-- Subtarefas -->
+        <div class="hub-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">◈</div>
+            <span class="hub-section-label">Subtarefas</span>
+            <span id="taskh-sub-pct" style="margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--muted)"></span>
+          </div>
+          <div class="taskh-sub-list" id="taskh-sub-list"></div>
+          <div class="taskh-add-sub">
+            <input class="taskh-add-sub-inp" id="taskh-new-sub" placeholder="Nova subtarefa…"
+              onkeydown="if(event.key==='Enter')taskHubAddSub()">
+            <button class="taskh-add-sub-btn" onclick="taskHubAddSub()">+ Add</button>
+          </div>
+        </div>
+      </div>
+      <!-- RIGHT sidebar -->
+      <div>
+        <!-- Progresso -->
+        <div class="hub-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">◎</div>
+            <span class="hub-section-label">Progresso</span>
+          </div>
+          <div class="taskh-ring-wrap">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <defs><linearGradient id="taskh-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7c6fcd"/><stop offset="100%" stop-color="#c8a96e"/>
+              </linearGradient></defs>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="9"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="url(#taskh-grad)" stroke-width="9"
+                stroke-dasharray="251.33" stroke-dashoffset="251.33" id="taskh-ring-fill"
+                transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1)"/>
+              <text x="50" y="47" text-anchor="middle" fill="var(--text)" font-family="var(--font-display)" font-size="17" font-weight="700" id="taskh-ring-pct">0%</text>
+              <text x="50" y="62" text-anchor="middle" fill="var(--muted)" font-family="var(--font-mono)" font-size="8" id="taskh-ring-sub">subtarefas</text>
+            </svg>
+            <div class="taskh-ring-stats" id="taskh-ring-stats"></div>
+          </div>
+        </div>
+        <!-- Cronograma -->
+        <div class="hub-section" id="taskh-sched-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">📅</div>
+            <span class="hub-section-label">Cronograma</span>
+          </div>
+          <div id="taskh-sched-content"></div>
+        </div>
+        <!-- Prioridade + Categoria -->
+        <div class="hub-section">
+          <div class="hub-section-hd">
+            <div class="hub-section-hd-icon">▸</div>
+            <span class="hub-section-label">Classificação</span>
+          </div>
+          <div id="taskh-class-content"></div>
+        </div>
+        <!-- Concluir -->
+        <div class="hub-section">
+          <button class="taskh-done-btn pending" id="taskh-done-btn" onclick="taskHubToggleDone()">
+            <span class="taskh-symbol" id="taskh-done-icon" aria-hidden="true">&#9675;</span>
+            <span id="taskh-done-lbl">Marcar como concluída</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-section taskh-links-stage">
+      <div class="hub-section-hd">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="hub-section-hd-icon">⇄</div>
+          <span class="hub-section-label">Estrutura</span>
+        </div>
+        <div class="taskh-links-zoom">
+          <button class="taskh-links-zoom-btn" type="button" onclick="taskHubZoomOut()">−</button>
+          <span class="taskh-links-zoom-readout" id="taskh-links-zoom-readout">100%</span>
+          <button class="taskh-links-zoom-btn" type="button" onclick="taskHubZoomIn()">+</button>
+        </div>
+      </div>
+      <div class="taskh-links-canvas" id="taskh-links-canvas" onwheel="taskHubLinksWheel(event)">
+        <div class="taskh-links-board" id="taskh-links-board" onpointerdown="taskHubLinksPointerDown(event)">
+          <button class="taskh-link-add left" type="button" onclick="taskHubCreateLinkedTask('parent')">+</button>
+          <div class="taskh-links-lane" id="taskh-links-lane"></div>
+          <button class="taskh-link-add right" type="button" onclick="taskHubCreateLinkedTask('child')">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="taskh-link-picker-bd" id="taskh-link-picker-bd" onclick="taskHubLinkPickerClose(event)">
+      <div class="taskh-link-picker">
+        <div class="taskh-link-picker-head">
+          <div>
+            <div class="taskh-link-picker-title" id="taskh-link-picker-title">Vincular tarefa</div>
+            <div class="taskh-link-picker-sub" id="taskh-link-picker-sub">Escolha uma tarefa existente ou crie uma nova.</div>
+          </div>
+          <button class="taskh-link-picker-close" type="button" onclick="taskHubLinkPickerClose()">✕</button>
+        </div>
+        <div class="taskh-link-picker-tools">
+          <input class="taskh-link-picker-search" id="taskh-link-picker-search" placeholder="Pesquisar tarefa..." oninput="taskHubLinkPickerRender()">
+          <button class="taskh-link-picker-new" type="button" onclick="taskHubLinkPickerCreateNew()">+ Adicionar tarefa</button>
+        </div>
+        <div class="taskh-link-picker-list" id="taskh-link-picker-list"></div>
+      </div>
+    </div>
+
+    <!-- Tips / dicas baseadas na tarefa -->
+    <div class="hub-tips-wrap">
+      <div class="hub-tips-hd">
+        <div class="hub-tips-hd-icon">💡</div>
+        <div>
+          <div class="hub-tips-hd-title">Dicas para esta tarefa</div>
+          <div class="hub-tips-hd-sub">Sugestões baseadas no status e prioridade</div>
+        </div>
+      </div>
+      <div class="hub-tips-grid" id="taskh-tips-grid"></div>
+    </div>
+  </div>
+
+  <div class="tk-modal-bd" id="tk-modal-bd" onclick="tkModalCloseOutside(event)">
+  <div class="tk-modal">
+    <div class="tk-modal-stripe"></div>
+    <div class="tk-modal-head">
+      <div>
+        <div class="tk-modal-head-title">Nova tarefa</div>
+        <div class="tk-modal-head-date" id="tk-modal-date-label"></div>
+      </div>
+      <button class="tk-modal-close" onclick="tkModalClose()">✕</button>
+    </div>
+    <div class="tk-modal-body">
+      <div>
+        <div class="tk-modal-lbl">Nome da tarefa *</div>
+        <input class="tk-modal-inp" id="tkm-nome" placeholder="O que precisa ser feito?" onkeydown="if(event.key==='Enter')tkModalSave()">
+      </div>
+      <div>
+        <div class="tk-modal-lbl">Detalhes</div>
+        <textarea class="tk-modal-inp" id="tkm-nota" placeholder="Contexto, links, observações…"></textarea>
+      </div>
+      <div class="tk-modal-row">
+        <div>
+          <div class="tk-modal-lbl">Prioridade</div>
+          <select class="tk-modal-inp" id="tkm-prior">
+            <option value="alta">🔴 Alta</option>
+            <option value="media" selected>🟡 Média</option>
+            <option value="baixa">🟢 Baixa</option>
+          </select>
+        </div>
+        <div>
+          <div class="tk-modal-lbl">Categoria</div>
+          <select class="tk-modal-inp" id="tkm-cat">
+            <option>Pessoal</option>
+            <option>Trabalho</option>
+            <option>Estudos</option>
+            <option>Saúde</option>
+            <option>Outros</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="tk-modal-lbl">Hora (opcional)</div>
+        <input class="tk-modal-inp" id="tkm-hora" type="time">
+      </div>
+      <div>
+        <div class="tk-modal-lbl">Recorrência</div>
+        <select class="tk-modal-inp" id="tkm-recorrencia">
+          <option value="none">Não recorrente</option>
+          <option value="daily">Diariamente</option>
+          <option value="weekly">Semanalmente</option>
+          <option value="monthly">Mensalmente</option>
+          <option value="semiannual">Semestralmente</option>
+          <option value="yearly">Anualmente</option>
+        </select>
+      </div>
+      <div>
+        <div class="tk-modal-lbl">Cor de destaque</div>
+        <div class="tk-modal-colors" id="tkm-colors"></div>
+      </div>
+    </div>
+    <div class="tk-modal-footer">
+      <button class="tk-modal-save" onclick="tkModalSave()">Salvar tarefa</button>
+      <button class="tk-modal-cancel" onclick="tkModalClose()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+  <div id="tk-analytics"></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/tarefas.js"></script>
+</body>
+</html>
+
