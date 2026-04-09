@@ -56,6 +56,7 @@ main{padding:0 24px 56px;min-height:100vh;}
 .vcd{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .vcm{display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap;}
 .vctg{font-size:9px;font-family:var(--fm);padding:1px 7px;border-radius:20px;}
+.vcst{font-size:9px;font-family:var(--fm);padding:1px 7px;border-radius:20px;background:rgba(94,196,168,.14);border:1px solid rgba(94,196,168,.35);color:var(--a3);}
 .vcdt{font-size:10px;color:var(--muted);font-family:var(--fm);}
 .vcbg{font-size:10px;font-family:var(--fm);color:var(--a3);margin-top:3px;}
 .vcds{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
