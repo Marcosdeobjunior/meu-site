@@ -67,13 +67,26 @@
     return String(v == null ? "" : v).trim();
   }
 
+  function getTravelBudget(item) {
+    return parseFloat(
+      item && (item.budget != null
+        ? item.budget
+        : item.orcamento != null
+          ? item.orcamento
+          : item.valor != null
+            ? item.valor
+            : item.preco)
+    ) || 0;
+  }
+
   function ensureTravelShape(item) {
     var image = norm(item && (item.image || item.imagem));
     return {
       destination: norm(item && (item.destination || item.destino || item.titulo || item.nome)),
       startDate: norm(item && item.startDate),
       endDate: norm(item && item.endDate),
-      budget: parseFloat(item && item.budget) || 0,
+      status: norm(item && item.status) || "planejada",
+      budget: getTravelBudget(item),
       category: norm(item && (item.category || item.categoria)),
       localDescription: norm(item && (item.localDescription || item.descricaoLocal || item.descricao)),
       descricao: norm(item && (item.descricao || item.localDescription || item.descricaoLocal)),
@@ -305,7 +318,7 @@
   function stats() {
     document.getElementById("s-total").textContent = T.length;
     document.getElementById("s-wish").textContent = T.filter(function (t) { return t.category === "Desejo"; }).length;
-    document.getElementById("s-budget").textContent = "R$ " + T.reduce(function (s, t) { return s + (parseFloat(t.budget) || 0); }, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+    document.getElementById("s-budget").textContent = "R$ " + T.reduce(function (s, t) { return s + getTravelBudget(t); }, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
     document.getElementById("s-cities").textContent = T.filter(function (t) { return t.category === "Cidade/Pais"; }).length;
   }
 
@@ -334,6 +347,7 @@
       var flag = fl(t.destination);
       var d = dur(t.startDate, t.endDate);
       var desc = t.localDescription || t.descricaoLocal || t.descricao || "";
+      var isDone = norm(t.status).toLowerCase() === "concluida";
       var div = document.createElement("div");
       div.className = "vc";
       div.dataset.i = gi;
@@ -345,6 +359,7 @@
         '<div class="vcd">' + esc(t.destination) + (flag ? " " + flag : "") + "</div>" +
         '<div class="vcm">' +
         (t.category ? '<span class="vctg ' + tcls(t.category) + '">' + esc(t.category) + "</span>" : "") +
+        (isDone ? '<span class="vcst">Concluída</span>' : "") +
         (t.startDate ? '<span class="vcdt">' + esc(fmt(t.startDate)) + (d ? " &middot; " + d + "d" : "") + "</span>" : "") +
         "</div>" +
         (t.budget ? '<div class="vcbg">R$ ' + parseFloat(t.budget).toFixed(2) + "</div>" : "") +
@@ -472,6 +487,7 @@
     document.getElementById("mo-title").textContent = "Nova Viagem";
     document.getElementById("btn-sub").textContent = "Adicionar";
     document.getElementById("btn-del").style.display = "none";
+    document.getElementById("btn-done").style.display = "none";
     edit = false;
     editIdx = -1;
   }
@@ -485,6 +501,7 @@
     document.getElementById("mo-title").textContent = "Editar Viagem";
     document.getElementById("btn-sub").textContent = "Salvar";
     document.getElementById("btn-del").style.display = "inline-flex";
+    document.getElementById("btn-done").style.display = norm(t.status).toLowerCase() === "concluida" ? "none" : "inline-flex";
     document.getElementById("f-dest").value = t.destination || "";
     document.getElementById("f-type").value = t.category || "";
     document.getElementById("f-s").value = t.startDate || "";
@@ -526,6 +543,7 @@
             descricao: document.getElementById("f-desc").value.trim(),
             image: img,
             imagem: img,
+            status: edit ? (T[editIdx].status || "planejada") : "planejada",
             weather: w,
             createdAt: edit ? T[editIdx].createdAt : new Date().toISOString(),
             updatedAt: edit ? new Date().toISOString() : "",
@@ -561,6 +579,18 @@
       render();
       close("mo-travel");
       toast("Viagem excluida.", "i");
+    });
+    document.getElementById("btn-done").addEventListener("click", function () {
+      var today;
+      if (!edit || editIdx === -1 || !T[editIdx]) return;
+      today = new Date().toISOString().slice(0, 10);
+      T[editIdx].status = "concluida";
+      if (!T[editIdx].endDate) T[editIdx].endDate = today;
+      T[editIdx].updatedAt = new Date().toISOString();
+      save();
+      render();
+      close("mo-travel");
+      toast("Viagem concluida!", "s");
     });
     if (document.getElementById("travel-search")) {
       document.getElementById("travel-search").addEventListener("input", function (event) {
