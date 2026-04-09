@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   "use strict";
 
   var DEFAULT_STATE = {
@@ -1043,36 +1043,10 @@
             setSignupEmailStatus('Este e-mail já está em uso.', 'error');
             return;
           }
-          return Promise.resolve(firebaseAuthInstance.signInWithEmailAndPassword(
-            email,
-            '__SOTER_EMAIL_PROBE__9f2A7x__'
-          )).then(function () {
-            if (requestSeq !== authSignupEmailCheckSeq) return;
-            return firebaseAuthInstance.signOut().catch(function () { return null; }).then(function () {
-              setSignupEmailStatus('Este e-mail já está em uso.', 'error');
-            });
-          }).catch(function (probeErr) {
-            var code = String(probeErr && (probeErr.code || probeErr.message) || '').trim();
-            if (requestSeq !== authSignupEmailCheckSeq) return;
-            if (code.indexOf('auth/user-not-found') >= 0) {
-              setSignupEmailStatus('E-mail disponível para cadastro.', 'ok');
-              return;
-            }
-            if (
-              code.indexOf('auth/wrong-password') >= 0 ||
-              code.indexOf('auth/invalid-credential') >= 0 ||
-              code.indexOf('INVALID_LOGIN_CREDENTIALS') >= 0 ||
-              code.indexOf('auth/user-disabled') >= 0 ||
-              code.indexOf('auth/too-many-requests') >= 0
-            ) {
-              setSignupEmailStatus('Este e-mail já está em uso.', 'error');
-              return;
-            }
-            setSignupEmailStatus('Não foi possível verificar este e-mail agora.', 'warn');
-          });
+          setSignupEmailStatus('E-mail aparentemente disponível. A confirmação final acontece ao criar a conta.', 'ok');
         }).catch(function () {
           if (requestSeq !== authSignupEmailCheckSeq) return;
-          setSignupEmailStatus('Não foi possível verificar este e-mail agora.', 'warn');
+          setSignupEmailStatus('Não foi possível verificar este e-mail agora. Você ainda pode tentar criar a conta.', 'warn');
         });
       }, 380);
     }
@@ -1149,7 +1123,6 @@
       if (!creds.name) { showFeedback('Digite seu nome.', true); return; }
       if (!creds.email || !creds.password) { showFeedback('Preencha email e senha.', true); return; }
       if (!looksLikeEmail(creds.email)) { showFeedback('Digite um e-mail válido.', true); return; }
-      if (signupEmailStatus && signupEmailStatus.className.indexOf('error') >= 0) { showFeedback('Este e-mail já está em uso.', true); return; }
       if (!isStrongPassword(creds.password)) { showFeedback('A senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 número.', true); return; }
       if (creds.password !== creds.passwordConfirm) { showFeedback('As senhas não coincidem.', true); return; }
       window.SoterStorage.registerWithEmail(creds.email, creds.password, { remember: creds.remember, name: creds.name }).then(function () {
