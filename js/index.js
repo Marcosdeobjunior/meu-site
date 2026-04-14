@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   "use strict";
 
   var PARALLAX_LAYERS = 3;
@@ -267,6 +267,14 @@
     return countArray(gym.exercicios) || countArray(gym.exercises) || countArray(gym.workouts);
   }
 
+  function getStudyHours(data) {
+    var tracker = data.estudoTracker;
+    var estudos = tracker && Array.isArray(tracker.sessions) ? tracker.sessions : (data.estudos || data.studySessions || data.study || []);
+    return (Array.isArray(estudos) ? estudos : []).reduce(function (acc, item) {
+      return acc + Number(item && item.horas || item && item.hours || 0);
+    }, 0);
+  }
+
   function formatCount(value, nounSingular, nounPlural) {
     var amount = Number(value || 0);
     return amount + " " + (amount === 1 ? nounSingular : nounPlural);
@@ -284,10 +292,10 @@
     });
   }
 
-  function getProfileName() {
-    var state = getState();
-    var name = state && state.profile && state.profile.name ? String(state.profile.name).trim() : "";
-    return name || "bem-vindo";
+  function setBar(id, percent) {
+    var node = document.getElementById(id);
+    if (!node) return;
+    node.style.width = Math.max(0, Math.min(100, percent)) + "%";
   }
 
   function getRpgXp(state) {
@@ -305,7 +313,7 @@
   }
 
   function getRpgTitle(level) {
-    var titles = ["Iniciante", "Aprendiz", "Explorador", "Aventureiro", "Viajante", "Veterano", "Especialista", "Mestre", "Grão-Mestre", "Lendário"];
+    var titles = ["Iniciante", "Aprendiz", "Explorador", "Aventureiro", "Viajante", "Veterano", "Especialista", "Mestre", "Gr\u00e3o-Mestre", "Lend\u00e1rio"];
     return titles[Math.max(0, Math.min(titles.length - 1, level - 1))] || "Iniciante";
   }
 
@@ -316,53 +324,14 @@
     return level * 100 + (level - 1) * 50;
   }
 
-  function renderCurrentCard(id, icon, title, subtitle) {
-    var node = document.getElementById(id);
-    if (!node) return;
-    if (!title) {
-      return;
-    }
-    node.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;text-align:left;width:100%">' +
-      '<div style="font-size:24px;line-height:1">' + icon + '</div>' +
-      '<div><div style="font-weight:700;color:var(--text);margin-bottom:4px">' + title + '</div>' +
-      '<div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">' + subtitle + '</div></div></div>';
-  }
-
-  function updateCurrentItems(data) {
-    var books = data.trackerLivraria || data.trackerLivros || data.livros || data.livraria || [];
-    var cinema = data.trackerCinema || data.trackerFilmes || data.trackerSeries || data.cinema || data.filmes || [];
-    var tasks = getTasks(data);
-    var currentBook = books.filter(function (item) {
-      var status = String(item && item.status || "").toLowerCase();
-      return status === "lendo" || status === "relendo" || status === "pausado";
-    })[0];
-    var currentCinema = cinema.filter(function (item) {
-      var status = String(item && item.status || "").toLowerCase();
-      return status === "assistindo" || status === "reassistindo" || status === "pausado";
-    })[0];
-    var nextTask = tasks.filter(function (item) { return item && !item.done; }).sort(function (a, b) {
-      return String(a && a.data || "9999-99-99").localeCompare(String(b && b.data || "9999-99-99"));
-    })[0];
-
-    if (currentBook) {
-      renderCurrentCard("home-lendo", "📚", String(currentBook.titulo || currentBook.title || "Livro"), String(currentBook.autor || currentBook.author || currentBook.status || "Em progresso"));
-    }
-    if (currentCinema) {
-      renderCurrentCard("home-cinema", "🎬", String(currentCinema.titulo || currentCinema.title || "Titulo"), String(currentCinema.tipo || currentCinema.status || "Em andamento"));
-    }
-    if (nextTask) {
-      renderCurrentCard("home-tarefa", "✅", String(nextTask.nome || "Tarefa"), String(nextTask.data || nextTask.prior || "Pendente"));
-    }
-  }
-
   function hydrateMoodNote(state) {
     var data = state && state.data ? state.data : {};
     var mood = String(data.homeMood || "");
     var note = String(data.homeQuickNote || "");
     var noteInput = document.getElementById("quickNote");
-    setText("moodDisplay", mood || "—");
+    setText("moodDisplay", mood || "â€”");
     if (noteInput && noteInput.value !== note) noteInput.value = note;
-    document.querySelectorAll(".mood-btn").forEach(function (btn) {
+    document.querySelectorAll(".humor-btn").forEach(function (btn) {
       btn.classList.toggle("is-active", btn.textContent === mood);
     });
   }
@@ -413,6 +382,7 @@
     var tasks = countArray(getTasks(data));
     var review = getReviewCount(data);
     var gym = getGymCount(data);
+    var study = getStudyHours(data);
     var notifications = countArray(data.notifications);
     var doneTasks = getTasks(data).filter(function (item) { return item && item.done; }).length;
     var pendingTasks = Math.max(0, tasks - doneTasks);
@@ -421,58 +391,70 @@
     var xpThisLevel = getXpForLevel(rpgLevel);
     var xpNextLevel = getXpForLevel(rpgLevel + 1);
     var xpPct = xpNextLevel > xpThisLevel ? Math.max(0, Math.min(100, Math.round((rpgXp - xpThisLevel) / (xpNextLevel - xpThisLevel) * 100))) : 0;
+    var xpRemaining = Math.max(0, xpNextLevel - rpgXp);
     var records = books + cinema + mangas + dreams + trips + wishlist + finances + tasks + review + gym;
     var library = books + cinema + mangas;
     var personal = dreams + trips + wishlist + finances;
     var execution = tasks + review + gym;
+    var attrs = window.SoterRPG && typeof window.SoterRPG.getAttrs === "function"
+      ? window.SoterRPG.getAttrs(state)
+      : [
+          { label: "Intelecto", val: Math.min(100, books * 4 + study * 2) },
+          { label: "Forca", val: Math.min(100, gym * 3) },
+          { label: "Sabedoria", val: Math.min(100, books * 2 + study * 3) },
+          { label: "Disciplina", val: Math.min(100, tasks * 2 + gym) },
+          { label: "Exploracao", val: Math.min(100, trips * 10 + cinema * 2) },
+          { label: "Prestigio", val: Math.min(100, Math.floor(rpgXp / 20)) }
+        ];
 
     setStat("modules", "10");
     setStat("records", String(records));
     setStat("notifications", String(notifications));
-    setStat("rpg-level", String(rpgLevel));
-
-    setStat("library", formatCount(library, "item", "itens"));
-    setStat("personal", formatCount(personal || 4, "frente", "frentes"));
-    setStat("execution", formatCount(execution || 3, "fluxo", "fluxos"));
-
-    setStat("library-detail", formatCount(library, "mídia", "mídias"));
-    setStat("personal-detail", formatCount(personal || 4, "meta", "metas"));
+    setStat("library-detail", formatCount(library, "midia", "midias"));
+    setStat("personal-detail", formatCount(personal, "meta", "metas"));
     setStat("planning-detail", formatCount(tasks + review, "frente", "frentes"));
     setStat("evolution-detail", formatCount(countObjectKeys(data.rpg || {}) ? 2 : 1, "sistema", "sistemas"));
-
-    setStat("books", formatCount(books, "livro", "livros"));
-    setStat("cinema", formatCount(cinema, "título", "títulos"));
-    setStat("mangas", formatCount(mangas, "coleção", "coleções"));
     setStat("dreams", formatCount(dreams, "sonho", "sonhos"));
-    setStat("trips", formatCount(trips, "viagem", "viagens"));
     setStat("wishlist", formatCount(wishlist, "desejo", "desejos"));
-    setStat("finances", formatCount(finances, "lançamento", "lançamentos"));
-    setStat("tasks", formatCount(tasks, "tarefa", "tarefas"));
-    setStat("review", formatCount(review, "card", "cards"));
-    setStat("gym", formatCount(gym, "exercício", "exercícios"));
 
-    setText("home-hero-name", getProfileName());
+    setText("hero-rpg-level", String(rpgLevel));
+    setText("constellation-rpg-level", String(rpgLevel));
+    setText("constellation-rpg-title", getRpgTitle(rpgLevel));
+    setText("featured-rpg-level", String(rpgLevel));
+    setText("featured-rpg-title", getRpgTitle(rpgLevel));
     setText("hs-livros", String(books));
     setText("hs-filmes", String(cinema));
     setText("hs-viagens", String(trips));
-    setText("hs-xp", String(Math.round(rpgXp)));
-    setText("hs-level", String(rpgLevel));
-    setText("hs-level-2", String(rpgLevel));
-    setText("hs-rpg-title", getRpgTitle(rpgLevel));
-    setText("hs-rpg-title-2", getRpgTitle(rpgLevel));
     setText("ht-livros", String(books));
     setText("ht-cinema", String(cinema));
     setText("ht-mangas", String(mangas));
     setText("ht-tarefas", String(tasks));
     setText("hs-dreams", String(dreams));
-    setText("hs-tasks", String(tasks));
     setText("hs-wishlist", String(wishlist));
-    setText("hs-tarefas-done", String(doneTasks));
-    setText("hs-tarefas-pend", String(pendingTasks));
-    document.querySelectorAll("#hs-xp-bar,#hs-xp-bar-2").forEach(function (node) {
-      node.style.width = xpPct + "%";
+    setText("hs-level-2", String(rpgLevel));
+    setText("hs-rpg-title-2", getRpgTitle(rpgLevel));
+    setText("xp-progress-label", Math.round(rpgXp) + " XP - " + xpRemaining + " XP para o proximo nivel");
+
+    setBar("hs-xp-bar-2", xpPct);
+    attrs.forEach(function (attr) {
+      var key = String(attr && attr.label || "")
+        .toLowerCase()
+        .replace(/\u00e7/g, "c")
+        .replace(/\u00e3/g, "a")
+        .replace(/\u00ed/g, "i")
+        .replace(/\u00f3/g, "o");
+      var id = key === "intelecto" ? "intellect"
+        : key === "forca" ? "strength"
+        : key === "sabedoria" ? "wisdom"
+        : key === "disciplina" ? "discipline"
+        : key === "exploracao" ? "exploration"
+        : key === "prestigio" ? "prestige"
+        : "";
+      if (!id) return;
+      setBar("attr-" + id, Number(attr.val || 0));
+      setText("attr-" + id + "-val", String(Number(attr.val || 0)));
     });
-    updateCurrentItems(data);
+
     hydrateMoodNote(state);
     syncHomeDate();
   }
@@ -491,7 +473,7 @@
         entry.target.classList.add("is-visible");
         observer.unobserve(entry.target);
       });
-    }, { threshold: 0.14, rootMargin: "0px 0px -40px 0px" });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
 
     items.forEach(function (item) { observer.observe(item); });
   }

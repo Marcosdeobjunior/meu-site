@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
-  <title>Sól de Sóter</title>
+  <title>S&oacute;l de S&oacute;ter</title>
   <script>
     (function () {
       var allow = sessionStorage.getItem("soter_allow_index");
@@ -15,7 +15,8 @@
     }());
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/app-shell.css">
   <link rel="stylesheet" href="css/index.css">
@@ -24,341 +25,256 @@
   <canvas id="bg-canvas"></canvas>
   <div data-app-header></div>
 
-  <main class="app-content index-shell">
-    <section class="overview-hero reveal-up">
-      <div class="overview-copy">
-        <div class="overview-eyebrow">Espaço pessoal ativo</div>
-        <h1>Olá, <em id="home-hero-name">bem-vindo</em>. Seu universo está aqui.</h1>
-        <p class="overview-summary">
-          Sól de Sóter reúne biblioteca, sonhos, viagens, finanças, planejamento, revisão e evolução pessoal em um só sistema.
-        </p>
-        <div class="overview-actions">
-          <a class="primary-action" href="rpg.html">Abrir Usuário</a>
-          <a class="secondary-action" href="tarefas.html">Ver Planejamento</a>
-          <a class="secondary-action" href="livros.html">Ir para Biblioteca</a>
-        </div>
-        <div class="hero-kpis">
-          <div class="hero-kpi">
-            <span class="hero-kpi-label">Módulos</span>
-            <strong class="hero-kpi-value" data-stat="modules">10</strong>
-          </div>
-          <div class="hero-kpi">
-            <span class="hero-kpi-label">Registros</span>
-            <strong class="hero-kpi-value" data-stat="records">0</strong>
-          </div>
-          <div class="hero-kpi">
-            <span class="hero-kpi-label">Notificações</span>
-            <strong class="hero-kpi-value" data-stat="notifications">0</strong>
-          </div>
-          <div class="hero-kpi">
-            <span class="hero-kpi-label">Nível RPG</span>
-            <strong class="hero-kpi-value" data-stat="rpg-level">1</strong>
-          </div>
-        </div>
-        <div class="hero-footnote">
-          <span id="homeDate"></span>
-        </div>
+  <main class="app-content integrated-home">
+    <section class="integrated-hero reveal-up">
+      <div class="hero-glow"></div>
+      <div class="hero-glow hero-glow-secondary"></div>
+
+      <div class="hero-eyebrow">&#10022; &nbsp; Espa&ccedil;o pessoal ativo</div>
+      <h1>Seu universo,<br><em>organizado.</em></h1>
+      <p class="hero-sub">
+        S&oacute;l de S&oacute;ter re&uacute;ne biblioteca, sonhos, viagens, finan&ccedil;as, planejamento e evolu&ccedil;&atilde;o pessoal em um &uacute;nico sistema coeso, projetado para refletir quem voc&ecirc; realmente &eacute;.
+      </p>
+
+      <div class="hero-actions">
+        <a href="rpg.html" class="btn-primary">&#9884; Abrir Usu&aacute;rio</a>
+        <a href="tarefas.html" class="btn-ghost">Ver Planejamento</a>
+        <a href="livros.html" class="btn-ghost">Biblioteca &rarr;</a>
       </div>
 
-      <aside class="overview-panel">
-        <div class="overview-panel-head">
-          <span class="status-dot"></span>
-          Estado atual do sistema
-        </div>
-        <div class="overview-orbit">
-          <div class="orbit-core">
-            <img src="img/soldesoter_logo.png" alt="Sól de Sóter">
-          </div>
-          <div class="orbit-node orbit-node-1">Biblioteca</div>
-          <div class="orbit-node orbit-node-2">Planejamento</div>
-          <div class="orbit-node orbit-node-3">Evolução</div>
-          <div class="orbit-node orbit-node-4">Pessoal</div>
-        </div>
-        <div class="overview-stack">
-          <article>
-            <span>Biblioteca</span>
-            <strong data-stat="library">0 itens</strong>
-          </article>
-          <article>
-            <span>Pessoal</span>
-            <strong data-stat="personal">0 frentes</strong>
-          </article>
-          <article>
-            <span>Execução</span>
-            <strong data-stat="execution">0 fluxos</strong>
-          </article>
-        </div>
-      </aside>
+      <div class="hero-date-pill" id="homeDate"></div>
     </section>
 
-    <section class="section-block reveal-up">
-      <div class="section-header">
-        <div class="section-kicker">Constelações</div>
-        <h2>As áreas centrais do seu ecossistema</h2>
-        <p>Cada frente do sistema alimenta a home com métricas, progresso e contexto rápido.</p>
+    <section class="stats-bar reveal-up" aria-label="Resumo r&aacute;pido">
+      <div class="stat-item">
+        <div class="stat-num" data-stat="modules">10</div>
+        <div class="stat-label">M&oacute;dulos</div>
       </div>
-      <div class="constellation-grid">
-        <article class="constellation-card tone-library">
-          <div class="constellation-icon">📚</div>
-          <h3>Biblioteca</h3>
-          <p>Livros, cinema e mangás vivem em um acervo só, com histórico e continuidade.</p>
-          <strong data-stat="library-detail">0 mídias</strong>
-        </article>
-        <article class="constellation-card tone-personal">
-          <div class="constellation-icon">🌙</div>
-          <h3>Pessoal</h3>
-          <p>Sonhos, viagens, wishlist e finanças conectam desejo, planejamento e execução.</p>
-          <strong data-stat="personal-detail">0 metas</strong>
-        </article>
-        <article class="constellation-card tone-planning">
-          <div class="constellation-icon">✅</div>
-          <h3>Planejamento</h3>
-          <p>Tarefas, revisão e treino transformam intenção em rotina consistente.</p>
-          <strong data-stat="planning-detail">0 frentes</strong>
-        </article>
-        <article class="constellation-card tone-evolution">
-          <div class="constellation-icon">⚔️</div>
-          <h3>Evolução</h3>
-          <p>O RPG consolida esforço, nível, atributos, conquistas e leitura do seu avanço.</p>
-          <strong data-stat="evolution-detail">0 sistemas</strong>
-        </article>
+      <div class="stat-item">
+        <div class="stat-num" data-stat="records">0</div>
+        <div class="stat-label">Registros</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="hero-rpg-level">1</div>
+        <div class="stat-label">N&iacute;vel RPG</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-stat="notifications">0</div>
+        <div class="stat-label">Notifica&ccedil;&otilde;es</div>
       </div>
     </section>
 
-    <section class="section-block reveal-up">
-      <div class="section-header compact">
-        <div class="section-kicker">Acesso Rápido</div>
-        <h2>Módulos em destaque</h2>
+    <section class="content-section section-dark reveal-up" id="constelacoes">
+      <div class="section-tag">&#10022; &nbsp; Constela&ccedil;&otilde;es</div>
+      <h2 class="section-title">As &aacute;reas centrais<br>do ecossistema</h2>
+      <p class="section-desc">Cada frente alimenta o sistema com m&eacute;tricas, progresso e contexto, formando um &uacute;nico organismo vivo.</p>
+
+      <div class="const-grid">
+        <a href="livros.html" class="const-card">
+          <div class="const-icon">&#128218;</div>
+          <div class="const-title">Biblioteca</div>
+          <div class="const-desc">Livros, cinema e mang&aacute;s em um acervo unificado, com hist&oacute;rico e continuidade real de leitura.</div>
+          <div class="const-meta" data-stat="library-detail">0 m&iacute;dias</div>
+        </a>
+        <a href="sonhos.html" class="const-card">
+          <div class="const-icon">&#127769;</div>
+          <div class="const-title">Pessoal</div>
+          <div class="const-desc">Sonhos, viagens, wishlist e finan&ccedil;as conectam desejo, planejamento e execu&ccedil;&atilde;o em um s&oacute; fluxo.</div>
+          <div class="const-meta" data-stat="personal-detail">0 metas</div>
+        </a>
+        <a href="tarefas.html" class="const-card">
+          <div class="const-icon">&#9989;</div>
+          <div class="const-title">Planejamento</div>
+          <div class="const-desc">Tarefas, revis&atilde;o e treino transformam inten&ccedil;&atilde;o em rotina consistente e mensur&aacute;vel.</div>
+          <div class="const-meta" data-stat="planning-detail">0 frentes</div>
+        </a>
+        <a href="rpg.html" class="const-card">
+          <div class="const-icon">&#9876;</div>
+          <div class="const-title">Evolu&ccedil;&atilde;o</div>
+          <div class="const-desc">O RPG consolida esfor&ccedil;o, n&iacute;vel, atributos, conquistas e leitura do seu avan&ccedil;o real.</div>
+          <div class="const-meta">N&iacute;vel <span id="constellation-rpg-level">1</span> &middot; <span id="constellation-rpg-title">Iniciante</span></div>
+        </a>
       </div>
-      <div class="module-grid">
-        <a class="module-card module-card-feature module-card-emphasis" href="rpg.html">
-          <img src="img/conquista-evolucao.png" alt="Usuário RPG">
-          <div class="module-copy">
-            <span class="module-tag">Usuário</span>
-            <h3>Nível, atributos e conquistas</h3>
-            <p>Acompanhe classe, XP, skills, achievements e estado geral do personagem.</p>
-            <strong>Nível <span id="hs-level">1</span> · <span id="hs-rpg-title">Iniciante</span></strong>
+    </section>
+
+    <section class="content-section reveal-up" id="modulos">
+      <div class="section-tag">&#10022; &nbsp; Acesso R&aacute;pido</div>
+      <h2 class="section-title">M&oacute;dulos em destaque</h2>
+      <p class="section-desc">Entradas diretas para os principais n&uacute;cleos do sistema.</p>
+
+      <div class="mod-grid">
+        <a href="rpg.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-evolucao.png" alt="Usu&aacute;rio" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Evolu&ccedil;&atilde;o</div>
+            <div class="mod-title">Usu&aacute;rio</div>
+            <div class="mod-desc">N&iacute;vel, atributos, classe, XP, skills, achievements e estado geral do personagem.</div>
+            <div class="mod-count">N&iacute;vel <span id="featured-rpg-level">1</span> &middot; <span id="featured-rpg-title">Iniciante</span></div>
           </div>
         </a>
-        <a class="module-card" href="livros.html">
-          <img src="img/conquista-leitura.png" alt="Livraria">
-          <div class="module-copy">
-            <span class="module-tag">Biblioteca</span>
-            <h3>Livraria</h3>
-            <p>Monitore leituras, páginas, notas e continuidade do que está em progresso.</p>
-            <strong><span id="hs-livros">0</span> livros</strong>
+        <a href="livros.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-leitura.png" alt="Livraria" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Biblioteca</div>
+            <div class="mod-title">Livraria</div>
+            <div class="mod-desc">Monitore leituras, p&aacute;ginas, notas e continuidade do que est&aacute; em progresso.</div>
+            <div class="mod-count"><span id="hs-livros">0</span> livros</div>
           </div>
         </a>
-        <a class="module-card" href="cinema.html">
-          <img src="img/conquista-cinema.png" alt="Cinema">
-          <div class="module-copy">
-            <span class="module-tag">Biblioteca</span>
-            <h3>Cinema</h3>
-            <p>Filmes e séries com status, reviews e andamento em uma mesma trilha.</p>
-            <strong><span id="hs-filmes">0</span> títulos</strong>
+        <a href="cinema.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-cinema.png" alt="Cinema" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Biblioteca</div>
+            <div class="mod-title">Cinema</div>
+            <div class="mod-desc">Filmes e s&eacute;ries com status, reviews e andamento em uma mesma trilha.</div>
+            <div class="mod-count"><span id="hs-filmes">0</span> t&iacute;tulos</div>
           </div>
         </a>
-        <a class="module-card" href="sonhos.html">
-          <img src="img/conquista-sonhos.png" alt="Sonhos">
-          <div class="module-copy">
-            <span class="module-tag">Pessoal</span>
-            <h3>Sonhos</h3>
-            <p>Transforme desejos em metas, cronogramas e progresso concreto.</p>
-            <strong data-stat="dreams">0 sonhos</strong>
+        <a href="sonhos.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-sonhos.png" alt="Sonhos" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Pessoal</div>
+            <div class="mod-title">Sonhos</div>
+            <div class="mod-desc">Transforme desejos em metas, cronogramas e progresso concreto.</div>
+            <div class="mod-count" data-stat="dreams">0 sonhos</div>
           </div>
         </a>
-        <a class="module-card" href="viagens.html">
-          <img src="img/conquista-viagens.png" alt="Viagens">
-          <div class="module-copy">
-            <span class="module-tag">Pessoal</span>
-            <h3>Viagens</h3>
-            <p>Mapeie destinos, custos, datas e desejos de rota num só painel.</p>
-            <strong><span id="hs-viagens">0</span> viagens</strong>
+        <a href="viagens.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-viagens.png" alt="Viagens" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Pessoal</div>
+            <div class="mod-title">Viagens</div>
+            <div class="mod-desc">Mapeie destinos, custos, datas e rotas em um painel unificado.</div>
+            <div class="mod-count"><span id="hs-viagens">0</span> viagens</div>
           </div>
         </a>
-        <a class="module-card" href="wishlist.html">
-          <img src="img/conquista-wishlist.png" alt="Wishlist">
-          <div class="module-copy">
-            <span class="module-tag">Pessoal</span>
-            <h3>Wishlist</h3>
-            <p>Priorize desejos, categorize aquisições e acompanhe o que virou conquista.</p>
-            <strong data-stat="wishlist">0 desejos</strong>
+        <a href="wishlist.html" class="mod-card">
+          <img class="mod-thumb" src="img/conquista-wishlist.png" alt="Wishlist" onerror="this.style.background='#1a1a28';this.removeAttribute('src')">
+          <div class="mod-body">
+            <div class="mod-tag">Pessoal</div>
+            <div class="mod-title">Wishlist</div>
+            <div class="mod-desc">Priorize desejos, categorize aquisi&ccedil;&otilde;es e acompanhe conquistas reais.</div>
+            <div class="mod-count" data-stat="wishlist">0 desejos</div>
           </div>
         </a>
       </div>
     </section>
 
-    <section class="split-showcase reveal-up">
-      <div class="showcase-panel">
-        <div class="section-header compact">
-          <div class="section-kicker">Em andamento</div>
-          <h2>O que está aberto agora</h2>
-        </div>
-        <div class="signal-list">
-          <div class="signal-item">
-            <div class="signal-icon">📖</div>
-            <div id="home-lendo">
-              <h3>Nenhum livro</h3>
-              <p>Sem leitura ativa no momento.</p>
-            </div>
-          </div>
-          <div class="signal-item">
-            <div class="signal-icon">🎬</div>
-            <div id="home-cinema">
-              <h3>Nenhum título</h3>
-              <p>Sem filme ou série em andamento.</p>
-            </div>
-          </div>
-          <div class="signal-item">
-            <div class="signal-icon">🗓️</div>
-            <div id="home-tarefa">
-              <h3>Sem tarefas</h3>
-              <p>Nenhuma tarefa pendente por agora.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section class="content-section section-dark reveal-up" id="ritmo">
+      <div class="section-tag">&#10022; &nbsp; Ritmo do Dia</div>
+      <h2 class="section-title">Rotas r&aacute;pidas<br>do momento</h2>
 
-      <div class="showcase-panel">
-        <div class="section-header compact">
-          <div class="section-kicker">Ritmo</div>
-          <h2>Rotas rápidas do dia</h2>
+      <div class="ritmo-grid">
+        <div class="ritmo-block">
+          <div class="ritmo-num">01 &nbsp;&middot;&nbsp; Humor</div>
+          <h3>Como voc&ecirc; est&aacute; agora?</h3>
+          <p>Registre rapidamente seu estado atual para acompanhar padr&otilde;es ao longo do tempo.</p>
+          <div class="humor-grid">
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128564;')">&#128564;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128528;')">&#128528;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128578;')">&#128578;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128516;')">&#128516;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#129321;')">&#129321;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128548;')">&#128548;</button>
+            <button class="humor-btn" type="button" onclick="setMood(this,'&#128543;')">&#128543;</button>
+          </div>
+          <div class="humor-estado">Humor atual: <span id="moodDisplay">&mdash;</span></div>
         </div>
-        <div class="route-track">
-          <div class="route-step">
-            <span>01</span>
-            <strong>Humor do dia</strong>
-            <p>Registre rapidamente como você está agora.</p>
-            <div class="mood-section" id="moodBtns">
-              <button class="mood-btn" onclick="setMood(this,'😴')">😴</button>
-              <button class="mood-btn" onclick="setMood(this,'😐')">😐</button>
-              <button class="mood-btn" onclick="setMood(this,'🙂')">🙂</button>
-              <button class="mood-btn" onclick="setMood(this,'😄')">😄</button>
-              <button class="mood-btn" onclick="setMood(this,'🤩')">🤩</button>
-              <button class="mood-btn" onclick="setMood(this,'😤')">😤</button>
-              <button class="mood-btn" onclick="setMood(this,'😟')">😟</button>
-            </div>
-            <p>Humor atual: <span id="moodDisplay">—</span></p>
-          </div>
-          <div class="route-step">
-            <span>02</span>
-            <strong>Nota rápida</strong>
-            <p>Guarde uma lembrança, foco ou intenção do momento.</p>
-            <textarea class="inp" id="quickNote" placeholder="Escreva algo para lembrar..." style="width:100%;min-height:92px;margin-top:10px" oninput="saveNote()"></textarea>
-          </div>
+
+        <div class="ritmo-block">
+          <div class="ritmo-num">02 &nbsp;&middot;&nbsp; Nota R&aacute;pida</div>
+          <h3>Guarde o que importa</h3>
+          <p>Registre uma lembran&ccedil;a, foco ou inten&ccedil;&atilde;o do momento antes que passe.</p>
+          <textarea class="nota-input" id="quickNote" placeholder="Escreva aqui sua nota do momento..." oninput="saveNote()"></textarea>
         </div>
       </div>
     </section>
 
-    <section class="section-block reveal-up">
-      <div class="section-header compact">
-        <div class="section-kicker">Panorama</div>
-        <h2>Indicadores rápidos</h2>
-      </div>
-      <div class="quick-tiles" id="quickTiles">
-        <div class="quick-tile" onclick="window.location.href='livros.html'">
-          <div class="tile-icon">📚</div>
-          <div class="tile-name">Livros</div>
-          <div class="tile-val" id="ht-livros">0</div>
-        </div>
-        <div class="quick-tile" onclick="window.location.href='cinema.html'">
-          <div class="tile-icon">🎬</div>
-          <div class="tile-name">Filmes</div>
-          <div class="tile-val" id="ht-cinema">0</div>
-        </div>
-        <div class="quick-tile" onclick="window.location.href='mangas.html'">
-          <div class="tile-icon">📖</div>
-          <div class="tile-name">Mangás</div>
-          <div class="tile-val" id="ht-mangas">0</div>
-        </div>
-        <div class="quick-tile" onclick="window.location.href='tarefas.html'">
-          <div class="tile-icon">✅</div>
-          <div class="tile-name">Tarefas</div>
-          <div class="tile-val" id="ht-tarefas">0</div>
-        </div>
+    <section class="content-section reveal-up" id="panorama">
+      <div class="section-tag">&#10022; &nbsp; Panorama</div>
+      <h2 class="section-title">Indicadores r&aacute;pidos</h2>
+
+      <div class="ind-grid">
+        <a class="ind-item" href="livros.html">
+          <div class="ind-icon">&#128218;</div>
+          <div class="ind-val" id="ht-livros">0</div>
+          <div class="ind-lbl">Livros</div>
+        </a>
+        <a class="ind-item" href="cinema.html">
+          <div class="ind-icon">&#127916;</div>
+          <div class="ind-val" id="ht-cinema">0</div>
+          <div class="ind-lbl">Filmes</div>
+        </a>
+        <a class="ind-item" href="mangas.html">
+          <div class="ind-icon">&#128214;</div>
+          <div class="ind-val" id="ht-mangas">0</div>
+          <div class="ind-lbl">Mang&aacute;s</div>
+        </a>
+        <a class="ind-item" href="tarefas.html">
+          <div class="ind-icon">&#9989;</div>
+          <div class="ind-val" id="ht-tarefas">0</div>
+          <div class="ind-lbl">Tarefas</div>
+        </a>
+        <a class="ind-item" href="sonhos.html">
+          <div class="ind-icon">&#127769;</div>
+          <div class="ind-val" id="hs-dreams">0</div>
+          <div class="ind-lbl">Sonhos</div>
+        </a>
+        <a class="ind-item" href="wishlist.html">
+          <div class="ind-icon">&#127919;</div>
+          <div class="ind-val" id="hs-wishlist">0</div>
+          <div class="ind-lbl">Wishlist</div>
+        </a>
       </div>
     </section>
 
-    <section class="split-showcase reveal-up">
-      <div class="showcase-panel">
-        <div class="section-header compact">
-          <div class="section-kicker">Resumo pessoal</div>
-          <h2>Frentes ativas</h2>
-        </div>
-        <div class="quick-tiles" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">
-          <div class="quick-tile">
-            <div class="tile-name">Sonhos</div>
-            <div class="tile-val" id="hs-dreams">0</div>
-          </div>
-          <div class="quick-tile">
-            <div class="tile-name">Tarefas</div>
-            <div class="tile-val" id="hs-tasks">0</div>
-          </div>
-          <div class="quick-tile">
-            <div class="tile-name">Wishlist</div>
-            <div class="tile-val" id="hs-wishlist">0</div>
-          </div>
-        </div>
-      </div>
+    <section class="content-section section-dark reveal-up" id="rpg">
+      <div class="section-tag">&#10022; &nbsp; Evolu&ccedil;&atilde;o</div>
+      <h2 class="section-title">Seu avan&ccedil;o atual</h2>
+      <p class="section-desc">O RPG transforma uso real do sistema em progresso mensur&aacute;vel de personagem.</p>
 
-      <div class="showcase-panel">
-        <div class="section-header compact">
-          <div class="section-kicker">Planejamento</div>
-          <h2>Estado das tarefas</h2>
-        </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <div class="quick-tile" style="flex:1;min-width:140px">
-            <div class="tile-name">Concluídas</div>
-            <div class="tile-val" id="hs-tarefas-done">0</div>
+      <div class="rpg-inner">
+        <div class="rpg-left">
+          <div class="rpg-level" id="hs-level-2">1</div>
+          <div class="rpg-title"><span id="hs-rpg-title-2">Iniciante</span> &nbsp;&middot;&nbsp; Viajante</div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar" id="hs-xp-bar-2"></div>
           </div>
-          <div class="quick-tile" style="flex:1;min-width:140px">
-            <div class="tile-name">Pendentes</div>
-            <div class="tile-val" id="hs-tarefas-pend">0</div>
-          </div>
+          <div class="xp-label" id="xp-progress-label">0 XP &nbsp;&middot;&nbsp; 0 XP para o pr&oacute;ximo n&iacute;vel</div>
+          <a href="rpg.html" class="btn-primary rpg-link" style="margin-top:2rem">Ver perfil completo</a>
         </div>
-      </div>
-    </section>
 
-    <section class="split-showcase reveal-up">
-      <div class="showcase-panel" onclick="window.location.href='rpg.html'" style="cursor:pointer">
-        <div class="section-header compact">
-          <div class="section-kicker">RPG</div>
-          <h2>Seu avanço atual</h2>
-        </div>
-        <div style="font-size:38px;margin-bottom:18px;filter:drop-shadow(0 0 12px rgba(200,169,110,.3))">⚔️</div>
-        <div style="font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--accent1);margin-bottom:8px" id="hs-level-2">1</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="hs-rpg-title-2">Iniciante</div>
-        <div style="height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden">
-          <div id="hs-xp-bar-2" style="height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent1));border-radius:4px;width:0%"></div>
-        </div>
-      </div>
-
-      <div class="showcase-panel">
-        <div class="section-header compact">
-          <div class="section-kicker">Base integrada</div>
-          <h2>Como a home se organiza</h2>
-        </div>
-        <div class="signal-list">
-          <div class="signal-item">
-            <div class="signal-icon">📚</div>
-            <div>
-              <h3>Biblioteca viva</h3>
-              <p>Livros, filmes e mangás alimentam acervo, conquistas e progresso.</p>
-            </div>
+        <div class="rpg-right">
+          <div class="rpg-aux-title">Atributos</div>
+          <div class="attr-row">
+            <div class="attr-name">Intelecto</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-intellect"></div></div>
+            <div class="attr-val" id="attr-intellect-val">0</div>
           </div>
-          <div class="signal-item">
-            <div class="signal-icon">🌙</div>
-            <div>
-              <h3>Vida pessoal</h3>
-              <p>Sonhos, viagens, finanças e desejos entram no mesmo fluxo de organização.</p>
-            </div>
+          <div class="attr-row">
+            <div class="attr-name">Forca</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-strength"></div></div>
+            <div class="attr-val" id="attr-strength-val">0</div>
           </div>
-          <div class="signal-item">
-            <div class="signal-icon">⚡</div>
-            <div>
-              <h3>Execução contínua</h3>
-              <p>Tarefas, revisão e treino ajudam a transformar intenção em rotina.</p>
-            </div>
+          <div class="attr-row">
+            <div class="attr-name">Sabedoria</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-wisdom"></div></div>
+            <div class="attr-val" id="attr-wisdom-val">0</div>
+          </div>
+          <div class="attr-row">
+            <div class="attr-name">Disciplina</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-discipline"></div></div>
+            <div class="attr-val" id="attr-discipline-val">0</div>
+          </div>
+          <div class="attr-row">
+            <div class="attr-name">Exploracao</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-exploration"></div></div>
+            <div class="attr-val" id="attr-exploration-val">0</div>
+          </div>
+          <div class="attr-row">
+            <div class="attr-name">Prestigio</div>
+            <div class="attr-bar-wrap"><div class="attr-bar" id="attr-prestige"></div></div>
+            <div class="attr-val" id="attr-prestige-val">0</div>
           </div>
         </div>
       </div>

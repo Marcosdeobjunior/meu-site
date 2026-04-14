@@ -1,9 +1,9 @@
-(function () {
+﻿(function () {
   "use strict";
 
   var DEFAULT_STATE = {
     profile: {
-      name: "Usuário",
+      name: "Usu\u00e1rio",
       avatar: ""
     },
     data: {}
@@ -743,7 +743,7 @@
     var openBtn = document.getElementById('firebase-open-auth-modal-btn');
     var syncBtn = document.getElementById('firebase-sync-user-btn');
     if (status) status.textContent = firebaseCurrentUser ? 'Conectado ao Firebase' : 'Usando modo local';
-    if (emailEl) emailEl.textContent = firebaseCurrentUser ? getFirebaseAuthDisplayName(firebaseCurrentUser) : 'Entre para sincronizar por usuário';
+    if (emailEl) emailEl.textContent = firebaseCurrentUser ? getFirebaseAuthDisplayName(firebaseCurrentUser) : 'Entre para sincronizar por usu\u00e1rio';
     if (loginBtn) loginBtn.style.display = firebaseCurrentUser ? 'none' : '';
     if (openBtn) openBtn.style.display = firebaseCurrentUser ? 'none' : '';
     if (logoutBtn) logoutBtn.style.display = firebaseCurrentUser ? '' : 'none';
@@ -816,7 +816,7 @@
     if (!input) return;
     isPass = input.type === 'password';
     input.type = isPass ? 'text' : 'password';
-    if (btn) btn.textContent = isPass ? '☀' : '🌙';
+    if (btn) btn.textContent = isPass ? '\u2600' : '\uD83C\uDF19';
     authSkyState[key] = isPass ? 'day' : 'night';
     syncAuthSky();
   }
@@ -884,7 +884,7 @@
       '        <div class="lm-cloud-d" style="width:85px;height:20px;top:75px;animation:cloudDrift1 37s linear infinite 26s"></div>',
       '      </div>',
       '      <div class="lm-sky-title">',
-      '        <div class="lm-sky-title-brand" id="soter-auth-title"><em style="font-style:italic;color:var(--accent1)">Sól</em> de Sóter</div>',
+      '        <div class="lm-sky-title-brand" id="soter-auth-title"><em style="font-style:italic;color:var(--accent1)">S\u00f3l</em> de S\u00f3ter</div>',
       '        <div class="lm-sky-title-sub">acesse seu universo</div>',
       '      </div>',
       '    </div>',
@@ -906,8 +906,8 @@
       '          <div>',
       '            <label class="lm-label">Senha</label>',
       '            <div style="position:relative">',
-      '              <input id="firebase-auth-password-input" type="password" placeholder="••••••••" autocomplete="current-password" class="lm-field-inp">',
-      '              <button class="lm-eye-btn" id="firebase-auth-password-eye" type="button" title="Mostrar/ocultar senha">🌙</button>',
+      '              <input id="firebase-auth-password-input" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password" class="lm-field-inp">',
+      '              <button class="lm-eye-btn" id="firebase-auth-password-eye" type="button" title="Mostrar/ocultar senha">\uD83C\uDF19</button>',
       '            </div>',
       '          </div>',
       '          <label class="lm-remember-row">',
@@ -934,17 +934,17 @@
       '            <div class="lm-inline-status" id="firebase-auth-signup-email-status"></div>',
       '          </div>',
       '          <div>',
-      '            <label class="lm-label">Senha <span style="opacity:.4;font-size:8px">(mín. 6 caracteres)</span></label>',
+      '            <label class="lm-label">Senha <span style="opacity:.4;font-size:8px">(m\u00edn. 6 caracteres)</span></label>',
       '            <div style="position:relative">',
-      '              <input id="firebase-auth-signup-password-input" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" class="lm-field-inp">',
-      '              <button class="lm-eye-btn" id="firebase-auth-signup-password-eye" type="button" title="Mostrar/ocultar senha">🌙</button>',
+      '              <input id="firebase-auth-signup-password-input" type="password" placeholder="M\u00ednimo 6 caracteres" autocomplete="new-password" class="lm-field-inp">',
+      '              <button class="lm-eye-btn" id="firebase-auth-signup-password-eye" type="button" title="Mostrar/ocultar senha">\uD83C\uDF19</button>',
       '            </div>',
       '          </div>',
       '          <div>',
       '            <label class="lm-label">Confirmar senha</label>',
       '            <div style="position:relative">',
       '              <input id="firebase-auth-signup-password-confirm-input" type="password" placeholder="Repita sua senha" autocomplete="new-password" class="lm-field-inp">',
-      '              <button class="lm-eye-btn" id="firebase-auth-signup-password-confirm-eye" type="button" title="Mostrar/ocultar senha">🌙</button>',
+      '              <button class="lm-eye-btn" id="firebase-auth-signup-password-confirm-eye" type="button" title="Mostrar/ocultar senha">\uD83C\uDF19</button>',
       '            </div>',
       '          </div>',
       '          <label class="lm-remember-row">',
@@ -956,7 +956,7 @@
       '        </div>',
       '      </div>',
       '      <div class="lm-close-row">',
-      '        <button class="lm-close-btn" type="button" data-auth-close>fechar ✕</button>',
+      '        <button class="lm-close-btn" type="button" data-auth-close>fechar \u00d7</button>',
       '      </div>',
       '    </div>',
       '  </div>',
@@ -1027,7 +1027,7 @@
         return;
       }
       if (!looksLikeEmail(email)) {
-        setSignupEmailStatus('Digite um e-mail válido para verificar disponibilidade.', 'warn');
+        setSignupEmailStatus('Digite um e-mail v\u00e1lido para verificar disponibilidade.', 'warn');
         return;
       }
       setSignupEmailStatus('Verificando disponibilidade do e-mail...', 'loading');
@@ -1040,29 +1040,29 @@
         }).then(function (methods) {
           if (requestSeq !== authSignupEmailCheckSeq) return;
           if (Array.isArray(methods) && methods.length) {
-            setSignupEmailStatus('Este e-mail já está em uso.', 'error');
+            setSignupEmailStatus('Este e-mail j\u00e1 est\u00e1 em uso.', 'error');
             return;
           }
-          setSignupEmailStatus('E-mail aparentemente disponível. A confirmação final acontece ao criar a conta.', 'ok');
+          setSignupEmailStatus('E-mail aparentemente dispon\u00edvel. A confirma\u00e7\u00e3o final acontece ao criar a conta.', 'ok');
         }).catch(function () {
           if (requestSeq !== authSignupEmailCheckSeq) return;
-          setSignupEmailStatus('Não foi possível verificar este e-mail agora. Você ainda pode tentar criar a conta.', 'warn');
+          setSignupEmailStatus('N\u00e3o foi poss\u00edvel verificar este e-mail agora. Voc\u00ea ainda pode tentar criar a conta.', 'warn');
         });
       }, 380);
     }
 
     function formatAuthMessage(err, mode) {
       var raw = String(err && (err.code || err.message) || err || '').trim();
-      if (!raw) return mode === 'signup' ? 'Não foi possível criar a conta agora.' : 'Não foi possível entrar agora.';
-      if (raw.indexOf('auth/email-already-in-use') >= 0) return 'Já existe uma conta com este e-mail.';
-      if (raw.indexOf('auth/user-not-found') >= 0) return 'Esta conta não existe.';
+      if (!raw) return mode === 'signup' ? 'N\u00e3o foi poss\u00edvel criar a conta agora.' : 'N\u00e3o foi poss\u00edvel entrar agora.';
+      if (raw.indexOf('auth/email-already-in-use') >= 0) return 'J\u00e1 existe uma conta com este e-mail.';
+      if (raw.indexOf('auth/user-not-found') >= 0) return 'Esta conta n\u00e3o existe.';
       if (raw.indexOf('auth/wrong-password') >= 0 || raw.indexOf('INVALID_LOGIN_CREDENTIALS') >= 0 || raw.indexOf('auth/invalid-credential') >= 0) {
         return 'E-mail ou senha incorretos.';
       }
-      if (raw.indexOf('auth/invalid-email') >= 0) return 'Digite um e-mail válido.';
-      if (raw.indexOf('auth/weak-password') >= 0) return 'A senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 número.';
+      if (raw.indexOf('auth/invalid-email') >= 0) return 'Digite um e-mail v\u00e1lido.';
+      if (raw.indexOf('auth/weak-password') >= 0) return 'A senha precisa ter pelo menos 6 caracteres, 1 letra mai\u00fascula e 1 n\u00famero.';
       if (raw.indexOf('auth/too-many-requests') >= 0) return 'Muitas tentativas seguidas. Aguarde um pouco e tente novamente.';
-      return mode === 'signup' ? 'Não foi possível criar a conta agora.' : 'Não foi possível entrar agora.';
+      return mode === 'signup' ? 'N\u00e3o foi poss\u00edvel criar a conta agora.' : 'N\u00e3o foi poss\u00edvel entrar agora.';
     }
 
     function showFeedback(message, isError) {
@@ -1122,9 +1122,9 @@
       var creds = readSignupCreds();
       if (!creds.name) { showFeedback('Digite seu nome.', true); return; }
       if (!creds.email || !creds.password) { showFeedback('Preencha email e senha.', true); return; }
-      if (!looksLikeEmail(creds.email)) { showFeedback('Digite um e-mail válido.', true); return; }
-      if (!isStrongPassword(creds.password)) { showFeedback('A senha precisa ter pelo menos 6 caracteres, 1 letra maiúscula e 1 número.', true); return; }
-      if (creds.password !== creds.passwordConfirm) { showFeedback('As senhas não coincidem.', true); return; }
+      if (!looksLikeEmail(creds.email)) { showFeedback('Digite um e-mail v\u00e1lido.', true); return; }
+      if (!isStrongPassword(creds.password)) { showFeedback('A senha precisa ter pelo menos 6 caracteres, 1 letra mai\u00fascula e 1 n\u00famero.', true); return; }
+      if (creds.password !== creds.passwordConfirm) { showFeedback('As senhas n\u00e3o coincidem.', true); return; }
       window.SoterStorage.registerWithEmail(creds.email, creds.password, { remember: creds.remember, name: creds.name }).then(function () {
         var state = ensureStateShape(loadState());
         state.profile.name = creds.name;
@@ -1527,17 +1527,17 @@
 
   var RPG_TITLES = [
     "Iniciante", "Aprendiz", "Explorador", "Aventureiro", "Viajante",
-    "Veterano", "Especialista", "Mestre", "Grão-Mestre", "Lendário"
+    "Veterano", "Especialista", "Mestre", "Gr\u00e3o-Mestre", "Lend\u00e1rio"
   ];
 
   var RPG_CLASSES = {
-    initiate: { name: "Despertando", icon: "✦", bonus: "Sem especialização fixa", passive: "Base neutra para construir sua rota." },
-    scholar: { name: "Sábio", icon: "📚", bonus: "Leitura, estudo e revisão", passive: "+12% XP em Livraria, Estudo e Revisão." },
-    warrior: { name: "Guerreiro", icon: "⚔", bonus: "Treino e disciplina", passive: "+14% XP em Academia e +6% em Tarefas." },
-    explorer: { name: "Explorador", icon: "🧭", bonus: "Expansão de mundo", passive: "+14% XP em Viagens e +3% em Cinema." },
-    artist: { name: "Artista", icon: "🎨", bonus: "Expressão e sensibilidade", passive: "+12% XP em Sonhos e +10% em Wishlist." },
-    mage: { name: "Mago", icon: "🔮", bonus: "Memória e precisão mental", passive: "+14% XP em Revisão e +10% em Estudo." },
-    ranger: { name: "Ranger", icon: "🏹", bonus: "Versatilidade consistente", passive: "+8% XP em Tarefas, Academia e Viagens." }
+    initiate: { name: "Despertando", icon: "\u2726", bonus: "Sem especializa\u00e7\u00e3o fixa", passive: "Base neutra para construir sua rota." },
+    scholar: { name: "S\u00e1bio", icon: "\uD83D\uDCDA", bonus: "Leitura, estudo e revis\u00e3o", passive: "+12% XP em Livraria, Estudo e Revis\u00e3o." },
+    warrior: { name: "Guerreiro", icon: "\u2694", bonus: "Treino e disciplina", passive: "+14% XP em Academia e +6% em Tarefas." },
+    explorer: { name: "Explorador", icon: "\uD83E\uDDED", bonus: "Expans\u00e3o de mundo", passive: "+14% XP em Viagens e +3% em Cinema." },
+    artist: { name: "Artista", icon: "\uD83C\uDFA8", bonus: "Express\u00e3o e sensibilidade", passive: "+12% XP em Sonhos e +10% em Wishlist." },
+    mage: { name: "Mago", icon: "\uD83D\uDD2E", bonus: "Mem\u00f3ria e precis\u00e3o mental", passive: "+14% XP em Revis\u00e3o e +10% em Estudo." },
+    ranger: { name: "Ranger", icon: "\uD83C\uDFF9", bonus: "Versatilidade consistente", passive: "+8% XP em Tarefas, Academia e Viagens." }
   };
 
   var RPG_MISSION_XP = {
@@ -1566,7 +1566,7 @@
   var TASK_NOTIF_PREFIX = "task-";
   var GYM_NOTIF_ID = "gym-today";
   var ABANDON_RULES = { watch: 7, risk: 14, critical: 30 };
-  var ABANDON_TRACKER_LABELS = { livros: "Livraria", cinema: "Cinema", mangas: "Mangás" };
+  var ABANDON_TRACKER_LABELS = { livros: "Livraria", cinema: "Cinema", mangas: "Mang\u00e1s" };
   var ABANDON_ACTIVE_STATUSES = {
     livros: { lendo: true, relendo: true, pausado: true },
     cinema: { assistindo: true, reassistindo: true, pausado: true },
@@ -1579,11 +1579,11 @@
   var RPG_SKILL_DEFS = [
     {
       id: "reading",
-      icon: "📖",
+      icon: "\uD83D\uDCD6",
       color: "#c8a96e",
-      name: "Devorador de Páginas",
+      name: "Devorador de P\u00e1ginas",
       desc: "Aprimora leitura profunda e recompensa registro de qualidade.",
-      utility: "+1,5% XP da Livraria por nível e reforço no bônus de reflexão.",
+      utility: "+1,5% XP da Livraria por n\u00edvel e refor\u00e7o no b\u00f4nus de reflex\u00e3o.",
       reqLevel: 1,
       reqXP: 0,
       reqAch: null,
@@ -1591,11 +1591,11 @@
     },
     {
       id: "cinema",
-      icon: "🎬",
+      icon: "\uD83C\uDFAC",
       color: "#e8864a",
       name: "Olhos de Lince",
       desc: "Transforma curadoria audiovisual em progresso mais valioso.",
-      utility: "+1,4% XP do Cinema por nível e mais peso para notas e documentários.",
+      utility: "+1,4% XP do Cinema por n\u00edvel e mais peso para notas e document\u00e1rios.",
       reqLevel: 1,
       reqXP: 0,
       reqAch: null,
@@ -1603,11 +1603,11 @@
     },
     {
       id: "fitness",
-      icon: "💪",
+      icon: "\uD83D\uDCAA",
       color: "#e06b8b",
       name: "Corpo de Ferro",
-      desc: "Premia constância real nos treinos programados.",
-      utility: "+1,8% XP da Academia por nível e escalada melhor de esforço.",
+      desc: "Premia const\u00e2ncia real nos treinos programados.",
+      utility: "+1,8% XP da Academia por n\u00edvel e escalada melhor de esfor\u00e7o.",
       reqLevel: 1,
       reqXP: 0,
       reqAch: null,
@@ -1615,11 +1615,11 @@
     },
     {
       id: "study",
-      icon: "🧠",
+      icon: "\uD83E\uDDE0",
       color: "#4ab0e8",
       name: "Mente Afiada",
-      desc: "Aumenta retenção, revisão e horas de estudo de alto valor.",
-      utility: "+1,6% XP em Estudo e Revisão por nível.",
+      desc: "Aumenta reten\u00e7\u00e3o, revis\u00e3o e horas de estudo de alto valor.",
+      utility: "+1,6% XP em Estudo e Revis\u00e3o por n\u00edvel.",
       reqLevel: 2,
       reqXP: 50,
       reqAch: null,
@@ -1630,11 +1630,11 @@
     },
     {
       id: "travel",
-      icon: "✈️",
+      icon: "\u2708\uFE0F",
       color: "#5ec4a8",
       name: "Passaporte Dourado",
-      desc: "Dá mais peso a destinos realmente concluídos e vividos.",
-      utility: "+2% XP de Viagens por nível.",
+      desc: "D\u00e1 mais peso a destinos realmente conclu\u00eddos e vividos.",
+      utility: "+2% XP de Viagens por n\u00edvel.",
       reqLevel: 3,
       reqXP: 100,
       reqAch: null,
@@ -1642,11 +1642,11 @@
     },
     {
       id: "dreams",
-      icon: "🌙",
+      icon: "\uD83C\uDF19",
       color: "#7c6fcd",
       name: "Arquiteto dos Sonhos",
-      desc: "Valoriza planos densos, reflexão e sonhos concretizados.",
-      utility: "+1,5% XP em Sonhos por nível e leve reforço na Wishlist.",
+      desc: "Valoriza planos densos, reflex\u00e3o e sonhos concretizados.",
+      utility: "+1,5% XP em Sonhos por n\u00edvel e leve refor\u00e7o na Wishlist.",
       reqLevel: 4,
       reqXP: 150,
       reqAch: "dreamer",
@@ -1656,11 +1656,11 @@
     },
     {
       id: "planning",
-      icon: "📋",
+      icon: "\uD83D\uDCCB",
       color: "#5ec4a8",
       name: "Estrategista",
-      desc: "Converte organização e execução limpa em vantagem real.",
-      utility: "+1,8% XP em Tarefas por nível e +0,6% em Finanças.",
+      desc: "Converte organiza\u00e7\u00e3o e execu\u00e7\u00e3o limpa em vantagem real.",
+      utility: "+1,8% XP em Tarefas por n\u00edvel e +0,6% em Finan\u00e7as.",
       reqLevel: 5,
       reqXP: 200,
       reqAch: "taskmaster",
@@ -1668,11 +1668,11 @@
     },
     {
       id: "manga",
-      icon: "📚",
+      icon: "\uD83D\uDCDA",
       color: "#e06b8b",
-      name: "Espírito Otaku",
-      desc: "Valoriza cadência, conclusão e curadoria de mangás.",
-      utility: "+1,6% XP de Mangás por nível.",
+      name: "Esp\u00edrito Otaku",
+      desc: "Valoriza cad\u00eancia, conclus\u00e3o e curadoria de mang\u00e1s.",
+      utility: "+1,6% XP de Mang\u00e1s por n\u00edvel.",
       reqLevel: 6,
       reqXP: 250,
       reqAch: "manga_fan",
@@ -2159,7 +2159,7 @@
     return {
       id: source.id != null ? source.id : (defaults.id != null ? defaults.id : Date.now() + Math.floor(Math.random() * 1000)),
       text: String(source.text || defaults.text || ""),
-      icon: String(source.icon || defaults.icon || "🔔"),
+      icon: String(source.icon || defaults.icon || "\ud83d\udd14"),
       label: String(source.label || defaults.label || "Sistema"),
       tone: String(source.tone || defaults.tone || "info"),
       cycle: String(source.cycle || defaults.cycle || "persist"),
@@ -2397,73 +2397,73 @@
       notifications.unshift(createNotification(
         DREAM_NOTIF_PREFIX + "overdue",
         "Sonhos: " + dreamCounts.overdue + " prazo" + (dreamCounts.overdue === 1 ? " venceu." : "s venceram."),
-        { icon: "🌙", label: "Sonhos", tone: "danger", cycle: today, href: "sonhos.html" }
+        { icon: "\uD83C\uDF19", label: "Sonhos", tone: "danger", cycle: today, href: "sonhos.html" }
       ));
     }
     if (dreamCounts.soon > 0) {
       notifications.unshift(createNotification(
         DREAM_NOTIF_PREFIX + "soon",
-        "Sonhos: " + dreamCounts.soon + " prazo" + (dreamCounts.soon === 1 ? " está próximo." : "s estão próximos."),
-        { icon: "🌙", label: "Sonhos", tone: "dream", cycle: today, href: "sonhos.html" }
+        "Sonhos: " + dreamCounts.soon + " prazo" + (dreamCounts.soon === 1 ? " est\u00e1 pr\u00f3ximo." : "s est\u00e3o pr\u00f3ximos."),
+        { icon: "\uD83C\uDF19", label: "Sonhos", tone: "dream", cycle: today, href: "sonhos.html" }
       ));
     }
 
     if (travelCounts.overdue > 0) {
       notifications.unshift(createNotification(
         TRAVEL_NOTIF_PREFIX + "overdue",
-        "Viagens: " + travelCounts.overdue + " data" + (travelCounts.overdue === 1 ? " passou sem conclusão." : "s passaram sem conclusão."),
-        { icon: "✈️", label: "Viagens", tone: "danger", cycle: today, href: "viagens.html" }
+        "Viagens: " + travelCounts.overdue + " data" + (travelCounts.overdue === 1 ? " passou sem conclus\u00e3o." : "s passaram sem conclus\u00e3o."),
+        { icon: "\u2708\uFE0F", label: "Viagens", tone: "danger", cycle: today, href: "viagens.html" }
       ));
     }
     if (travelCounts.soon > 0) {
       notifications.unshift(createNotification(
         TRAVEL_NOTIF_PREFIX + "soon",
-        "Viagens: " + travelCounts.soon + " data" + (travelCounts.soon === 1 ? " está próxima." : "s estão próximas."),
-        { icon: "✈️", label: "Viagens", tone: "travel", cycle: today, href: "viagens.html" }
+        "Viagens: " + travelCounts.soon + " data" + (travelCounts.soon === 1 ? " est\u00e1 pr\u00f3xima." : "s est\u00e3o pr\u00f3ximas."),
+        { icon: "\u2708\uFE0F", label: "Viagens", tone: "travel", cycle: today, href: "viagens.html" }
       ));
     }
 
     if (financeCounts.dueOut > 0) {
       notifications.unshift(createNotification(
         FINANCE_NOTIF_PREFIX + "debit-out",
-        "Finanças: " + financeCounts.dueOut + " saída" + (financeCounts.dueOut === 1 ? " agendada foi debitada hoje." : "s agendadas foram debitadas hoje."),
-        { icon: "📤", label: "Finanças", tone: "money", cycle: today, href: "financas.html" }
+        "Finan\u00e7as: " + financeCounts.dueOut + " sa\u00edda" + (financeCounts.dueOut === 1 ? " agendada foi debitada hoje." : "s agendadas foram debitadas hoje."),
+        { icon: "\uD83D\uDCE4", label: "Finan\u00e7as", tone: "money", cycle: today, href: "financas.html" }
       ));
     }
     if (financeCounts.dueIn > 0) {
       notifications.unshift(createNotification(
         FINANCE_NOTIF_PREFIX + "debit-in",
-        "Finanças: " + financeCounts.dueIn + " entrada" + (financeCounts.dueIn === 1 ? " agendada caiu hoje." : "s agendadas caíram hoje."),
-        { icon: "💰", label: "Finanças", tone: "money", cycle: today, href: "financas.html" }
+        "Finan\u00e7as: " + financeCounts.dueIn + " entrada" + (financeCounts.dueIn === 1 ? " agendada caiu hoje." : "s agendadas ca\u00edram hoje."),
+        { icon: "\uD83D\uDCB0", label: "Finan\u00e7as", tone: "money", cycle: today, href: "financas.html" }
       ));
     }
 
     if (tasksOverdueCount > 0) {
       notifications.unshift(createNotification(
         TASK_NOTIF_PREFIX + "overdue",
-        "Planejamento: " + tasksOverdueCount + " tarefa" + (tasksOverdueCount === 1 ? " está vencida." : "s estão vencidas."),
-        { icon: "⏰", label: "Planejamento", tone: "danger", cycle: today, href: "tarefas.html" }
+        "Planejamento: " + tasksOverdueCount + " tarefa" + (tasksOverdueCount === 1 ? " est\u00e1 vencida." : "s est\u00e3o vencidas."),
+        { icon: "\u23F0", label: "Planejamento", tone: "danger", cycle: today, href: "tarefas.html" }
       ));
     }
     if (tasksTodayCount > 0) {
       notifications.unshift(createNotification(
         TASK_NOTIF_PREFIX + "today",
-        "Planejamento: " + tasksTodayCount + " tarefa" + (tasksTodayCount === 1 ? " é para hoje." : "s são para hoje."),
-        { icon: "🗓️", label: "Planejamento", tone: "plan", cycle: today, href: "tarefas.html" }
+        "Planejamento: " + tasksTodayCount + " tarefa" + (tasksTodayCount === 1 ? " \u00e9 para hoje." : "s s\u00e3o para hoje."),
+        { icon: "\uD83D\uDDD3\uFE0F", label: "Planejamento", tone: "plan", cycle: today, href: "tarefas.html" }
       ));
     }
     if (tasksSoonCount > 0) {
       notifications.unshift(createNotification(
         TASK_NOTIF_PREFIX + "soon",
-        "Planejamento: " + tasksSoonCount + " prazo" + (tasksSoonCount === 1 ? " está chegando." : "s estão chegando."),
-        { icon: "⌛", label: "Planejamento", tone: "warn", cycle: today, href: "tarefas.html" }
+        "Planejamento: " + tasksSoonCount + " prazo" + (tasksSoonCount === 1 ? " est\u00e1 chegando." : "s est\u00e3o chegando."),
+        { icon: "\u231B", label: "Planejamento", tone: "warn", cycle: today, href: "tarefas.html" }
       ));
     }
     if (tasksWithoutDateCount > 0) {
       notifications.unshift(createNotification(
         TASK_NOTIF_PREFIX + "nodate",
         "Planejamento: " + tasksWithoutDateCount + " tarefa" + (tasksWithoutDateCount === 1 ? " segue sem data." : "s seguem sem data."),
-        { icon: "📌", label: "Planejamento", tone: "plan", cycle: today, href: "tarefas.html" }
+        { icon: "\uD83D\uDCCC", label: "Planejamento", tone: "plan", cycle: today, href: "tarefas.html" }
       ));
     }
 
@@ -2474,8 +2474,8 @@
       if (gymState.profile.trainDays.map(Number).indexOf(todayDate.getDay()) === -1) return;
       notifications.unshift(createNotification(
         GYM_NOTIF_ID,
-        "Academia: há treino previsto para hoje.",
-        { icon: "🏋️", label: "Academia", tone: "gym", cycle: today, href: "academia.html" }
+        "Academia: h\u00e1 treino previsto para hoje.",
+        { icon: "\uD83C\uDFCB\uFE0F", label: "Academia", tone: "gym", cycle: today, href: "academia.html" }
       ));
     }());
 
@@ -2494,8 +2494,8 @@
 
   function getTrackerItemTitle(item, tracker) {
     if (item && (item.titulo || item.title || item.nome)) return String(item.titulo || item.title || item.nome);
-    if (tracker === "cinema" && isSeriesType(item)) return "Série";
-    return tracker === "cinema" ? "Título" : tracker === "mangas" ? "Mangá" : "Livro";
+    if (tracker === "cinema" && isSeriesType(item)) return "S\u00e9rie";
+    return tracker === "cinema" ? "T\u00edtulo" : tracker === "mangas" ? "Mang\u00e1" : "Livro";
   }
 
   function getTrackerLastTouch(item) {
@@ -2527,12 +2527,12 @@
   }
 
   function buildAbandonNotification(tracker, item, abandonState) {
-    var trackerLabel = tracker === "cinema" && isSeriesType(item) ? "Séries" : (ABANDON_TRACKER_LABELS[tracker] || tracker);
+    var trackerLabel = tracker === "cinema" && isSeriesType(item) ? "S\u00e9ries" : (ABANDON_TRACKER_LABELS[tracker] || tracker);
     return Object.assign(createNotification(
       ABANDON_NOTIF_PREFIX + tracker + "-" + String(item && item.id != null ? item.id : getTrackerItemTitle(item, tracker)),
-      trackerLabel + ': "' + getTrackerItemTitle(item, tracker) + '" está há ' + abandonState.days + " dias sem atualização.",
+      trackerLabel + ': "' + getTrackerItemTitle(item, tracker) + '" est\u00e1 h\u00e1 ' + abandonState.days + " dias sem atualiza\u00e7\u00e3o.",
       {
-        icon: tracker === "livros" ? "📚" : tracker === "mangas" ? "📖" : isSeriesType(item) ? "📺" : "🎬",
+        icon: tracker === "livros" ? "\uD83D\uDCDA" : tracker === "mangas" ? "\uD83D\uDCD6" : isSeriesType(item) ? "\uD83D\uDCFA" : "\uD83C\uDFAC",
         label: "Ante-abandono",
         tone: abandonState.key === "critical" ? "danger" : abandonState.key === "risk" ? "warn" : "library",
         cycle: getNotificationCycleDate(),
@@ -2743,8 +2743,8 @@
     if (reviewDueCount > 0) {
       notifications.unshift(createNotification(
         REVIEW_DUE_NOTIF_ID,
-        "Revisão: há " + reviewDueCount + " card" + (reviewDueCount === 1 ? "" : "s") + " para revisar hoje.",
-        { icon: "🧠", label: "Revisão", tone: "study", cycle: getNotificationCycleDate(), href: "revisao.html" }
+        "Revis\u00e3o: h\u00e1 " + reviewDueCount + " card" + (reviewDueCount === 1 ? "" : "s") + " para revisar hoje.",
+        { icon: "\uD83E\uDDE0", label: "Revis\u00e3o", tone: "study", cycle: getNotificationCycleDate(), href: "revisao.html" }
       ));
     }
 
@@ -2759,7 +2759,7 @@
       options.id != null ? options.id : (Date.now() + Math.floor(Math.random() * 1000)),
       text,
       {
-        icon: options.icon || "⚔",
+        icon: options.icon || "\u2694",
         label: options.label || "RPG",
         tone: options.tone || "rpg",
         cycle: options.cycle || "persist",
@@ -2829,16 +2829,16 @@
       .concat(makeSeries({ group: "Tarefas", idPrefix: "tasks_high", names: arcNames("Prioridade"), thresholds: [1, 2, 3, 5, 8, 12, 18, 25, 35, 50], metric: getHighPriorityTasksDoneCount, req: function (v) { return reqLabel(v, "prioridade alta", "prioridades altas"); } }))
       .concat(makeSeries({ group: "Tarefas", idPrefix: "tasks_complex", names: arcNames("Engenharia"), thresholds: [1, 2, 3, 5, 8, 12, 18, 25, 35, 50], metric: getComplexTasksDoneCount, req: function (v) { return reqLabel(v, "complexa", "complexas"); } }))
       .concat(makeSeries({ group: "Tarefas", idPrefix: "tasks_subtasks", names: arcNames("Costura"), thresholds: [3, 5, 8, 12, 18, 25, 35, 50, 70, 100], metric: getSubtasksTotalCount, req: function (v) { return reqLabel(v, "subtarefa", "subtarefas"); } }))
-      .concat(makeSeries({ group: "Evolução", idPrefix: "evo_level", names: arcNames("Nível"), thresholds: [2, 3, 4, 5, 6, 8, 10, 12, 15, 20], ids: [null, null, null, "level5", null, null, "legend", null, null, null], metric: function (state) { return getLevelFromXp(Math.round(calcRpgXp(state))); }, req: function (v) { return "Nível " + v; } }))
-      .concat(makeSeries({ group: "Evolução", idPrefix: "evo_xp", names: arcNames("Prestígio"), thresholds: [180, 420, 760, 1200, 1800, 2600, 3600, 4900, 6500, 8600], metric: function (state) { return Math.round(calcRpgXp(state)); }, req: function (v) { return v + " XP"; } }))
-      .concat(makeSeries({ group: "Evolução", idPrefix: "evo_skills", names: arcNames("Arsenal"), thresholds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], metric: function (state) { return getSkillStates(state).filter(function (skill) { return skill.unlocked; }).length; }, req: function (v) { return reqLabel(v, "skill", "skills"); } }))
-      .concat(makeSeries({ group: "Evolução", idPrefix: "evo_attrs", names: arcNames("Atributo"), thresholds: [120, 180, 240, 300, 360, 420, 480, 540, 580, 600], metric: function (state) { return getRpgAttrs(state).reduce(function (acc, attr) { return acc + num(attr && attr.val); }, 0); }, req: function (v) { return v + " atributos"; } }))
-      .concat(makeSeries({ group: "Evolução", idPrefix: "evo_sources", names: arcNames("Constelação"), thresholds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], metric: function (state) { return Object.keys(getRpgBreakdown(state)).filter(function (key) { return key !== "total" && num(getRpgBreakdown(state)[key]) > 0; }).length; }, req: function (v) { return reqLabel(v, "fonte", "fontes"); } }))
-      .concat(makeSeries({ group: "Coleção", idPrefix: "collection_favorites", names: arcNames("Favoritos"), thresholds: [1, 3, 5, 8, 10, 15, 25, 35, 50, 70], ids: [null, null, null, null, "collector", null, null, null, null, null], metric: getFavoritosCount, req: function (v) { return reqLabel(v, "favorito", "favoritos"); } }))
-      .concat(makeSeries({ group: "Coleção", idPrefix: "collection_size", names: arcNames("Museu"), thresholds: [5, 10, 15, 25, 40, 60, 90, 130, 180, 250], metric: getLibraryEntriesCount, req: function (v) { return reqLabel(v, "item", "itens"); } }))
-      .concat(makeSeries({ group: "Coleção", idPrefix: "collection_done", names: arcNames("Arquivo"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getCompletedMediaCount, req: function (v) { return reqLabel(v, "concluída", "concluídas"); } }))
-      .concat(makeSeries({ group: "Coleção", idPrefix: "collection_rated", names: arcNames("Curadoria"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getAllRatedCount, req: function (v) { return reqLabel(v, "avaliação", "avaliações"); } }))
-      .concat(makeSeries({ group: "Coleção", idPrefix: "collection_notes", names: arcNames("Margem do Acervo"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getAllNotedCount, req: function (v) { return reqLabel(v, "nota", "notas"); } }))
+      .concat(makeSeries({ group: "Evolu\u00e7\u00e3o", idPrefix: "evo_level", names: arcNames("N\u00edvel"), thresholds: [2, 3, 4, 5, 6, 8, 10, 12, 15, 20], ids: [null, null, null, "level5", null, null, "legend", null, null, null], metric: function (state) { return getLevelFromXp(Math.round(calcRpgXp(state))); }, req: function (v) { return "N\u00edvel " + v; } }))
+      .concat(makeSeries({ group: "Evolu\u00e7\u00e3o", idPrefix: "evo_xp", names: arcNames("Prest\u00edgio"), thresholds: [180, 420, 760, 1200, 1800, 2600, 3600, 4900, 6500, 8600], metric: function (state) { return Math.round(calcRpgXp(state)); }, req: function (v) { return v + " XP"; } }))
+      .concat(makeSeries({ group: "Evolu\u00e7\u00e3o", idPrefix: "evo_skills", names: arcNames("Arsenal"), thresholds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], metric: function (state) { return getSkillStates(state).filter(function (skill) { return skill.unlocked; }).length; }, req: function (v) { return reqLabel(v, "skill", "skills"); } }))
+      .concat(makeSeries({ group: "Evolu\u00e7\u00e3o", idPrefix: "evo_attrs", names: arcNames("Atributo"), thresholds: [120, 180, 240, 300, 360, 420, 480, 540, 580, 600], metric: function (state) { return getRpgAttrs(state).reduce(function (acc, attr) { return acc + num(attr && attr.val); }, 0); }, req: function (v) { return v + " atributos"; } }))
+      .concat(makeSeries({ group: "Evolu\u00e7\u00e3o", idPrefix: "evo_sources", names: arcNames("Constela\u00e7\u00e3o"), thresholds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], metric: function (state) { return Object.keys(getRpgBreakdown(state)).filter(function (key) { return key !== "total" && num(getRpgBreakdown(state)[key]) > 0; }).length; }, req: function (v) { return reqLabel(v, "fonte", "fontes"); } }))
+      .concat(makeSeries({ group: "Cole\u00e7\u00e3o", idPrefix: "collection_favorites", names: arcNames("Favoritos"), thresholds: [1, 3, 5, 8, 10, 15, 25, 35, 50, 70], ids: [null, null, null, null, "collector", null, null, null, null, null], metric: getFavoritosCount, req: function (v) { return reqLabel(v, "favorito", "favoritos"); } }))
+      .concat(makeSeries({ group: "Cole\u00e7\u00e3o", idPrefix: "collection_size", names: arcNames("Museu"), thresholds: [5, 10, 15, 25, 40, 60, 90, 130, 180, 250], metric: getLibraryEntriesCount, req: function (v) { return reqLabel(v, "item", "itens"); } }))
+      .concat(makeSeries({ group: "Cole\u00e7\u00e3o", idPrefix: "collection_done", names: arcNames("Arquivo"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getCompletedMediaCount, req: function (v) { return reqLabel(v, "conclu\u00edda", "conclu\u00eddas"); } }))
+      .concat(makeSeries({ group: "Cole\u00e7\u00e3o", idPrefix: "collection_rated", names: arcNames("Curadoria"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getAllRatedCount, req: function (v) { return reqLabel(v, "avalia\u00e7\u00e3o", "avalia\u00e7\u00f5es"); } }))
+      .concat(makeSeries({ group: "Cole\u00e7\u00e3o", idPrefix: "collection_notes", names: arcNames("Margem do Acervo"), thresholds: [1, 3, 5, 8, 12, 18, 25, 35, 50, 70], metric: getAllNotedCount, req: function (v) { return reqLabel(v, "nota", "notas"); } }))
       .concat(makeSeries({ group: "Wishlist", idPrefix: "wishlist_count", names: arcNames("Desejo"), thresholds: [1, 3, 5, 8, 10, 15, 25, 35, 50, 70], ids: [null, null, null, null, "wishmaster", null, null, null, null, null], metric: function (state) { return getWishlist(state).length; }, req: function (v) { return reqLabel(v, "item", "itens"); } }))
       .concat(makeSeries({ group: "Wishlist", idPrefix: "wishlist_priority", names: arcNames("Radar"), thresholds: [1, 2, 3, 5, 8, 12, 18, 25, 35, 50], metric: getWishlistPriorityCount, req: function (v) { return reqLabel(v, "prioridade", "prioridades"); } }))
       .concat(makeSeries({ group: "Wishlist", idPrefix: "wishlist_price", names: arcNames("Etiqueta"), thresholds: [1, 2, 3, 5, 8, 12, 18, 25, 35, 50], metric: getWishlistPricedCount, req: function (v) { return reqLabel(v, "preco", "precos"); } }))
@@ -3108,7 +3108,7 @@
         icon: RPG_CLASSES.initiate.icon,
         bonus: RPG_CLASSES.initiate.bonus,
         requirement: "Base inicial",
-        progress: "Sempre disponível"
+        progress: "Sempre dispon\u00edvel"
       },
       scholar: {
         id: "scholar",
@@ -3134,7 +3134,7 @@
         name: RPG_CLASSES.explorer.name,
         icon: RPG_CLASSES.explorer.icon,
         bonus: RPG_CLASSES.explorer.bonus,
-        requirement: "5 viagens concluídas",
+        requirement: "5 viagens conclu\u00eddas",
         progress: tripCount + "/5 viagens"
       },
       artist: {
@@ -3143,8 +3143,8 @@
         name: RPG_CLASSES.artist.name,
         icon: RPG_CLASSES.artist.icon,
         bonus: RPG_CLASSES.artist.bonus,
-        requirement: "8 reflexões em sonhos e 12 notas no acervo",
-        progress: dreamReflection + "/8 sonhos criativos · " + collectionNotes + "/12 notas"
+        requirement: "8 reflex\u00f5es em sonhos e 12 notas no acervo",
+        progress: dreamReflection + "/8 sonhos criativos \u00b7 " + collectionNotes + "/12 notas"
       },
       mage: {
         id: "mage",
@@ -3152,8 +3152,8 @@
         name: RPG_CLASSES.mage.name,
         icon: RPG_CLASSES.mage.icon,
         bonus: RPG_CLASSES.mage.bonus,
-        requirement: "21 dias de revisão e 120 cards revistos",
-        progress: reviewStats.streak + "/21 dias · " + reviewStats.totalCards + "/120 cards"
+        requirement: "21 dias de revis\u00e3o e 120 cards revistos",
+        progress: reviewStats.streak + "/21 dias \u00b7 " + reviewStats.totalCards + "/120 cards"
       },
       ranger: {
         id: "ranger",
@@ -3161,7 +3161,7 @@
         name: RPG_CLASSES.ranger.name,
         icon: RPG_CLASSES.ranger.icon,
         bonus: RPG_CLASSES.ranger.bonus,
-        requirement: "5 frentes de vida estáveis",
+        requirement: "5 frentes de vida est\u00e1veis",
         progress: balancedDomains.count + "/5 frentes equilibradas"
       }
     };
@@ -3208,13 +3208,13 @@
     getSkillStates(state).forEach(function (skill) { nextSkills[skill.id] = skill; });
 
     if (nextLevel > prevLevel) {
-      pushNotification(state, "Seu nível geral subiu para Nv " + nextLevel + ".", {
+      pushNotification(state, "Seu n\u00edvel geral subiu para Nv " + nextLevel + ".", {
         id: "rpg-level-" + nextLevel,
         cycle: today,
         href: "rpg.html"
       });
       if (prevLevel < RPG_MAX_LEVEL && nextLevel >= RPG_MAX_LEVEL) {
-        pushNotification(state, "Você atingiu o nível máximo geral do RPG.", {
+        pushNotification(state, "Voc\u00ea atingiu o n\u00edvel m\u00e1ximo geral do RPG.", {
           id: "rpg-level-max",
           cycle: today,
           href: "rpg.html"
@@ -3233,7 +3233,7 @@
           href: "rpg.html"
         });
         if (beforeVal < RPG_ATTR_MAX && afterVal >= RPG_ATTR_MAX) {
-          pushNotification(state, attr.label + " atingiu o nível máximo.", {
+          pushNotification(state, attr.label + " atingiu o n\u00edvel m\u00e1ximo.", {
             id: "rpg-attr-max-" + attr.label,
             cycle: today,
             href: "rpg.html"
@@ -3243,12 +3243,12 @@
     });
 
     if (prevState.data.rpg.missionsDate !== today) {
-      pushNotification(state, "As missões do dia foram renovadas no RPG.", {
+      pushNotification(state, "As miss\u00f5es do dia foram renovadas no RPG.", {
         id: "rpg-missions-renewed",
         cycle: today
       });
       if (RPG_DAILY_MISSION_COUNT > 0) {
-        pushNotification(state, "Você tem " + RPG_DAILY_MISSION_COUNT + " missões do dia para fazer.", {
+        pushNotification(state, "Voc\u00ea tem " + RPG_DAILY_MISSION_COUNT + " miss\u00f5es do dia para fazer.", {
           id: "rpg-missions-count",
           cycle: today,
           href: "rpg.html"
@@ -3259,7 +3259,7 @@
     Object.keys(state.data.rpg.missions).forEach(function (missionId) {
       if (!state.data.rpg.missions[missionId]) return;
       if (prevState.data.rpg.missions[missionId]) return;
-      pushNotification(state, 'Missão concluída: "' + (missionCatalog[missionId] || missionId) + '".', {
+      pushNotification(state, 'Miss\u00e3o conclu\u00edda: "' + (missionCatalog[missionId] || missionId) + '".', {
         id: "rpg-mission-" + missionId + "-" + today,
         cycle: today,
         href: "rpg.html"
@@ -3278,13 +3278,13 @@
         });
       }
       if (after.level > before.level) {
-        pushNotification(state, '"' + after.name + '" subiu para o nível ' + after.level + ".", {
+        pushNotification(state, '"' + after.name + '" subiu para o n\u00edvel ' + after.level + ".", {
           id: "rpg-skill-level-" + after.id + "-" + after.level,
           cycle: today,
           href: "rpg.html"
         });
         if (before.level < RPG_SKILL_MAX && after.level >= RPG_SKILL_MAX) {
-          pushNotification(state, '"' + after.name + '" atingiu o nível máximo.', {
+          pushNotification(state, '"' + after.name + '" atingiu o n\u00edvel m\u00e1ximo.', {
             id: "rpg-skill-max-" + after.id,
             cycle: today,
             href: "rpg.html"
@@ -3507,7 +3507,7 @@
     if (gymStats.completedTrainingDays > 0) {
       entries.push({
         icon: "\uD83D\uDCAA",
-        text: "Academia em rota: " + gymStats.completedTrainingDays + " dia(s) de treino concluídos e sequência de " + gymStats.streak + ".",
+        text: "Academia em rota: " + gymStats.completedTrainingDays + " dia(s) de treino conclu\u00eddos e sequ\u00eancia de " + gymStats.streak + ".",
         xp: calcGymXp(state),
         t: now
       });
@@ -3518,7 +3518,7 @@
     if (reviewStats.totalCards > 0) {
       entries.push({
         icon: "\uD83E\uDDE0",
-        text: "Revisão ativa: " + reviewStats.totalCards + " cards revistos em " + reviewStats.activeDays + " dia(s).",
+        text: "Revis\u00e3o ativa: " + reviewStats.totalCards + " cards revistos em " + reviewStats.activeDays + " dia(s).",
         xp: calcReviewXp(state),
         t: now - 1
       });
@@ -3536,7 +3536,7 @@
       entries.push({ icon: "\uD83D\uDCB0", text: "Movimento financeiro registrado", xp: RPG_XP.financaTx + (item.type === "save" ? RPG_XP.financaSave : 0), t: item.updatedAt || item.id || now });
     });
     getWishlistHistory(state).slice(-2).forEach(function (item) {
-      entries.push({ icon: "\uD83C\uDF20", text: 'Wishlist avançou: "' + (item.name || "Item") + '"', xp: RPG_XP.wishlistAquisicao, t: item.acquiredAt || item.id || now });
+      entries.push({ icon: "\uD83C\uDF20", text: 'Wishlist avan\u00e7ou: "' + (item.name || "Item") + '"', xp: RPG_XP.wishlistAquisicao, t: item.acquiredAt || item.id || now });
     });
     return entries.sort(function (a, b) { return b.t - a.t; }).slice(0, 12);
   }
@@ -3554,14 +3554,14 @@
   function getDailyMissionsForState(state) {
     var today = getRpgDailyCycleDate();
     var pool = [
-      { id: "m_leitura", icon: "📚", name: "Sessão de Leitura", desc: "Abra a Livraria e registre progresso real.", xp: RPG_MISSION_XP.m_leitura, color: "#c8a96e" },
-      { id: "m_treino", icon: "💪", name: "Treino do Dia", desc: "Complete o treino previsto na Academia.", xp: RPG_MISSION_XP.m_treino, color: "#e06b8b" },
-      { id: "m_tarefa", icon: "✅", name: "Conclua uma Tarefa", desc: "Feche ao menos uma tarefa do planejamento.", xp: RPG_MISSION_XP.m_tarefa, color: "#5ec4a8" },
-      { id: "m_estudo", icon: "🧠", name: "Hora de Estudo", desc: "Registre estudo ou revisão consistente.", xp: RPG_MISSION_XP.m_estudo, color: "#4ab0e8" },
-      { id: "m_sonho", icon: "🌙", name: "Registro de Sonho", desc: "Avance em um sonho com plano, nota ou meta.", xp: RPG_MISSION_XP.m_sonho, color: "#7c6fcd" },
-      { id: "m_cinema", icon: "🎬", name: "Sessão de Cinema", desc: "Atualize filme, série ou episódio assistido.", xp: RPG_MISSION_XP.m_cinema, color: "#e8864a" },
-      { id: "m_manga", icon: "📚", name: "Capítulo de Mangá", desc: "Atualize seu progresso de mangá.", xp: RPG_MISSION_XP.m_manga, color: "#e06b8b" },
-      { id: "m_wishlist", icon: "🌠", name: "Atualizar Wishlist", desc: "Detalhe ou revise um item da wishlist.", xp: RPG_MISSION_XP.m_wishlist, color: "#7c6fcd" }
+      { id: "m_leitura", icon: "\uD83D\uDCDA", name: "Sess\u00e3o de Leitura", desc: "Abra a Livraria e registre progresso real.", xp: RPG_MISSION_XP.m_leitura, color: "#c8a96e" },
+      { id: "m_treino", icon: "\uD83D\uDCAA", name: "Treino do Dia", desc: "Complete o treino previsto na Academia.", xp: RPG_MISSION_XP.m_treino, color: "#e06b8b" },
+      { id: "m_tarefa", icon: "\u2705", name: "Conclua uma Tarefa", desc: "Feche ao menos uma tarefa do planejamento.", xp: RPG_MISSION_XP.m_tarefa, color: "#5ec4a8" },
+      { id: "m_estudo", icon: "\uD83E\uDDE0", name: "Hora de Estudo", desc: "Registre estudo ou revis\u00e3o consistente.", xp: RPG_MISSION_XP.m_estudo, color: "#4ab0e8" },
+      { id: "m_sonho", icon: "\uD83C\uDF19", name: "Registro de Sonho", desc: "Avance em um sonho com plano, nota ou meta.", xp: RPG_MISSION_XP.m_sonho, color: "#7c6fcd" },
+      { id: "m_cinema", icon: "\uD83C\uDFAC", name: "Sess\u00e3o de Cinema", desc: "Atualize filme, s\u00e9rie ou epis\u00f3dio assistido.", xp: RPG_MISSION_XP.m_cinema, color: "#e8864a" },
+      { id: "m_manga", icon: "\uD83D\uDCDA", name: "Cap\u00edtulo de Mang\u00e1", desc: "Atualize seu progresso de mang\u00e1.", xp: RPG_MISSION_XP.m_manga, color: "#e06b8b" },
+      { id: "m_wishlist", icon: "\uD83C\uDF20", name: "Atualizar Wishlist", desc: "Detalhe ou revise um item da wishlist.", xp: RPG_MISSION_XP.m_wishlist, color: "#7c6fcd" }
     ];
     var seed = parseInt(String(today).replace(/-/g, ""), 10) % pool.length;
     return [0, 1, 2, 3].map(function (offset) {
@@ -3710,6 +3710,8 @@
 
     var headerLevel = document.getElementById("header-level-badge");
     var headerFill = document.getElementById("header-xp-fill");
+    var mobileLevel = document.getElementById("mobile-level-badge");
+    var mobileFill = document.getElementById("mobile-xp-fill");
     var pmTitle = document.getElementById("pm-title-display");
     var pmXpText = document.getElementById("pm-xp-text");
     var pmXpNext = document.getElementById("pm-xp-next");
@@ -3717,9 +3719,11 @@
 
     if (headerLevel) headerLevel.textContent = "Nv " + level;
     if (headerFill) headerFill.style.width = pct + "%";
-    if (pmTitle) pmTitle.textContent = title + " · " + cls.name + " · Nível " + level;
+    if (mobileLevel) mobileLevel.textContent = "Nv " + level;
+    if (mobileFill) mobileFill.style.width = pct + "%";
+    if (pmTitle) pmTitle.textContent = title + " \u00b7 " + cls.name + " \u00b7 N\u00edvel " + level;
     if (pmXpText) pmXpText.textContent = xp.toLocaleString("pt-BR") + " XP";
-    if (pmXpNext) pmXpNext.textContent = "próx. nível: " + xpNext.toLocaleString("pt-BR") + " XP";
+    if (pmXpNext) pmXpNext.textContent = "pr\u00f3x. n\u00edvel: " + xpNext.toLocaleString("pt-BR") + " XP";
     if (pmXpFill) pmXpFill.style.width = pct + "%";
   }
 
@@ -3930,16 +3934,26 @@
   function renderHeaderBalance(state) {
     var currentState = state || loadState();
     var balanceVal = document.getElementById("header-balance-val");
+    var mobileBalanceVal = document.getElementById("mobile-balance-val");
     var balanceWrap = document.getElementById("header-balance");
     var masked;
-    if (!balanceVal) return;
+    if (!balanceVal && !mobileBalanceVal) return;
     var finance = computeHeaderFinance(currentState);
     var hidden = !(currentState.data && currentState.data.headerBalanceHidden === false);
     var formatted = "R$ " + Number(finance.saldo || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     masked = formatted.replace(/\d/g, "*");
-    balanceVal.textContent = hidden ? masked : formatted;
-    balanceVal.classList.toggle("negative", !!finance.overload);
-    balanceVal.classList.toggle("is-hidden", hidden);
+    if (balanceVal) {
+      balanceVal.textContent = hidden ? masked : formatted;
+      balanceVal.classList.toggle("negative", !!finance.overload);
+      balanceVal.classList.toggle("is-hidden", hidden);
+    }
+    if (mobileBalanceVal) {
+      mobileBalanceVal.textContent = hidden ? masked : formatted;
+      mobileBalanceVal.classList.toggle("negative", !!finance.overload);
+      mobileBalanceVal.classList.toggle("is-hidden", hidden);
+      mobileBalanceVal.setAttribute("aria-pressed", hidden ? "true" : "false");
+      mobileBalanceVal.setAttribute("title", hidden ? "Mostrar saldo" : "Ocultar saldo");
+    }
     if (balanceWrap) {
       balanceWrap.classList.toggle("is-hidden", hidden);
       balanceWrap.setAttribute("aria-pressed", hidden ? "true" : "false");
@@ -3949,13 +3963,28 @@
 
   function wireHeaderBalanceToggle(state) {
     var balanceWrap = document.getElementById("header-balance");
-    if (!balanceWrap) return;
-    balanceWrap.addEventListener("click", function () {
+    var mobileBalance = document.getElementById("mobile-balance-val");
+
+    function toggleBalanceVisibility() {
       var nextState = ensureStateShape(loadState());
       if (!nextState.data || typeof nextState.data !== "object") nextState.data = {};
       nextState.data.headerBalanceHidden = !nextState.data.headerBalanceHidden;
       state = applySiteState(nextState, loadState());
-    });
+    }
+
+    if (balanceWrap) {
+      balanceWrap.addEventListener("click", function () {
+        toggleBalanceVisibility();
+      });
+    }
+
+    if (mobileBalance) {
+      mobileBalance.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleBalanceVisibility();
+      });
+    }
   }
 
   function applySiteState(nextState, previousState) {
@@ -4008,16 +4037,22 @@
     var hasAvatar = !!profile.avatar;
 
     var headerName = document.getElementById("header-profile-name");
+    var mobileName = document.getElementById("mobile-profile-name");
     var pmName = document.getElementById("pm-name-display");
     var nameInput = document.getElementById("pm-name-input");
     var initials = document.getElementById("header-initials");
+    var mobileInitials = document.getElementById("mobile-initials");
     var avatar = document.getElementById("header-avatar");
+    var mobileAvatar = document.getElementById("mobile-avatar");
     var avatarImg = document.getElementById("header-avatar-img");
+    var mobileAvatarImg = document.getElementById("mobile-avatar-img");
 
     if (headerName) headerName.textContent = displayName;
+    if (mobileName) mobileName.textContent = displayName;
     if (pmName) pmName.textContent = displayName;
     if (nameInput) nameInput.value = displayName;
     if (initials) initials.textContent = getInitials(displayName);
+    if (mobileInitials) mobileInitials.textContent = getInitials(displayName);
 
     if (avatar && avatarImg) {
       if (hasAvatar) {
@@ -4026,6 +4061,16 @@
       } else {
         avatar.classList.remove("has-photo");
         avatarImg.removeAttribute("src");
+      }
+    }
+
+    if (mobileAvatar && mobileAvatarImg) {
+      if (hasAvatar) {
+        mobileAvatar.classList.add("has-photo");
+        mobileAvatarImg.src = profile.avatar;
+      } else {
+        mobileAvatar.classList.remove("has-photo");
+        mobileAvatarImg.removeAttribute("src");
       }
     }
   }
@@ -4117,40 +4162,44 @@
 
     mount.innerHTML = [
       '<header class="site-header" id="site-header">',
-      '  <a class="header-brand" href="index.html"><em>Sól</em> de Sóter</a>',
+      '  <button class="header-mobile-toggle" id="header-mobile-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="header-mobile-drawer">',
+      '    <span></span><span></span><span></span>',
+      '  </button>',
+      '  <a class="header-brand" href="index.html"><em>S\u00f3l</em> de S\u00f3ter</a>',
       '  <nav class="header-nav" id="header-nav">',
       '    <div style="flex:1"></div>',
       '    <a class="hn-link" data-page="home" href="index.html">Home</a>',
       '    <div class="hn-dropdown" id="dd-pessoal">',
-      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Pessoal <span class="hn-chevron">▾</span></button>',
+      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Pessoal <span class="hn-chevron">\u25be</span></button>',
       '      <div class="hn-menu">',
       '        <a class="hn-menu-item" data-page="sonhos" href="sonhos.html">Sonhos</a>',
       '        <a class="hn-menu-item" data-page="viagens" href="viagens.html">Viagens</a>',
       '        <a class="hn-menu-item" data-page="wishlist" href="wishlist.html">Wishlist</a>',
-      '        <a class="hn-menu-item" data-page="financas" href="financas.html">Finanças</a>',
+      '        <a class="hn-menu-item" data-page="financas" href="financas.html">Finan\u00e7as</a>',
       '        <a class="hn-menu-item" data-page="tarefas" href="tarefas.html">Planejamento</a>',
       '        <a class="hn-menu-item" data-page="academia" href="academia.html">Academia</a>',
       '      </div>',
       '    </div>',
       '    <div class="hn-dropdown" id="dd-estudos">',
-      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Estudos <span class="hn-chevron">▾</span></button>',
+      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Estudos <span class="hn-chevron">\u25be</span></button>',
       '      <div class="hn-menu">',
-      '        <a class="hn-menu-item" data-page="revisao" href="revisao.html">Revisão</a>',
+      '        <a class="hn-menu-item" data-page="revisao" href="revisao.html">Revis\u00e3o</a>',
       '      </div>',
       '    </div>',
       '    <div class="hn-dropdown" id="dd-biblioteca">',
-      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Biblioteca <span class="hn-chevron">▾</span></button>',
+      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Biblioteca <span class="hn-chevron">\u25be</span></button>',
       '      <div class="hn-menu">',
       '        <a class="hn-menu-item" data-page="livros" href="livros.html">Livraria</a>',
       '        <a class="hn-menu-item" data-page="cinema" href="cinema.html">Cinema</a>',
-      '        <a class="hn-menu-item" data-page="mangas" href="mangas.html">Mangás</a>',
+      '        <a class="hn-menu-item" data-page="mangas" href="mangas.html">Mang\u00e1s</a>',
       '      </div>',
       '    </div>',
       '  </nav>',
+      '  <div class="header-desktop-actions">',
       '  <div class="hn-dropdown hn-notif" id="dd-notif">',
-      '    <button class="hn-dropdown-trigger hn-notif-trigger" type="button" tabindex="0" aria-label="Notificações" aria-expanded="false">🔔 <span class="hn-notif-badge" id="notif-count">0</span></button>',
+      '    <button class="hn-dropdown-trigger hn-notif-trigger" type="button" tabindex="0" aria-label="Notifica\u00e7\u00f5es" aria-expanded="false">\ud83d\udd14 <span class="hn-notif-badge" id="notif-count">0</span></button>',
       '    <div class="hn-menu hn-notif-menu">',
-      '      <div class="hn-notif-head"><span>Notificações</span><button type="button" class="hn-notif-clear" id="notif-clear-btn">Limpar</button></div>',
+      '      <div class="hn-notif-head"><span>Notifica\u00e7\u00f5es</span><button type="button" class="hn-notif-clear" id="notif-clear-btn">Limpar</button></div>',
       '      <div class="hn-notif-list" id="notif-list"></div>',
       '    </div>',
       '  </div>',
@@ -4167,29 +4216,71 @@
       '        <span class="avatar-initials" id="header-initials">?</span>',
       '      </div>',
       '      <div class="profile-info">',
-      '        <div class="profile-name" id="header-profile-name">Usuário</div>',
+      '        <div class="profile-name" id="header-profile-name">Usu\u00e1rio</div>',
       '        <div class="profile-level-row">',
       '          <span class="profile-level-badge" id="header-level-badge">Nv 1</span>',
       '          <div class="profile-xp-bar"><div class="profile-xp-fill" id="header-xp-fill" style="width:0%"></div></div>',
       '        </div>',
       '      </div>',
-      '      <span class="profile-chevron">▾</span>',
+      '      <span class="profile-chevron">\u25be</span>',
       '    </button>',
       '    <div class="profile-menu" id="profile-menu">',
       '      <div class="pm-header">',
-      '        <div class="pm-name" id="pm-name-display">Usuário</div>',
-      '        <div class="pm-title" id="pm-title-display">Viajante Nível 1</div>',
+      '        <div class="pm-name" id="pm-name-display">Usu\u00e1rio</div>',
+      '        <div class="pm-title" id="pm-title-display">Viajante N\u00edvel 1</div>',
       '        <div class="pm-xp-row">',
       '          <span id="pm-xp-text">0 XP</span>',
-      '          <span id="pm-xp-next">próx. nível: 100 XP</span>',
+      '          <span id="pm-xp-next">pr\u00f3x. n\u00edvel: 100 XP</span>',
       '        </div>',
       '        <div class="pm-xp-bar"><div class="pm-xp-fill" id="pm-xp-fill" style="width:0%"></div></div>',
       '      </div>',
       '      <div class="pm-divider"></div>',
-      '      <a class="pm-item pm-item-user" href="rpg.html"><span class="pm-icon pm-icon-user" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 18.5c.9-3 3.5-4.75 6.5-4.75s5.6 1.75 6.5 4.75"></path></svg></span> Usuário</a>',
+      '      <a class="pm-item pm-item-user" href="rpg.html"><span class="pm-icon pm-icon-user" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 18.5c.9-3 3.5-4.75 6.5-4.75s5.6 1.75 6.5 4.75"></path></svg></span> Usu\u00e1rio</a>',
       '    </div>',
       '  </div>',
-      '</header>'
+      '  </div>',
+      '</header>',
+      '<div class="header-mobile-backdrop" id="header-mobile-backdrop"></div>',
+      '<aside class="header-mobile-drawer" id="header-mobile-drawer" aria-hidden="true">',
+      '  <div class="header-mobile-drawer-head">',
+      '    <div class="header-mobile-profile">',
+      '      <div class="profile-avatar header-mobile-avatar" id="mobile-avatar">',
+      '        <img id="mobile-avatar-img" src="" alt="">',
+      '        <span class="avatar-initials" id="mobile-initials">?</span>',
+      '      </div>',
+      '      <div class="header-mobile-profile-copy">',
+      '        <div class="header-mobile-profile-name" id="mobile-profile-name">Usu\u00e1rio</div>',
+      '        <div class="header-mobile-profile-meta">',
+      '          <span class="profile-level-badge" id="mobile-level-badge">Nv 1</span>',
+      '          <div class="header-mobile-progress-row">',
+      '            <div class="header-mobile-xp-bar"><div class="header-mobile-xp-fill" id="mobile-xp-fill" style="width:0%"></div></div>',
+      '            <button class="header-mobile-balance" id="mobile-balance-val" type="button" aria-label="Alternar visibilidade do saldo mobile" aria-pressed="false">R$ 0,00</button>',
+      '          </div>',
+      '        </div>',
+      '      </div>',
+      '    </div>',
+      '    <button class="header-mobile-close" id="header-mobile-close" type="button" aria-label="Fechar menu">\u00d7</button>',
+      '  </div>',
+      '  <nav class="header-mobile-nav">',
+      '    <a class="header-mobile-link" href="index.html">Home</a>',
+      '    <div class="header-mobile-group-label">Pessoal</div>',
+      '    <a class="header-mobile-link" href="sonhos.html">Sonhos</a>',
+      '    <a class="header-mobile-link" href="viagens.html">Viagens</a>',
+      '    <a class="header-mobile-link" href="wishlist.html">Wishlist</a>',
+      '    <a class="header-mobile-link" href="financas.html">Finan\u00e7as</a>',
+      '    <a class="header-mobile-link" href="tarefas.html">Planejamento</a>',
+      '    <a class="header-mobile-link" href="academia.html">Academia</a>',
+      '    <div class="header-mobile-group-label">Estudos</div>',
+      '    <a class="header-mobile-link" href="revisao.html">Revis\u00e3o</a>',
+      '    <div class="header-mobile-group-label">Biblioteca</div>',
+      '    <a class="header-mobile-link" href="livros.html">Livraria</a>',
+      '    <a class="header-mobile-link" href="cinema.html">Cinema</a>',
+      '    <a class="header-mobile-link" href="mangas.html">Mang\u00e1s</a>',
+      '  </nav>',
+      '  <div class="header-mobile-drawer-actions">',
+      '    <a class="header-mobile-action" href="rpg.html">Usu\u00e1rio</a>',
+      '  </div>',
+      '</aside>'
     ].join("\n");
   }
 
@@ -4218,10 +4309,10 @@
     var order = {
       "RPG": 0,
       "Ante-abandono": 1,
-      "Revisão": 2,
+      "Revis\u00e3o": 2,
       "Sonhos": 3,
       "Viagens": 4,
-      "Finanças": 5,
+      "Finan\u00e7as": 5,
       "Planejamento": 6,
       "Academia": 7
     };
@@ -4231,7 +4322,7 @@
   function getNotificationTonePillLabel(notification) {
     var tone = String(notification && notification.tone || "");
     if (tone === "danger") return "Urgente";
-    if (tone === "warn") return "Atenção";
+    if (tone === "warn") return "Aten\u00e7\u00e3o";
     if (tone === "rpg") return "Progresso";
     return "Hoje";
   }
@@ -4249,7 +4340,7 @@
     count.style.display = notifications.length ? "inline-flex" : "none";
 
     if (!notifications.length) {
-      list.innerHTML = '<div class="hn-notif-empty">Sem notificações</div>';
+      list.innerHTML = '<div class="hn-notif-empty">Sem notifica\u00e7\u00f5es</div>';
       return;
     }
 
@@ -4273,7 +4364,7 @@
     list.innerHTML =
       '<div class="hn-notif-summary">' +
       '<span class="hn-notif-summary-pill tone-danger">Urgentes ' + summary.urgent + '</span>' +
-      '<span class="hn-notif-summary-pill tone-warn">Atenção ' + summary.attention + '</span>' +
+      '<span class="hn-notif-summary-pill tone-warn">Aten\u00e7\u00e3o ' + summary.attention + '</span>' +
       '<span class="hn-notif-summary-pill">Total ' + notifications.length + '</span>' +
       '</div>' +
       groupList.map(function (groupName) {
@@ -4286,7 +4377,7 @@
             return '<div class="hn-notif-item tone-' + escapeHtml(notification.tone) + '" data-notif-href="' + escapeHtml(notification.href) + '" tabindex="0" role="button" aria-label="' + escapeHtml(notification.label + ": " + notification.text) + '">' +
               '<div class="hn-notif-icon" aria-hidden="true">' + escapeHtml(notification.icon) + '</div>' +
               '<div class="hn-notif-copy"><div class="hn-notif-label-row"><div class="hn-notif-label">' + escapeHtml(notification.label) + '</div><span class="hn-notif-chip tone-' + escapeHtml(notification.tone) + '">' + escapeHtml(getNotificationTonePillLabel(notification)) + '</span></div><span class="hn-notif-text">' + escapeHtml(notification.text) + '</span><span class="hn-notif-linkhint">Abrir</span></div>' +
-              '<button type="button" class="hn-notif-remove" data-notif-id="' + escapeHtml(notification.id) + '" aria-label="Remover notificação">✕</button></div>';
+              '<button type="button" class="hn-notif-remove" data-notif-id="' + escapeHtml(notification.id) + '" aria-label="Remover notifica\u00e7\u00e3o">\u00d7</button></div>';
           }).join("") +
           '</section>';
       }).join("");
@@ -4354,6 +4445,20 @@
     var dropdowns = Array.prototype.slice.call(document.querySelectorAll(".hn-dropdown"));
     var profileWidget = document.getElementById("profile-widget");
     var profileTrigger = document.getElementById("profile-trigger");
+    var mobileToggle = document.getElementById("header-mobile-toggle");
+    var mobileClose = document.getElementById("header-mobile-close");
+    var mobileDrawer = document.getElementById("header-mobile-drawer");
+    var mobileBackdrop = document.getElementById("header-mobile-backdrop");
+
+    function setMobileDrawerOpen(open) {
+      var shouldOpen = !!open;
+      if (!mobileDrawer || !mobileToggle || !mobileBackdrop) return;
+      mobileDrawer.classList.toggle("is-open", shouldOpen);
+      mobileBackdrop.classList.toggle("is-open", shouldOpen);
+      mobileDrawer.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+      mobileToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+      document.body.classList.toggle("mobile-drawer-open", shouldOpen);
+    }
 
     function setDropdownOpen(dropdown, open) {
       if (!dropdown) return;
@@ -4371,6 +4476,7 @@
     function closeAllMenus() {
       dropdowns.forEach(function (dropdown) { setDropdownOpen(dropdown, false); });
       setProfileOpen(false);
+      setMobileDrawerOpen(false);
     }
 
     dropdowns.forEach(function (dropdown) {
@@ -4405,8 +4511,35 @@
       });
     }
 
+    if (mobileToggle) {
+      mobileToggle.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setMobileDrawerOpen(!mobileDrawer.classList.contains("is-open"));
+      });
+    }
+
+    if (mobileClose) {
+      mobileClose.addEventListener("click", function (event) {
+        event.preventDefault();
+        setMobileDrawerOpen(false);
+      });
+    }
+
+    if (mobileBackdrop) {
+      mobileBackdrop.addEventListener("click", function () {
+        setMobileDrawerOpen(false);
+      });
+    }
+
+    document.querySelectorAll(".header-mobile-link, .header-mobile-action").forEach(function (link) {
+      link.addEventListener("click", function () {
+        setMobileDrawerOpen(false);
+      });
+    });
+
     document.addEventListener("click", function (event) {
-      var insideHeaderMenu = event.target.closest(".hn-dropdown, .profile-widget");
+      var insideHeaderMenu = event.target.closest(".hn-dropdown, .profile-widget, .header-mobile-drawer, .header-mobile-toggle");
       if (insideHeaderMenu) return;
       closeAllMenus();
     });
@@ -4424,18 +4557,18 @@
     mount.innerHTML = [
       '<footer class="site-footer">',
       "  <div>",
-      '    <div class="footer-brand"><em>Sól</em> de Sóter</div>',
-      '    <div class="footer-tagline">Espaço pessoal · tudo em um só lugar</div>',
+      '    <div class="footer-brand"><em>S\u00f3l</em> de S\u00f3ter</div>',
+      '    <div class="footer-tagline">Espa\u00e7o pessoal \u00b7 tudo em um s\u00f3 lugar</div>',
       "  </div>",
       '  <div class="footer-links">',
       '    <a class="footer-link" href="index.html">Home</a>',
       '    <a class="footer-link" href="livros.html">Livraria</a>',
       '    <a class="footer-link" href="cinema.html">Cinema</a>',
       '    <a class="footer-link" href="sonhos.html">Sonhos</a>',
-      '    <a class="footer-link" href="financas.html">Finanças</a>',
+      '    <a class="footer-link" href="financas.html">Finan\u00e7as</a>',
       '    <a class="footer-link" href="tarefas.html">Planejamento</a>',
       "  </div>",
-      '  <div class="footer-copy">✦ Sól de Sóter · <span id="footer-year">' + year + "</span></div>",
+      '  <div class="footer-copy">\u2726 S\u00f3l de S\u00f3ter \u00b7 <span id="footer-year">' + year + "</span></div>",
       "</footer>"
     ].join("\n");
   }
