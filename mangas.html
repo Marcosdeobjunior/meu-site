@@ -467,6 +467,50 @@
   .mc-fav-badge { position:absolute; top:8px; right:8px; font-size:13px; filter:drop-shadow(0 1px 6px rgba(0,0,0,.9)); z-index:3; animation:favPop .3s cubic-bezier(.22,1,.36,1) both; }
   @keyframes favPop { from { transform:scale(0); } to { transform:scale(1); } }
   .mc-ribbon { position:absolute; top:10px; left:0; font-size:8px; font-family:var(--font-mono); font-weight:700; letter-spacing:1.2px; text-transform:uppercase; padding:4px 10px 4px 7px; border-radius:0 8px 8px 0; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:2px 2px 8px rgba(0,0,0,.4); z-index:3; }
+  .quick-actions-menu {
+    position: fixed;
+    z-index: 1200;
+    width: min(240px, calc(100vw - 24px));
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(8,7,20,.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 18px 60px rgba(0,0,0,.58), 0 0 0 1px rgba(200,169,110,.08);
+    display: none;
+  }
+  .quick-actions-menu.open { display: block; animation: fadeIn .18s ease both; }
+  .quick-actions-head { margin-bottom: 8px; }
+  .quick-actions-kicker { font: 700 9px var(--font-mono); letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); }
+  .quick-actions-title { margin-top: 4px; font-size: 13px; font-weight: 700; line-height: 1.35; }
+  .quick-actions-list { display: grid; gap: 6px; }
+  .quick-action-btn {
+    width: 100%;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: left;
+    cursor: pointer;
+    font: 600 11px var(--font-ui);
+    transition: background .18s, border-color .18s, transform .18s;
+  }
+  .quick-action-btn:hover {
+    background: rgba(200,169,110,.1);
+    border-color: rgba(200,169,110,.28);
+    transform: translateY(-1px);
+  }
+  .quick-action-btn.danger {
+    color: #ffb4c4;
+    border-color: rgba(224,107,139,.18);
+    background: rgba(224,107,139,.08);
+  }
+  .quick-action-btn.danger:hover {
+    background: rgba(224,107,139,.14);
+    border-color: rgba(224,107,139,.34);
+  }
 
   /* ══════════════════════════════════════════
      FILTER BUTTON & PANEL
@@ -1317,6 +1361,14 @@
       </div>
     </div>
   </div>
+</div>
+
+<div id="tracker-quick-actions" class="quick-actions-menu" onclick="event.stopPropagation()">
+  <div class="quick-actions-head">
+    <div class="quick-actions-kicker">Ações rápidas</div>
+    <div class="quick-actions-title" id="quick-actions-title">Item</div>
+  </div>
+  <div class="quick-actions-list" id="quick-actions-list"></div>
 </div>
 
 <!-- MAIN -->
@@ -2604,6 +2656,7 @@ let thTracker  = null;
 let thItemId   = null;
 let thStarVal  = 0;
 let thImgData  = '';
+let quickActionState = null;
 const TH_STAR_LABELS = ['','Ruim','Regular','Bom','Ótimo','Imperdível'];
 
 function thOpen(tracker, itemId) {
@@ -2936,6 +2989,126 @@ function thDeleteItem() {
   renderTracker(thTracker);
   thDrawerClose();
   thClose();
+}
+
+function getItemByTrackerId(tracker, itemId) {
+  return (S[tracker] || []).find(item => item.id === itemId) || null;
+}
+
+function getQuickActionPrimaryLabel(tracker, item) {
+  if (tracker === 'livros') return 'Atualizar leitura';
+  if (tracker === 'mangas') return 'Atualizar capítulos';
+  if (tracker === 'cinema' && item && item.tipo === 'Série') return 'Atualizar progresso';
+  return 'Editar item';
+}
+
+function focusQuickActionField(tracker) {
+  if (tracker === 'livros' || tracker === 'mangas') {
+    document.getElementById('th-prog-atual')?.focus();
+    return;
+  }
+  document.getElementById('th-titulo')?.focus();
+}
+
+function closeTrackerQuickActions() {
+  document.getElementById('tracker-quick-actions')?.classList.remove('open');
+  quickActionState = null;
+}
+
+function openTrackerQuickActions(event, tracker, itemId) {
+  event.preventDefault();
+  event.stopPropagation();
+  const item = getItemByTrackerId(tracker, itemId);
+  const menu = document.getElementById('tracker-quick-actions');
+  const title = document.getElementById('quick-actions-title');
+  const list = document.getElementById('quick-actions-list');
+  if (!item || !menu || !title || !list) return false;
+  quickActionState = { tracker, itemId };
+  title.textContent = item.titulo || 'Item';
+  list.innerHTML = [
+    `<button type="button" class="quick-action-btn" onclick="quickActionOpenEditor()">${getQuickActionPrimaryLabel(tracker, item)}</button>`,
+    `<button type="button" class="quick-action-btn" onclick="quickActionEditItem()">Editar</button>`,
+    `<button type="button" class="quick-action-btn" onclick="quickActionToggleFavorite()">${item.fav ? 'Remover dos favoritos' : 'Favoritar'}</button>`,
+    `<button type="button" class="quick-action-btn" onclick="quickActionMarkDone()">Concluir</button>`,
+    `<button type="button" class="quick-action-btn danger" onclick="quickActionDeleteItem()">Excluir</button>`
+  ].join('');
+  menu.classList.add('open');
+  const padding = 12;
+  const rect = menu.getBoundingClientRect();
+  const left = Math.min(event.clientX, window.innerWidth - rect.width - padding);
+  const top = Math.min(event.clientY, window.innerHeight - rect.height - padding);
+  menu.style.left = Math.max(padding, left) + 'px';
+  menu.style.top = Math.max(padding, top) + 'px';
+  return false;
+}
+
+function quickActionOpenEditor() {
+  if (!quickActionState) return;
+  const { tracker, itemId } = quickActionState;
+  closeTrackerQuickActions();
+  thOpen(tracker, itemId);
+  thDrawerOpen();
+  setTimeout(() => focusQuickActionField(tracker), 220);
+}
+
+function quickActionEditItem() {
+  if (!quickActionState) return;
+  const { tracker, itemId } = quickActionState;
+  closeTrackerQuickActions();
+  thOpen(tracker, itemId);
+  thDrawerOpen();
+}
+
+function quickActionToggleFavorite() {
+  if (!quickActionState) return;
+  const { tracker, itemId } = quickActionState;
+  const item = getItemByTrackerId(tracker, itemId);
+  if (!item) return;
+  item.fav = !item.fav;
+  pushTimeline(item, item.fav ? 'Adicionado aos favoritos' : 'Removido dos favoritos', Date.now(), item.fav ? 'fav' : 'default');
+  save();
+  renderTracker(tracker);
+  if (thTracker === tracker && thItemId === itemId) thRender(item, TRACKER_CFG[tracker]);
+  closeTrackerQuickActions();
+}
+
+function quickActionMarkDone() {
+  if (!quickActionState) return;
+  const { tracker, itemId } = quickActionState;
+  const item = getItemByTrackerId(tracker, itemId);
+  if (!item) return;
+  const now = Date.now();
+  if (tracker === 'livros' && (+item.paginas || 0) > 0) item.atual = +item.paginas || 0;
+  if (tracker === 'mangas' && (+item.capTotal || 0) > 0) item.capAtual = +item.capTotal || 0;
+  if (tracker === 'cinema' && item.tipo === 'Série') {
+    if ((+item.temporadaTotal || 0) > 0) item.temporadaAtual = +item.temporadaTotal || 0;
+    if ((+item.episodioTotal || 0) > 0) item.episodioAtual = +item.episodioTotal || 0;
+  }
+  item.status = 'concluido';
+  item.finishedAt = item.finishedAt || now;
+  item.updatedAt = now;
+  pushTimeline(item, 'Marcado como concluído', now, 'done');
+  pushProgressHistory(tracker, item, now);
+  save();
+  renderTracker(tracker);
+  if (thTracker === tracker && thItemId === itemId) thRender(item, TRACKER_CFG[tracker]);
+  closeTrackerQuickActions();
+}
+
+function quickActionDeleteItem() {
+  if (!quickActionState) return;
+  const { tracker, itemId } = quickActionState;
+  const item = getItemByTrackerId(tracker, itemId);
+  if (!item) return;
+  if (!confirm('Excluir "' + item.titulo + '"?')) return;
+  S[tracker] = (S[tracker] || []).filter(entry => entry.id !== itemId);
+  save();
+  renderTracker(tracker);
+  if (thTracker === tracker && thItemId === itemId) {
+    thDrawerClose();
+    thClose();
+  }
+  closeTrackerQuickActions();
 }
 
 // ─── FILTER SYSTEM ────────────────────────────────────────────────────────
@@ -3285,7 +3458,7 @@ function buildCard(item, cfg) {
     ? `<img class="mc-img" src="${item.img}" alt="${item.titulo}" loading="lazy">`
     : `<div class="mc-img-placeholder"><div class="ph-icon">${cfg.icon}</div><div class="ph-title">${item.titulo}</div></div>`;
   const progressSection = pct!==null ? `<div class="mc-progress-bar"><div class="mc-progress-fill" style="width:${pct}%"></div></div>` : '';
-  return `<div class="mc ${item.fav?'fav':''}" onclick="openModal('${cfg.key}',${JSON.stringify(item.id)})">
+  return `<div class="mc ${item.fav?'fav':''}" onclick="openModal('${cfg.key}',${JSON.stringify(item.id)})" oncontextmenu="return openTrackerQuickActions(event,'${cfg.key}',${JSON.stringify(item.id)})">
     ${imgSection}
     <div class="mc-ribbon" style="background:${ribbonColor};color:#fff">${statusLabel}</div>
     ${item.fav?'<div class="mc-fav-badge">⭐</div>':''}
@@ -3518,6 +3691,14 @@ renderSharedQuotePanels();
 renderTracker('livros');
 renderTracker('cinema');
 renderTracker('mangas');
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('#tracker-quick-actions')) closeTrackerQuickActions();
+});
+document.addEventListener('scroll', closeTrackerQuickActions, true);
+window.addEventListener('resize', closeTrackerQuickActions);
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeTrackerQuickActions();
+});
 window.addEventListener('soter:firebase-auth-changed', reloadLibraryFromScopedState);
 window.addEventListener('soter:storage-hydrated', reloadLibraryFromScopedState);
 const INITIAL_TRACKER = ['livros','cinema','mangas'].includes(document.body.dataset.page) ? document.body.dataset.page : 'livros';
