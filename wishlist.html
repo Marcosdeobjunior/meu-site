@@ -56,6 +56,7 @@
       <div class="ws-tabs" role="tablist" aria-label="Navegacao da wishlist">
         <button class="ws-tab is-active" id="ws-tab-wishlist" type="button" data-tab="wishlist" role="tab" aria-selected="true">Wishlist</button>
         <button class="ws-tab" id="ws-tab-listas" type="button" data-tab="listas" role="tab" aria-selected="false">Listas</button>
+        <button class="ws-tab" id="ws-tab-historico" type="button" data-tab="historico" role="tab" aria-selected="false">Histórico</button>
       </div>
 
       <div class="ws-view is-active" id="ws-view-wishlist" data-view="wishlist">
@@ -142,7 +143,7 @@
 
           <section class="ws-panel">
             <div class="ws-panel-title">Histórico de Aquisições</div>
-            <div id="acq-history"></div>
+            <div class="ws-history-sidebar-note">Use a aba Histórico para ver todas as aquisições por período.</div>
           </section>
         </aside>
       </div>
@@ -161,6 +162,27 @@
         </div>
         <div class="ws-lists-grid" id="ws-lists-grid"></div>
         <div class="ws-pagination" id="ws-lists-pagination"></div>
+      </div>
+
+      <div class="ws-view" id="ws-view-historico" data-view="historico">
+        <section class="ws-history-view">
+          <div class="ws-lists-head">
+            <div>
+              <div class="ws-section-eyebrow">Linha do tempo</div>
+              <h3 class="ws-section-title">Histórico de Aquisições</h3>
+            </div>
+          </div>
+          <div class="ws-panel">
+            <div class="ws-history-filters" id="acq-history-filters">
+              <button class="ws-history-filter is-active" type="button" data-history-range="1m">Último mês</button>
+              <button class="ws-history-filter" type="button" data-history-range="3m">Últimos 3 meses</button>
+              <button class="ws-history-filter" type="button" data-history-range="6m">Últimos 6 meses</button>
+              <button class="ws-history-filter" type="button" data-history-range="1y">Último ano</button>
+              <button class="ws-history-filter" type="button" data-history-range="all">Todos</button>
+            </div>
+            <div id="acq-history"></div>
+          </div>
+        </section>
       </div>
     </section>
   </main>

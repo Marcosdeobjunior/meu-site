@@ -1761,7 +1761,7 @@
   function isDoneCinema(item) { return item && norm(item.status) === "concluido"; }
   function isDoneManga(item) { return item && norm(item.status) === "concluido"; }
   function isDoneTask(item) { return !!(item && item.done); }
-  function isVisitedViagem(item) { return ["feito", "visitado", "concluido"].indexOf(norm(item && item.status)) >= 0; }
+  function isVisitedViagem(item) { return ["feito", "feita", "visitado", "visitada", "concluido", "concluida"].indexOf(norm(item && item.status)) >= 0; }
   function isDoneDream(item) { return !!(item && item.realizado); }
   function getEstudosHoras(state) {
     return getEstudos(state).reduce(function (acc, item) {

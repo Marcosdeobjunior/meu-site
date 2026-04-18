@@ -11,6 +11,7 @@
   var editListGroupId = null;
   var activeTab = "wishlist";
   var activeListGroupId = null;
+  var historyRange = "1m";
   var ITEMS_PER_PAGE = 50;
   var pageState = {
     wishlist: 1,
@@ -171,7 +172,12 @@
       itemId: String(normalized.itemId || ""),
       name: String(normalized.name || "").trim(),
       category: String(normalized.category || "Outros").trim() || "Outros",
+      priority: String(normalized.priority || "media").trim() || "media",
       price: normalizeNumber(normalized.price),
+      store: String(normalized.store || "").trim(),
+      img: String(normalized.img || "").trim(),
+      emoji: String(normalized.emoji || "").trim(),
+      notes: String(normalized.notes || "").trim(),
       acquiredAt: normalizeNumber(normalized.acquiredAt) || Date.now()
     };
   }
@@ -638,36 +644,48 @@
 
     grid.innerHTML = pageData.items.map(function (item) {
       var index = W.indexOf(item);
-      var badge = item.priority;
-      var thumb = item.emoji || CATS[item.category] || "\u2728";
-      var categoryLine = esc(item.category || "Outros") + (item.store ? " &middot; " + esc(item.store) : "");
-
-      return '' +
-        '<article class="ws-card" data-edit-index="' + index + '">' +
-        '<div class="ws-card-priority ' + badge + '"></div>' +
-        '<div class="ws-card-image">' +
-        (isHttpImage(item.img)
-          ? '<img src="' + esc(item.img) + '" alt="' + esc(item.name) + '" loading="lazy">'
-          : '<span class="ws-card-fallback">' + esc(thumb) + "</span>") +
-        '<div class="ws-card-image-overlay"></div>' +
-        '<span class="ws-card-badge ' + badge + '">' + esc(BADGE_LABELS[badge] || badge) + "</span>" +
-        "</div>" +
-        '<div class="ws-card-body">' +
-        '<div class="ws-card-cat">' + categoryLine + "</div>" +
-        '<div class="ws-card-name">' + esc(item.name) + "</div>" +
-        (item.notes ? '<div class="ws-card-notes">' + esc(item.notes) + "</div>" : "") +
-        '<div class="ws-card-footer">' +
-        '<span class="ws-card-stock">Estoque: ' + item.stock + '</span>' +
-        '<span class="ws-card-price">' + (item.price ? money(item.price, true) : "&ndash;") + "</span>" +
-        (item.link ? '<a class="ws-card-link" href="' + esc(item.link) + '" target="_blank" rel="noopener" data-stop-click="true">Ver produto &rarr;</a>' : "") +
-        '<button class="ws-card-check" type="button" title="Registrar aquisicao" data-toggle-index="' + index + '">' +
-        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
-        "</button>" +
-        "</div>" +
-        "</div>" +
-        "</article>";
+      return buildWishlistCardMarkup(item, {
+        editIndex: index,
+        stockLabel: "Estoque: " + item.stock,
+        footerPrice: item.price ? money(item.price, true) : "&ndash;",
+        footerExtra: item.link ? '<a class="ws-card-link" href="' + esc(item.link) + '" target="_blank" rel="noopener" data-stop-click="true">Ver produto &rarr;</a>' : "",
+        actionButton: '<button class="ws-card-check" type="button" title="Registrar aquisicao" data-toggle-index="' + index + '">' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
+          "</button>"
+      });
     }).join("");
     renderPagination("ws-items-pagination", "wishlist", pageState.wishlist, items.length);
+  }
+
+  function buildWishlistCardMarkup(item, options) {
+    var opts = options || {};
+    var badge = item.priority;
+    var thumb = item.emoji || CATS[item.category] || "\u2728";
+    var categoryLine = esc(item.category || "Outros") + (item.store ? " &middot; " + esc(item.store) : "");
+    var attrs = typeof opts.editIndex === "number" && opts.editIndex >= 0 ? ' data-edit-index="' + opts.editIndex + '"' : "";
+
+    return '' +
+      '<article class="ws-card"' + attrs + '>' +
+      '<div class="ws-card-priority ' + badge + '"></div>' +
+      '<div class="ws-card-image">' +
+      (isHttpImage(item.img)
+        ? '<img src="' + esc(item.img) + '" alt="' + esc(item.name) + '" loading="lazy">'
+        : '<span class="ws-card-fallback">' + esc(thumb) + "</span>") +
+      '<div class="ws-card-image-overlay"></div>' +
+      '<span class="ws-card-badge ' + badge + '">' + esc(opts.badgeLabel || BADGE_LABELS[badge] || badge) + "</span>" +
+      "</div>" +
+      '<div class="ws-card-body">' +
+      '<div class="ws-card-cat">' + categoryLine + "</div>" +
+      '<div class="ws-card-name">' + esc(item.name) + "</div>" +
+      (item.notes ? '<div class="ws-card-notes">' + esc(item.notes) + "</div>" : "") +
+      '<div class="ws-card-footer">' +
+      '<span class="ws-card-stock">' + (opts.stockLabel || "") + "</span>" +
+      '<span class="ws-card-price">' + (opts.footerPrice || "&ndash;") + "</span>" +
+      (opts.footerExtra || "") +
+      (opts.actionButton || "") +
+      "</div>" +
+      "</div>" +
+      "</article>";
   }
 
   function renderStats() {
@@ -812,7 +830,7 @@
   }
 
   function setActiveTab(nextTab) {
-    activeTab = nextTab === "listas" ? "listas" : "wishlist";
+    activeTab = nextTab === "listas" || nextTab === "historico" ? nextTab : "wishlist";
     document.querySelectorAll(".ws-tab").forEach(function (tab) {
       var isActive = tab.getAttribute("data-tab") === activeTab;
       tab.classList.toggle("is-active", isActive);
@@ -873,27 +891,61 @@
 
   function renderHistory() {
     var container = getNode("acq-history");
-    var items = acquisitionHistory.slice().sort(function (a, b) {
+    var now = new Date();
+    var cutoff = null;
+    var items;
+    if (historyRange === "1m") cutoff = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).getTime();
+    else if (historyRange === "3m") cutoff = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).getTime();
+    else if (historyRange === "6m") cutoff = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()).getTime();
+    else if (historyRange === "1y") cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).getTime();
+    items = acquisitionHistory.filter(function (entry) {
+      return cutoff == null || entry.acquiredAt >= cutoff;
+    }).slice().sort(function (a, b) {
       return b.acquiredAt - a.acquiredAt;
-    }).slice(0, 6);
+    });
 
     if (!container) return;
 
     if (!items.length) {
-      container.innerHTML = '<div class="ws-empty-note">Nenhuma aquisicao ainda</div>';
+      container.innerHTML = '<div class="ws-empty-note">Nenhuma aquisição encontrada neste período</div>';
       return;
     }
 
-    container.innerHTML = items.map(function (entry) {
-      return '' +
-        '<div class="ws-history-row">' +
-        '<div class="ws-history-main">' +
-        '<div class="ws-history-name">' + esc(entry.name) + '</div>' +
-        '<div class="ws-history-meta">' + esc(entry.category || "Outros") + ' &middot; ' + new Date(entry.acquiredAt).toLocaleDateString("pt-BR") + '</div>' +
-        '</div>' +
-        '<div class="ws-history-price">' + (entry.price ? money(entry.price, true) : "&ndash;") + '</div>' +
-        '</div>';
-    }).join("");
+    container.innerHTML = '<div class="ws-igrid ws-history-grid">' + items.map(function (entry) {
+      var currentItem = W.find(function (item) { return String(item.id) === String(entry.itemId); }) || null;
+      var visualItem = normalizeItem({
+        id: currentItem ? currentItem.id : entry.itemId,
+        name: entry.name || (currentItem && currentItem.name) || "Item adquirido",
+        category: entry.category || (currentItem && currentItem.category) || "Outros",
+        priority: (currentItem && currentItem.priority) || entry.priority || "media",
+        price: entry.price || (currentItem && currentItem.price) || 0,
+        store: (currentItem && currentItem.store) || entry.store || "",
+        img: (currentItem && currentItem.img) || entry.img || "",
+        emoji: (currentItem && currentItem.emoji) || entry.emoji || "",
+        notes: (currentItem && currentItem.notes) || entry.notes || "",
+        stock: currentItem ? currentItem.stock : 0
+      });
+      return buildWishlistCardMarkup(visualItem, {
+        editIndex: currentItem ? W.indexOf(currentItem) : -1,
+        badgeLabel: "Adquirido",
+        stockLabel: "Em " + new Date(entry.acquiredAt).toLocaleDateString("pt-BR"),
+        footerPrice: entry.price ? money(entry.price, true) : "&ndash;"
+      });
+    }).join("") + "</div>";
+  }
+
+  function bindHistoryFilters() {
+    var wrap = getNode("acq-history-filters");
+    if (!wrap) return;
+    wrap.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-history-range]");
+      if (!button) return;
+      historyRange = button.getAttribute("data-history-range") || "1m";
+      Array.prototype.forEach.call(wrap.querySelectorAll("[data-history-range]"), function (chip) {
+        chip.classList.toggle("is-active", chip === button);
+      });
+      renderHistory();
+    });
   }
 
   function renderAll() {
@@ -984,7 +1036,12 @@
       itemId: item.id,
       name: item.name,
       category: item.category,
+      priority: item.priority,
       price: item.price,
+      store: item.store,
+      img: item.img,
+      emoji: item.emoji,
+      notes: item.notes,
       acquiredAt: Date.now()
     }));
   }
@@ -1194,6 +1251,12 @@
       if (!card) return;
       openListModal(card.getAttribute("data-list-group"));
     });
+    getNode("acq-history").addEventListener("click", function (event) {
+      var stopLink = event.target.closest("[data-stop-click='true']");
+      var card = event.target.closest("[data-edit-index]");
+      if (stopLink || !card) return;
+      openEdit(parseInt(card.getAttribute("data-edit-index"), 10));
+    });
   }
 
   function initVisitedState() {
@@ -1207,6 +1270,7 @@
   load();
   initVisitedState();
   syncFilterUi();
+  bindHistoryFilters();
   renderAll();
   wireEvents();
 

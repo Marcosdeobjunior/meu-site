@@ -581,6 +581,7 @@ function tkRenderFocus() {
     const sDone = subs.filter(s=>s.done).length;
     const sPct  = subs.length ? Math.round(sDone/subs.length*100) : (t.done ? 100 : 0);
     return `<div class="tk-focus-card ${t.done?'done-card':''}" style="--tk-color:${color}"
+        oncontextmenu="return tkQuickActionsOpen(event, ${t.id})"
         onclick="taskHubOpen(${t.id})">
       <div class="tk-focus-card-top">
         <div class="tk-focus-card-check ${t.done?'checked':''}"
@@ -605,6 +606,7 @@ function tkRenderFocus() {
 // LISTA COM ABAS
 let tkListTab = 'pendentes';
 let tkListPage = 1;
+let tkQuickActionState = null;
 
 function tkGetListPageSize() {
   const width = window.innerWidth || 1280;
@@ -753,6 +755,7 @@ function tkRenderList() {
     const dateLbl = diff===null?'Sem data': diff===0?'Hoje': diff===1?'Amanhã': diff===-1?'Ontem':
                     diff<0?`${Math.abs(diff)}d atrás`:`em ${diff}d`;
     return `<div class="tk-task-card ${t.done?'done-card':''}" style="--tk-color:${color}"
+        oncontextmenu="return tkQuickActionsOpen(event, ${t.id})"
         onclick="taskHubOpen(${t.id})">
       <div class="tk-task-card-top">
         <div class="tk-task-card-check ${t.done?'checked':''}"
@@ -836,6 +839,7 @@ function tkCalRender() {
       const col = t.cor || TK_PRIOR_COLOR[t.prior] || '#c8a96e';
       return `<div class="tk-cal-task-card ${t.done ? 'done-mini' : ''}"
           style="--tk-color:${col}"
+          oncontextmenu="return tkQuickActionsOpen(event, ${t.id})"
           onclick="event.stopPropagation();taskHubOpen(${t.id})"
           title="${t.nome}">
         ${t.hora ? `<span style="opacity:.6;margin-right:3px">${t.hora}</span>` : ''}${t.nome}
@@ -1312,6 +1316,149 @@ function addTask() { tkModalOpenForDate(tkCalState.selected); }
 function toggleTask(id) { tkQuickToggle(id); }
 function delTask(id) { S.tasks = S.tasks.filter(x => x.id !== id); save(); renderTasks(); }
 
+function tkGetTaskById(id) {
+  return S.tasks.find(function (item) { return item.id === id; }) || null;
+}
+
+function tkDeleteTaskById(id) {
+  const task = tkGetTaskById(id);
+  if (!task) return false;
+  const nextParentId = task.parentId || null;
+  S.tasks.forEach(function (item) {
+    if (item.parentId === id) item.parentId = nextParentId;
+  });
+  S.tasks = S.tasks.filter(function (item) {
+    if (item.id === id) return false;
+    if (!task.isRecurringClone && item.isRecurringClone && item.recurrenceMasterId === task.id) return false;
+    return true;
+  });
+  tkCalendarSelection.ids.delete(id);
+  if (taskHubState.id === id) {
+    taskHubDrawerClose();
+    taskHubClose();
+  }
+  save();
+  renderTasks();
+  return true;
+}
+
+function tkDuplicateTask(id) {
+  const original = tkGetTaskById(id);
+  if (!original) return null;
+  const copyId = Date.now();
+  const duplicated = {
+    id: copyId,
+    nome: (original.nome || 'Tarefa') + ' (cópia)',
+    nota: original.nota || '',
+    prior: original.prior || 'media',
+    cat: original.cat || 'Pessoal',
+    hora: original.hora || '',
+    recurrence: original.recurrence || 'none',
+    data: original.data || '',
+    cor: original.cor || TK_COLORS[0],
+    done: false,
+    subtarefas: (original.subtarefas || []).map(function (sub) {
+      return { texto: sub.texto, done: false };
+    }),
+    parentId: original.parentId || null,
+    isRecurringClone: false,
+    recurrenceMasterId: copyId,
+    recurrenceIndex: 0
+  };
+  S.tasks.push(duplicated);
+  save();
+  renderTasks();
+  return duplicated;
+}
+
+function tkQuickActionFocusField(task) {
+  if (!task) return;
+  if (task.done) {
+    document.getElementById('tkd-nome')?.focus();
+    return;
+  }
+  if (task.subtarefas && task.subtarefas.length) {
+    document.getElementById('taskh-new-sub')?.focus();
+    return;
+  }
+  document.getElementById('tkd-nota')?.focus();
+}
+
+function tkQuickActionsClose() {
+  const menu = document.getElementById('tk-quick-actions');
+  if (menu) menu.classList.remove('open');
+  tkQuickActionState = null;
+}
+
+function tkQuickActionsOpen(event, id) {
+  event.preventDefault();
+  event.stopPropagation();
+  const task = tkGetTaskById(id);
+  const menu = document.getElementById('tk-quick-actions');
+  const title = document.getElementById('tk-quick-actions-title');
+  const list = document.getElementById('tk-quick-actions-list');
+  if (!task || !menu || !title || !list) return false;
+  tkQuickActionState = { id: id };
+  title.textContent = task.nome || 'Tarefa';
+  list.innerHTML = [
+    '<button type="button" class="tk-quick-action-btn" onclick="tkQuickActionOpenTask()">Abrir tarefa</button>',
+    '<button type="button" class="tk-quick-action-btn" onclick="tkQuickActionEditTask()">Editar</button>',
+    '<button type="button" class="tk-quick-action-btn" onclick="tkQuickActionToggleDone()">' + (task.done ? 'Reabrir' : 'Concluir') + '</button>',
+    '<button type="button" class="tk-quick-action-btn" onclick="tkQuickActionDuplicateTask()">Duplicar</button>',
+    '<button type="button" class="tk-quick-action-btn danger" onclick="tkQuickActionDeleteTask()">Excluir</button>'
+  ].join('');
+  menu.classList.add('open');
+  const padding = 12;
+  const rect = menu.getBoundingClientRect();
+  const left = Math.min(event.clientX, window.innerWidth - rect.width - padding);
+  const top = Math.min(event.clientY, window.innerHeight - rect.height - padding);
+  menu.style.left = Math.max(padding, left) + 'px';
+  menu.style.top = Math.max(padding, top) + 'px';
+  return false;
+}
+
+function tkQuickActionOpenTask() {
+  if (!tkQuickActionState) return;
+  const task = tkGetTaskById(tkQuickActionState.id);
+  tkQuickActionsClose();
+  if (!task) return;
+  taskHubOpen(task.id);
+}
+
+function tkQuickActionEditTask() {
+  if (!tkQuickActionState) return;
+  const task = tkGetTaskById(tkQuickActionState.id);
+  tkQuickActionsClose();
+  if (!task) return;
+  taskHubOpen(task.id);
+  taskHubDrawerOpen();
+  setTimeout(function () { tkQuickActionFocusField(task); }, 220);
+}
+
+function tkQuickActionToggleDone() {
+  if (!tkQuickActionState) return;
+  const task = tkGetTaskById(tkQuickActionState.id);
+  if (!task) return;
+  tkQuickActionsClose();
+  tkQuickToggle(task.id);
+}
+
+function tkQuickActionDuplicateTask() {
+  if (!tkQuickActionState) return;
+  const duplicated = tkDuplicateTask(tkQuickActionState.id);
+  tkQuickActionsClose();
+  if (duplicated) taskHubOpen(duplicated.id);
+}
+
+function tkQuickActionDeleteTask() {
+  if (!tkQuickActionState) return;
+  const task = tkGetTaskById(tkQuickActionState.id);
+  if (!task) return;
+  if (!confirm('Excluir "' + task.nome + '"?')) return;
+  tkQuickActionsClose();
+  tkDeleteTaskById(task.id);
+}
+
 // ======================================================================
 // TASK HUB FULLSCREEN
 // ======================================================================
@@ -1319,6 +1466,7 @@ const taskHubState = { id: null };
 let taskHubDrawerColor = TK_COLORS[0];
 
 function taskHubOpen(id) {
+  tkQuickActionsClose();
   const t = S.tasks.find(x => x.id === id); if (!t) return;
   taskHubState.id = id;
   const hub = document.getElementById('task-hub');
@@ -1331,6 +1479,7 @@ function taskHubOpen(id) {
 }
 
 function taskHubClose() {
+  tkQuickActionsClose();
   document.getElementById('task-hub').classList.remove('open');
   document.body.style.overflow = '';
   const header = document.querySelector('.site-header');
@@ -1927,6 +2076,7 @@ tkCalRender = function () {
           data-task-id="${task.id}"
           data-date="${task.data}"
           style="--tk-color:${col}"
+          oncontextmenu="return tkQuickActionsOpen(event, ${task.id})"
           onclick="tkCalCardActivate(event, ${task.id})"
           onpointerdown="tkCalCardPointerDown(event, ${task.id})"
           title="${task.nome}">
@@ -2345,7 +2495,15 @@ taskHubDelete = function () {
 
 load();
 renderTasks();
+document.addEventListener('click', function (event) {
+  if (!event.target.closest('#tk-quick-actions')) tkQuickActionsClose();
+});
+document.addEventListener('scroll', tkQuickActionsClose, true);
+window.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape') tkQuickActionsClose();
+});
 window.addEventListener('resize', tkRenderList);
+window.addEventListener('resize', tkQuickActionsClose);
 window.addEventListener('resize', taskHubClampBoardPosition);
 
 
