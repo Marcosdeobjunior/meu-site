@@ -49,7 +49,11 @@
   var authSignupEmailCheckTimer = null;
   var authSignupEmailCheckSeq = 0;
   var rpgDailyRefreshTimer = null;
+  var taskTimeReminderTimer = null;
+  var taskReminderPermissionBound = false;
+  var taskReminderVisibilityBound = false;
   var NOTIFICATION_DISMISSALS_STORAGE_PREFIX = "soter_notif_dismissals_v1_";
+  var TASK_TIME_ALERTS_STORAGE_PREFIX = "soter_task_time_alerts_v1_";
   var LAST_AUTH_UID_STORAGE_KEY = "soter_last_auth_uid_v1";
   var USER_STATE_STORAGE_PREFIX = "soter_state_cache_v2_";
   var GUEST_STATE_STORAGE_KEY = "soter_state_cache_v2_guest";
@@ -121,6 +125,51 @@
         JSON.stringify(dismissals && typeof dismissals === "object" ? dismissals : {})
       );
     } catch (err) { }
+  }
+
+  function getTaskTimeAlertsScopeKey() {
+    var activeUid = firebaseCurrentUser && firebaseCurrentUser.uid ? String(firebaseCurrentUser.uid) : "";
+    var lastUid = "";
+    if (activeUid) return TASK_TIME_ALERTS_STORAGE_PREFIX + activeUid;
+    try {
+      lastUid = String(localStorage.getItem(LAST_AUTH_UID_STORAGE_KEY) || "").trim();
+    } catch (err) {
+      lastUid = "";
+    }
+    return TASK_TIME_ALERTS_STORAGE_PREFIX + (lastUid || "__guest__");
+  }
+
+  function loadTaskTimeAlertsSnapshot() {
+    try {
+      var raw = localStorage.getItem(getTaskTimeAlertsScopeKey());
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function saveTaskTimeAlertsSnapshot(alerts) {
+    try {
+      localStorage.setItem(
+        getTaskTimeAlertsScopeKey(),
+        JSON.stringify(alerts && typeof alerts === "object" ? alerts : {})
+      );
+    } catch (err) { }
+  }
+
+  function pruneTaskTimeAlertsSnapshot(alerts, nowMs) {
+    var next = alerts && typeof alerts === "object" ? alerts : {};
+    var changed = false;
+    Object.keys(next).forEach(function (key) {
+      var stamp = Number(next[key]);
+      if (!Number.isFinite(stamp) || stamp <= 0 || nowMs - stamp > 45 * 86400000) {
+        delete next[key];
+        changed = true;
+      }
+    });
+    return { alerts: next, changed: changed };
   }
 
   function loadState() {
@@ -2205,6 +2254,106 @@
     return getRpgDailyCycleDate(date);
   }
 
+  function parseTaskClockMinutes(value) {
+    var match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    var hours = Number(match[1]);
+    var minutes = Number(match[2]);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+    return hours * 60 + minutes;
+  }
+
+  function supportsDesktopTaskNotifications() {
+    return typeof window !== "undefined" && typeof window.Notification === "function";
+  }
+
+  function hasTimedTasksForToday(state) {
+    var today = getNotificationCycleDate();
+    return getTasks(state).some(function (task) {
+      return !!task &&
+        !task.done &&
+        String(task.data || "").slice(0, 10) === String(today) &&
+        parseTaskClockMinutes(task.hora) !== null;
+    });
+  }
+
+  function requestTaskReminderPermission() {
+    if (!supportsDesktopTaskNotifications()) return;
+    if (window.Notification.permission !== "default") return;
+    try {
+      Promise.resolve(window.Notification.requestPermission()).then(function () {
+        checkTaskTimeReminders();
+      }).catch(function () { });
+    } catch (err) { }
+  }
+
+  function ensureTaskReminderPermissionPrompt() {
+    if (taskReminderPermissionBound || !supportsDesktopTaskNotifications()) return;
+    if (window.Notification.permission !== "default") return;
+    if (!hasTimedTasksForToday(ensureStateShape(loadState()))) return;
+    var onInteract = function () {
+      window.removeEventListener("pointerdown", onInteract, true);
+      window.removeEventListener("keydown", onInteract, true);
+      taskReminderPermissionBound = false;
+      requestTaskReminderPermission();
+    };
+    taskReminderPermissionBound = true;
+    window.addEventListener("pointerdown", onInteract, true);
+    window.addEventListener("keydown", onInteract, true);
+  }
+
+  function buildTaskReminderBody(task) {
+    var bits = [];
+    if (task && task.hora) bits.push("Agora às " + String(task.hora).slice(0, 5));
+    if (task && task.cat) bits.push(task.cat);
+    return bits.join(" • ") || "Tarefa agendada para agora.";
+  }
+
+  function checkTaskTimeReminders() {
+    if (!supportsDesktopTaskNotifications()) return;
+    ensureTaskReminderPermissionPrompt();
+    if (window.Notification.permission !== "granted") return;
+
+    var now = new Date();
+    var nowMs = now.getTime();
+    var today = getNotificationCycleDate(now);
+    var state = ensureStateShape(loadState());
+    var snapshot = pruneTaskTimeAlertsSnapshot(loadTaskTimeAlertsSnapshot(), nowMs);
+    var alerts = snapshot.alerts;
+    var changed = snapshot.changed;
+
+    getTasks(state).forEach(function (task) {
+      if (!task || task.done) return;
+      if (String(task.data || "").slice(0, 10) !== String(today)) return;
+      if (parseTaskClockMinutes(task.hora) === null) return;
+
+      var triggerAt = Date.parse(String(today) + "T" + String(task.hora).slice(0, 5) + ":00");
+      if (!Number.isFinite(triggerAt)) return;
+      if (nowMs < triggerAt || nowMs - triggerAt > 90000) return;
+
+      var key = [task.id, today, String(task.hora).slice(0, 5)].join("|");
+      if (alerts[key]) return;
+
+      alerts[key] = nowMs;
+      changed = true;
+
+      try {
+        var notification = new window.Notification("Hora da tarefa: " + String(task.nome || "Tarefa"), {
+          body: buildTaskReminderBody(task),
+          tag: "task-time-" + String(task.id),
+          renotify: false
+        });
+        notification.onclick = function () {
+          try { window.focus(); } catch (err) { }
+          if (currentPage() !== "tarefas") window.location.href = "tarefas.html";
+        };
+      } catch (err) { }
+    });
+
+    if (changed) saveTaskTimeAlertsSnapshot(alerts);
+  }
+
   function getIsoToday() {
     return new Date().toISOString().slice(0, 10);
   }
@@ -4011,6 +4160,20 @@
     }, 30000);
   }
 
+  function startTaskTimeReminderWatcher() {
+    checkTaskTimeReminders();
+    if (taskTimeReminderTimer) clearInterval(taskTimeReminderTimer);
+    taskTimeReminderTimer = setInterval(function () {
+      checkTaskTimeReminders();
+    }, 30000);
+    if (taskReminderVisibilityBound) return;
+    taskReminderVisibilityBound = true;
+    window.addEventListener("focus", checkTaskTimeReminders);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") checkTaskTimeReminders();
+    });
+  }
+
   window.SoterRPG = {
     calcXP: function (state) { return calcRpgXp(state || loadState()); },
     getBreakdown: function (state) { return getRpgBreakdown(state || loadState()); },
@@ -4809,6 +4972,7 @@
   exposeStorageApi(siteState);
   wireFirebaseAuthControls();
   startRpgDailyRefreshWatcher();
+  startTaskTimeReminderWatcher();
   tryHydrateFromFile();
   initFirebaseSync().catch(function () { });
 }());
