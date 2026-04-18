@@ -1251,14 +1251,45 @@ function tkQuickToggle(id) {
 let tkModalDate = '';
 let tkModalColor = TK_COLORS[0];
 
+function tkNormalizeHexColor(value, fallback) {
+  var normalized = String(value || '').trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(normalized)) return normalized.toLowerCase();
+  if (/^#[0-9a-fA-F]{3}$/.test(normalized)) {
+    return ('#' + normalized[1] + normalized[1] + normalized[2] + normalized[2] + normalized[3] + normalized[3]).toLowerCase();
+  }
+  return typeof fallback === 'string' ? fallback : '';
+}
+
 function tkBuildColorPicker(containerId, selectedColor, onPickFn) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = TK_COLORS.map(col =>
-    `<div class="tk-color-opt ${col===selectedColor ? 'sel' : ''}"
-      style="background:${col}"
-      onclick="(${onPickFn})('${col}')"></div>`
-  ).join('');
+  const normalizedColor = tkNormalizeHexColor(selectedColor, TK_COLORS[0]);
+  const isPreset = TK_COLORS.indexOf(normalizedColor) >= 0;
+  el.innerHTML =
+    `<div class="tk-color-picker-shell">
+      <div class="tk-color-preset-grid">
+        ${TK_COLORS.map(col =>
+          `<button type="button"
+            class="tk-color-opt ${col===normalizedColor ? 'sel' : ''}"
+            style="background:${col}"
+            onclick="(${onPickFn})('${col}')"
+            aria-label="Selecionar cor ${col.toUpperCase()}"></button>`
+        ).join('')}
+      </div>
+      <label class="tk-color-custom-trigger ${!isPreset ? 'sel' : ''}" style="--picker-color:${normalizedColor}">
+        <input class="tk-color-native" type="color" value="${normalizedColor}" onchange="tkHandleCustomColorPick('${onPickFn}', this.value)">
+        <span class="tk-color-custom-chip" aria-hidden="true"></span>
+        <span class="tk-color-custom-copy">
+          <strong>Personalizar</strong>
+          <small>${normalizedColor.toUpperCase()}</small>
+        </span>
+      </label>
+    </div>`;
+}
+
+function tkHandleCustomColorPick(onPickFn, value) {
+  var normalizedColor = tkNormalizeHexColor(value, TK_COLORS[0]);
+  if (typeof window[onPickFn] === 'function') window[onPickFn](normalizedColor);
 }
 
 function tkModalOpenForDate(ds) {
