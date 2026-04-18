@@ -423,8 +423,10 @@ function tkApplyRecurringEdits(taskId, updates) {
     return task;
   }
 
-  var nextRecurrence = updates.recurrence || task.recurrence || master.recurrence || 'none';
-  var nextDate = updates.data || task.data || master.data;
+  var hasNextRecurrence = Object.prototype.hasOwnProperty.call(updates, 'recurrence');
+  var hasNextDate = Object.prototype.hasOwnProperty.call(updates, 'data');
+  var nextRecurrence = hasNextRecurrence ? updates.recurrence : (task.recurrence || master.recurrence || 'none');
+  var nextDate = hasNextDate ? updates.data : (task.data || master.data);
   var nextMasterDate = nextDate;
   if (task.isRecurringClone && task.recurrenceIndex) {
     nextMasterDate = tkRewindRecurrence(nextDate, nextRecurrence, task.recurrenceIndex);
@@ -453,7 +455,7 @@ function tkMoveTaskSeries(ids, dayDelta) {
 function tkMigrate() {
   S.tasks = (S.tasks || []).map(t => {
     if (!t.subtarefas) t.subtarefas = [];
-    if (!t.data) t.data = tkToday();
+    if (typeof t.data === 'undefined' || t.data === null) t.data = tkToday();
     if (!t.cor)  t.cor  = TK_COLORS[0];
     if (!t.nota) t.nota = '';
     if (!t.hora) t.hora = '';
@@ -1265,6 +1267,7 @@ function tkModalOpenForDate(ds) {
   document.getElementById('tkm-nome').value  = '';
   document.getElementById('tkm-nota').value  = '';
   document.getElementById('tkm-hora').value  = '';
+  document.getElementById('tkm-data').value  = tkModalDate;
   document.getElementById('tkm-recorrencia').value = 'none';
   document.getElementById('tkm-prior').value = 'media';
   document.getElementById('tkm-cat').value   = 'Pessoal';
@@ -1279,6 +1282,11 @@ function tkModalPickColor(col) {
   tkBuildColorPicker('tkm-colors', tkModalColor, 'tkModalPickColor');
 }
 
+function tkModalSetDate(value) {
+  tkModalDate = value || '';
+  document.getElementById('tk-modal-date-label').textContent = tkModalDate ? tkFmtDateLong(tkModalDate) : 'Sem data';
+}
+
 function tkModalClose() {
   document.getElementById('tk-modal-bd').classList.remove('open');
   taskLinkPendingCreate = null;
@@ -1288,6 +1296,8 @@ function tkModalCloseOutside(e) { if (e.target.id === 'tk-modal-bd') tkModalClos
 function tkModalSave() {
   const nome = document.getElementById('tkm-nome').value.trim();
   if (!nome) { document.getElementById('tkm-nome').focus(); return; }
+  const selectedDate = document.getElementById('tkm-data').value;
+  tkModalSetDate(selectedDate);
   const task = {
     id:         Date.now(),
     nome,
@@ -1296,7 +1306,7 @@ function tkModalSave() {
     cat:        document.getElementById('tkm-cat').value,
     hora:       document.getElementById('tkm-hora').value,
     recurrence: document.getElementById('tkm-recorrencia').value,
-    data:       tkModalDate,
+    data:       selectedDate,
     cor:        tkModalColor,
     done:       false,
     subtarefas: [],
@@ -2420,6 +2430,8 @@ taskHubRenderSubs = function (task) {
 tkModalSave = function () {
   const nome = document.getElementById('tkm-nome').value.trim();
   if (!nome) { document.getElementById('tkm-nome').focus(); return; }
+  const selectedDate = document.getElementById('tkm-data').value;
+  tkModalSetDate(selectedDate);
   const task = {
     id: Date.now(),
     nome: nome,
@@ -2428,7 +2440,7 @@ tkModalSave = function () {
     cat: document.getElementById('tkm-cat').value,
     hora: document.getElementById('tkm-hora').value,
     recurrence: document.getElementById('tkm-recorrencia').value,
-    data: tkModalDate,
+    data: selectedDate,
     cor: tkModalColor,
     done: false,
     subtarefas: [],
