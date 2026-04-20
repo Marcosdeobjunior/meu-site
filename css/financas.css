@@ -496,6 +496,17 @@ body[data-page="financas"] .app-content {
   transition: width .5s ease;
 }
 
+.fin-savings-estimate {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--fin-muted2);
+  font-family: var(--fin-font-mono);
+}
+
 .fin-savings-meta {
   display: flex;
   align-items: center;
@@ -785,6 +796,7 @@ body[data-page="financas"] .app-content {
 .fin-tx-dot.in { background: rgba(94, 196, 168, 0.15); }
 .fin-tx-dot.out { background: rgba(224, 107, 139, 0.15); }
 .fin-tx-dot.save { background: rgba(200, 169, 110, 0.15); }
+.fin-tx-dot.save-withdraw { background: rgba(124, 111, 205, 0.15); }
 
 .fin-tx-body {
   flex: 1;
@@ -825,6 +837,7 @@ body[data-page="financas"] .app-content {
 .fin-tx-amt.in { color: var(--fin-teal); }
 .fin-tx-amt.out { color: var(--fin-rose); }
 .fin-tx-amt.save { color: var(--fin-gold); }
+.fin-tx-amt.save-withdraw { color: var(--fin-violet); }
 
 .fin-tx-future {
   opacity: 0.6;
@@ -1100,9 +1113,15 @@ body[data-page="financas"] .app-content {
   background: var(--fin-gold);
 }
 
+.fin-cal-ev.save-withdraw::before,
+.fin-cal-ev.future-save-withdraw::before {
+  background: var(--fin-violet);
+}
+
 .fin-cal-ev.future-in,
 .fin-cal-ev.future-out,
-.fin-cal-ev.future-save {
+.fin-cal-ev.future-save,
+.fin-cal-ev.future-save-withdraw {
   opacity: .68;
   border-style: dashed;
 }
@@ -1646,7 +1665,7 @@ body[data-page="financas"] .app-content {
 
 .fin-type-toggle {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   overflow: hidden;
@@ -1684,6 +1703,11 @@ body[data-page="financas"] .app-content {
 .fin-tt-btn.active-save {
   background: rgba(67, 53, 26, 0.98);
   color: var(--fin-gold);
+}
+
+.fin-tt-btn.active-save-withdraw {
+  background: rgba(39, 34, 76, 0.98);
+  color: #a79ff2;
 }
 
 .fin-btn.fin-btn-sm,

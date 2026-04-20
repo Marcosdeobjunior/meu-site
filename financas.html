@@ -91,6 +91,7 @@
               <div class="fin-savings-bar">
                 <div class="fin-savings-fill" id="fin-savings-fill" style="width:0%"></div>
               </div>
+              <div class="fin-savings-estimate" id="fin-savings-estimate">Sem aportes suficientes para estimar</div>
               <div class="fin-savings-meta">
                 <span id="fin-savings-meta-left">Meta atual</span>
                 <span id="fin-savings-meta-right">R$ 0,00</span>
@@ -250,7 +251,8 @@
       <div class="fin-type-toggle">
         <button class="fin-tt-btn active-in" id="tt-in" data-type="in"><i class="fas fa-arrow-down"></i> Entrada</button>
         <button class="fin-tt-btn" id="tt-out" data-type="out"><i class="fas fa-arrow-up"></i> Saída</button>
-        <button class="fin-tt-btn" id="tt-save" data-type="save"><i class="fas fa-piggy-bank"></i> Poupança</button>
+        <button class="fin-tt-btn" id="tt-save" data-type="save"><i class="fas fa-piggy-bank"></i> Guardar</button>
+        <button class="fin-tt-btn" id="tt-save-withdraw" data-type="save_withdraw"><i class="fas fa-coins"></i> Retirar</button>
       </div>
 
       <div class="fin-fg">
@@ -372,7 +374,8 @@
               <select class="fin-fsel" id="mr-type">
                 <option value="in">Entrada</option>
                 <option value="out">Saída</option>
-                <option value="save">Poupança</option>
+                <option value="save">Guardar na poupança</option>
+                <option value="save_withdraw">Retirar da poupança</option>
               </select>
             </div>
             <div class="fin-fg">

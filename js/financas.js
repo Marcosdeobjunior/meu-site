@@ -127,7 +127,7 @@
         description: String(rule.description || "").trim(),
         note: String(rule.note || "").trim(),
         startDate: String(rule.startDate || today()),
-        type: rule.type === "out" || rule.type === "save" ? rule.type : "in",
+        type: rule.type === "out" || rule.type === "save" || rule.type === "save_withdraw" ? rule.type : "in",
         value: Number(rule.value || 0),
         category: String(rule.category || ""),
         pattern: rule.pattern === "fixed_day" ? "fixed_day" : "nth_counted_day",
@@ -157,11 +157,36 @@
 
   function getCategoriesForType(type) {
     if (!categorySets) categorySets = normalizeCategorySets();
-    return (categorySets[type] || DEFAULT_CATEGORY_SETS[type] || []).slice();
+    return (categorySets[getCategorySetKey(type)] || DEFAULT_CATEGORY_SETS[getCategorySetKey(type)] || []).slice();
+  }
+
+  function getCategorySetKey(type) {
+    return isSavingsType(type) ? "save" : type;
+  }
+
+  function isSavingsType(type) {
+    return type === "save" || type === "save_withdraw";
+  }
+
+  function getSavingsDelta(tx) {
+    if (!tx) return 0;
+    if (tx.type === "save") return Number(tx.value || 0);
+    if (tx.type === "save_withdraw") return -Number(tx.value || 0);
+    return 0;
+  }
+
+  function getTxClass(type) {
+    if (type === "save_withdraw") return "save-withdraw";
+    return type === "in" ? "in" : type === "save" ? "save" : "out";
+  }
+
+  function getTxSign(type) {
+    return getTxDelta({ type: type, value: 1 }) >= 0 ? "+" : "-";
   }
 
   function getTxDelta(tx) {
     if (tx.type === "in") return Number(tx.value);
+    if (tx.type === "save_withdraw") return Number(tx.value);
     if (tx.type === "out" || tx.type === "save") return -Number(tx.value);
     return 0;
   }
@@ -182,6 +207,10 @@
 
   function today() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  function diffDays(dateA, dateB) {
+    return Math.round((new Date(dateB + "T12:00:00").getTime() - new Date(dateA + "T12:00:00").getTime()) / 86400000);
   }
 
   function nowYM() {
@@ -275,7 +304,7 @@
         type: rule.type,
         description: rule.description || rule.name,
         value: Number(rule.value),
-        category: rule.category || (rule.type === "save" ? "Poupança" : "Outros"),
+        category: rule.category || (isSavingsType(rule.type) ? "Poupança" : "Outros"),
         recurrence: "rule",
         future: date > today(),
         note: rule.note || ""
@@ -375,6 +404,128 @@
     return result;
   }
 
+  function getSavingsBalanceUntil(dateStr, ignoreTxId) {
+    var balance = 0;
+    txs.forEach(function (tx) {
+      if (ignoreTxId && tx.id === ignoreTxId) return;
+      if (!isSavingsType(tx.type)) return;
+      if (tx.recurrence === "monthly") {
+        var monthlyCur = new Date(tx.date + "T12:00:00");
+        var endMonthly = new Date(dateStr + "T12:00:00");
+        while (monthlyCur <= endMonthly) {
+          balance += getSavingsDelta(tx);
+          monthlyCur.setMonth(monthlyCur.getMonth() + 1);
+        }
+      } else if (tx.recurrence === "weekly") {
+        var weeklyCur = new Date(tx.date + "T12:00:00");
+        var endWeekly = new Date(dateStr + "T12:00:00");
+        while (weeklyCur <= endWeekly) {
+          balance += getSavingsDelta(tx);
+          weeklyCur.setDate(weeklyCur.getDate() + 7);
+        }
+      } else if (tx.date <= dateStr) {
+        balance += getSavingsDelta(tx);
+      }
+    });
+    getRuleOccurrencesUntil(dateStr).forEach(function (tx) {
+      if (isSavingsType(tx.type)) balance += getSavingsDelta(tx);
+    });
+    return balance;
+  }
+
+  function getSavingsDepositOccurrencesUntil(dateStr, ignoreTxId) {
+    var occurrences = [];
+    txs.forEach(function (tx) {
+      if (ignoreTxId && tx.id === ignoreTxId) return;
+      if (tx.type !== "save") return;
+      if (tx.recurrence === "monthly") {
+        var monthlyCur = new Date(tx.date + "T12:00:00");
+        var endMonthly = new Date(dateStr + "T12:00:00");
+        while (monthlyCur <= endMonthly) {
+          occurrences.push({
+            date: getMonthDateStr(monthlyCur.getFullYear(), monthlyCur.getMonth(), monthlyCur.getDate()),
+            value: Number(tx.value || 0)
+          });
+          monthlyCur.setMonth(monthlyCur.getMonth() + 1);
+        }
+      } else if (tx.recurrence === "weekly") {
+        var weeklyCur = new Date(tx.date + "T12:00:00");
+        var endWeekly = new Date(dateStr + "T12:00:00");
+        while (weeklyCur <= endWeekly) {
+          occurrences.push({
+            date: getMonthDateStr(weeklyCur.getFullYear(), weeklyCur.getMonth(), weeklyCur.getDate()),
+            value: Number(tx.value || 0)
+          });
+          weeklyCur.setDate(weeklyCur.getDate() + 7);
+        }
+      } else if (tx.date <= dateStr) {
+        occurrences.push({ date: tx.date, value: Number(tx.value || 0) });
+      }
+    });
+    getRuleOccurrencesUntil(dateStr).forEach(function (tx) {
+      if (tx.type !== "save") return;
+      occurrences.push({ date: tx.date, value: Number(tx.value || 0) });
+    });
+    occurrences.sort(function (a, b) { return a.date.localeCompare(b.date); });
+    return occurrences;
+  }
+
+  function getSavingsPaceEstimate(reserve, goal) {
+    var missing = Math.max(0, Number(goal || 0) - Number(reserve || 0));
+    if (goal <= 0) {
+      return {
+        summary: "Defina uma meta para calcular a estimativa.",
+        metaLeft: "Meta atual"
+      };
+    }
+    if (missing <= 0) {
+      return {
+        summary: "Objetivo concluído. A meta já foi atingida.",
+        metaLeft: "Meta atingida"
+      };
+    }
+
+    var deposits = getSavingsDepositOccurrencesUntil(today());
+    if (!deposits.length) {
+      return {
+        summary: "Adicione aportes na poupança para estimar o tempo até a meta.",
+        metaLeft: "Meta atual"
+      };
+    }
+
+    var totalDeposited = deposits.reduce(function (sum, item) { return sum + Number(item.value || 0); }, 0);
+    var averageDeposit = totalDeposited / deposits.length;
+    var averageGapDays = null;
+    if (deposits.length > 1) {
+      var gapTotal = 0;
+      for (var idx = 1; idx < deposits.length; idx += 1) {
+        gapTotal += Math.max(1, diffDays(deposits[idx - 1].date, deposits[idx].date));
+      }
+      averageGapDays = gapTotal / (deposits.length - 1);
+    } else {
+      averageGapDays = 30;
+    }
+
+    if (!averageDeposit || averageDeposit <= 0 || !averageGapDays || averageGapDays <= 0) {
+      return {
+        summary: "Sem aportes suficientes para estimar com consistência.",
+        metaLeft: "Meta atual"
+      };
+    }
+
+    var cyclesNeeded = Math.ceil(missing / averageDeposit);
+    var estimatedDays = Math.max(1, Math.round(cyclesNeeded * averageGapDays));
+    var targetDateObj = new Date(today() + "T12:00:00");
+    targetDateObj.setDate(targetDateObj.getDate() + estimatedDays);
+    var targetDate = getMonthDateStr(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate());
+    var frequencyText = averageGapDays <= 8 ? "semanal" : averageGapDays <= 20 ? "quinzenal" : "mensal";
+
+    return {
+      summary: "Mantendo aportes m\u00e9dios de " + fmtR(averageDeposit) + " em ritmo " + frequencyText + ", a meta chega em cerca de " + estimatedDays + " dias.",
+      metaLeft: "Estimativa " + fmtD(targetDate)
+    };
+  }
+
   function computeStats() {
     var ym = nowYM();
     var monthTxs = expandRecurring(ym.y, ym.m);
@@ -401,7 +552,7 @@
         var now = new Date();
         while (monthlyCur <= now) {
           saldo += getTxDelta(tx);
-          if (tx.type === "save") savingsTotal += Number(tx.value);
+          savingsTotal += getSavingsDelta(tx);
           monthlyCur.setMonth(monthlyCur.getMonth() + 1);
         }
       } else if (tx.recurrence === "weekly") {
@@ -409,17 +560,17 @@
         var nowWeekly = new Date();
         while (weeklyCur <= nowWeekly) {
           saldo += getTxDelta(tx);
-          if (tx.type === "save") savingsTotal += Number(tx.value);
+          savingsTotal += getSavingsDelta(tx);
           weeklyCur.setDate(weeklyCur.getDate() + 7);
         }
       } else if (!isFuture(tx)) {
         saldo += getTxDelta(tx);
-        if (tx.type === "save") savingsTotal += Number(tx.value);
+        savingsTotal += getSavingsDelta(tx);
       }
     });
     getRuleOccurrencesUntil(today()).forEach(function (tx) {
       saldo += getTxDelta(tx);
-      if (tx.type === "save") savingsTotal += Number(tx.value);
+      savingsTotal += getSavingsDelta(tx);
     });
 
     var proj = saldo;
@@ -445,30 +596,34 @@
     var reserve = Math.max(0, savingsTotal);
     var reservePct = savingsGoal > 0 ? Math.max(0, Math.min(100, Math.round((reserve / savingsGoal) * 100))) : 0;
     var reserveMonth = monthTxs.reduce(function (sum, tx) {
-      return tx.type === "save" ? sum + Number(tx.value || 0) : sum;
+      return sum + getSavingsDelta(tx);
     }, 0);
     var reserveHistory = [];
     txs.forEach(function (tx) {
-      if (tx.type !== "save") return;
+      if (!isSavingsType(tx.type)) return;
       if (tx.recurrence === "monthly") {
         var monthlyCur = new Date(tx.date + "T12:00:00");
         var nowMonthly = new Date();
         while (monthlyCur <= nowMonthly) {
-          reserveHistory.push({ date: getMonthDateStr(monthlyCur.getFullYear(), monthlyCur.getMonth(), monthlyCur.getDate()), value: tx.value });
+          reserveHistory.push({ date: getMonthDateStr(monthlyCur.getFullYear(), monthlyCur.getMonth(), monthlyCur.getDate()), value: getSavingsDelta(tx) });
           monthlyCur.setMonth(monthlyCur.getMonth() + 1);
         }
       } else if (tx.recurrence === "weekly") {
         var weeklyCur = new Date(tx.date + "T12:00:00");
         var nowWeeklyHistory = new Date();
         while (weeklyCur <= nowWeeklyHistory) {
-          reserveHistory.push({ date: getMonthDateStr(weeklyCur.getFullYear(), weeklyCur.getMonth(), weeklyCur.getDate()), value: tx.value });
+          reserveHistory.push({ date: getMonthDateStr(weeklyCur.getFullYear(), weeklyCur.getMonth(), weeklyCur.getDate()), value: getSavingsDelta(tx) });
           weeklyCur.setDate(weeklyCur.getDate() + 7);
         }
       } else if (tx.date <= today()) {
-        reserveHistory.push({ date: tx.date, value: tx.value });
+        reserveHistory.push({ date: tx.date, value: getSavingsDelta(tx) });
       }
     });
-    reserveHistory = reserveHistory.concat(getRuleOccurrencesUntil(today()).filter(function (tx) { return tx.type === "save"; }));
+    reserveHistory = reserveHistory.concat(getRuleOccurrencesUntil(today()).filter(function (tx) {
+      return isSavingsType(tx.type);
+    }).map(function (tx) {
+      return { date: tx.date, value: getSavingsDelta(tx) };
+    }));
     var reserveMonthsMap = {};
     reserveHistory.forEach(function (tx) {
       var key = String(tx.date || "").slice(0, 7);
@@ -515,6 +670,7 @@
     var reserveFill = document.getElementById("fin-savings-fill");
     var reserveRight = document.getElementById("fin-savings-meta-right");
     var reserveSub = document.getElementById("fin-savings-sub");
+    var reserveEstimate = document.getElementById("fin-savings-estimate");
     var reserveGoalInput = document.getElementById("fin-savings-goal-input");
     var reserveGoalDisplay = document.getElementById("fin-savings-goal-display");
     var analyticsSaveAmount = document.getElementById("st-save-amount");
@@ -533,6 +689,9 @@
     if (reserveRight) reserveRight.textContent = fmtR(savingsGoal);
     if (reserveGoalInput) reserveGoalInput.value = savingsGoal ? String(savingsGoal) : "";
     if (reserveGoalDisplay) reserveGoalDisplay.textContent = savingsGoal > 0 ? fmtR(savingsGoal) : "Clique para editar";
+    var paceEstimate = getSavingsPaceEstimate(reserve, savingsGoal);
+    if (reserveEstimate) reserveEstimate.textContent = paceEstimate.summary;
+    document.getElementById("fin-savings-meta-left").textContent = paceEstimate.metaLeft;
     if (analyticsSaveAmount) analyticsSaveAmount.textContent = fmtR(reserve);
     if (analyticsSavePct) analyticsSavePct.textContent = reservePct + "%";
     if (analyticsSaveFill) analyticsSaveFill.style.width = reservePct + "%";
@@ -543,10 +702,10 @@
     if (analyticsSaveDays) analyticsSaveDays.textContent = projectedDays === null ? "Sem média suficiente" : (projectedDays === 0 ? "0 dias" : projectedDays + " dias");
     if (analyticsSaveDate) analyticsSaveDate.textContent = projectedDate ? fmtD(projectedDate) : "Sem projeção";
     if (reserveSub) {
-      reserveSub.textContent = reserve > 0 ? "Transferido para a poupan\u00e7a e fora do saldo dispon\u00edvel" : "Use o tipo Poupan\u00e7a para mover valores sem trat\u00e1-los como gasto";
+      reserveSub.textContent = reserve > 0 ? "Movido entre saldo e poupança, sem tratar como gasto." : "Use guardar e retirar para mover valores entre saldo e poupança.";
     }
     if (analyticsSaveSub) {
-      analyticsSaveSub.textContent = reserve > 0 ? "Valor acumulado em transferências de poupança fora do saldo disponível." : "Use transferências de poupança para construir sua reserva.";
+      analyticsSaveSub.textContent = reserve > 0 ? "Saldo líquido acumulado na poupança, já considerando retiradas." : "Use transferências de poupança para construir sua reserva.";
     }
     savingsAnalyticsModel = {
       reserve: reserve,
@@ -886,14 +1045,11 @@
         dayEvs.slice(0, 3).forEach(function (tx) {
           var ev = document.createElement("div");
           var fut = isFuture(tx);
-          ev.className = "fin-cal-ev " + (
-            fut
-              ? (tx.type === "in" ? "future-in" : tx.type === "save" ? "future-save" : "future-out")
-              : (tx.type === "in" ? "in" : tx.type === "save" ? "save" : "out")
-          );
+          var txClass = getTxClass(tx.type);
+          ev.className = "fin-cal-ev " + (fut ? "future-" + txClass : txClass);
           ev.setAttribute("role", "button");
           ev.setAttribute("tabindex", "0");
-          ev.textContent = (tx.type === "in" ? "+" : "-") + fmtR(tx.value).replace("R$ ", "");
+          ev.textContent = getTxSign(tx.type) + fmtR(tx.value).replace("R$ ", "");
           ev.title = tx.description + " — " + fmtR(tx.value) + (fut ? " (futuro)" : "");
           ev.addEventListener("click", function (event) {
             event.stopPropagation();
@@ -932,7 +1088,7 @@
     var list = document.getElementById("tx-list");
     var ym = nowYM();
     var filtered = expandRecurring(ym.y, ym.m).filter(function (tx) {
-      if (txFilter === "in") return tx.type === "in";
+      if (txFilter === "in") return tx.type === "in" || tx.type === "save_withdraw";
       if (txFilter === "out") return tx.type === "out" || tx.type === "save";
       return true;
     });
@@ -950,7 +1106,7 @@
       var div = document.createElement("div");
       var catClr = CAT_COLORS[tx.category] || "#7a7590";
       var catIco = CAT_ICONS[tx.category] || "\uD83D\uDCCC";
-      var txClass = tx.type === "in" ? "in" : tx.type === "save" ? "save" : "out";
+      var txClass = getTxClass(tx.type);
       div.className = "fin-tx-item" + (fut ? " fin-tx-future" : "");
       div.innerHTML =
         '<div class="fin-tx-dot ' + txClass + '" style="background:rgba(' + hexToRgb(catClr) + ',.15)">' + catIco + "</div>" +
@@ -958,7 +1114,7 @@
           '<div class="fin-tx-name">' + tx.description + '<span class="fin-tx-cat-badge" style="background:rgba(' + hexToRgb(catClr) + ',.15);color:' + catClr + '">' + tx.category + "</span></div>" +
           '<div class="fin-tx-meta">' + fmtD(tx.date) + (tx.recurrence ? ' · <span style="color:var(--fin-amber)">↻ ' + (tx.recurrence === "monthly" ? "Mensal" : "Semanal") + "</span>" : "") + "</div>" +
         "</div>" +
-        '<div class="fin-tx-amt ' + txClass + '">' + (tx.type === "in" ? "+" : "-") + fmtR(tx.value) + "</div>";
+        '<div class="fin-tx-amt ' + txClass + '">' + getTxSign(tx.type) + fmtR(tx.value) + "</div>";
       div.addEventListener("click", function () {
         openGeneratedSource(tx);
       });
@@ -1568,6 +1724,7 @@
     document.getElementById("tt-in").className = "fin-tt-btn" + (type === "in" ? " active-in" : "");
     document.getElementById("tt-out").className = "fin-tt-btn" + (type === "out" ? " active-out" : "");
     document.getElementById("tt-save").className = "fin-tt-btn" + (type === "save" ? " active-save" : "");
+    document.getElementById("tt-save-withdraw").className = "fin-tt-btn" + (type === "save_withdraw" ? " active-save-withdraw" : "");
     syncCategoryOptions(type);
   }
 
@@ -1638,6 +1795,7 @@
     document.getElementById("tt-in").addEventListener("click", function () { setTxType("in"); });
     document.getElementById("tt-out").addEventListener("click", function () { setTxType("out"); });
     document.getElementById("tt-save").addEventListener("click", function () { setTxType("save"); });
+    document.getElementById("tt-save-withdraw").addEventListener("click", function () { setTxType("save_withdraw"); });
     document.getElementById("fin-manage-categories").addEventListener("click", openCategoryManager);
     document.getElementById("fin-manage-recurring").addEventListener("click", function () { openRecurringManager(); });
     document.getElementById("mc-close").addEventListener("click", function () { closeModal("modal-categories"); });
@@ -1727,6 +1885,14 @@
         recurrence: document.getElementById("mtx-rec").value,
         note: document.getElementById("mtx-note").value.trim()
       };
+
+      if (tx.type === "save_withdraw") {
+        var savingsBalance = getSavingsBalanceUntil(tx.date, editId);
+        if (tx.value > savingsBalance) {
+          toast("Esse valor é maior do que a poupança disponível até essa data.", "err");
+          return;
+        }
+      }
 
       if (editId) {
         var idx = txs.findIndex(function (item) { return item.id === editId; });
