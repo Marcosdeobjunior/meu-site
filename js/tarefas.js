@@ -201,6 +201,17 @@ const TK_PRIOR_LABEL  = { alta:'🔴 Alta', media:'🟡 Média', baixa:'🟢 Bai
 const TK_MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const TK_MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const TK_NATIONAL_HOLIDAY_DEFS = [
+  { month: 1, day: 1, name: 'Confraternização Universal' },
+  { month: 4, day: 21, name: 'Tiradentes' },
+  { month: 5, day: 1, name: 'Dia do Trabalho' },
+  { month: 9, day: 7, name: 'Independência do Brasil' },
+  { month: 10, day: 12, name: 'Nossa Senhora Aparecida' },
+  { month: 11, day: 2, name: 'Finados' },
+  { month: 11, day: 15, name: 'Proclamação da República' },
+  { month: 11, day: 20, name: 'Dia Nacional de Zumbi e da Consciência Negra' },
+  { month: 12, day: 25, name: 'Natal' }
+];
 const TK_RECURRENCE_LABEL = {
   none: 'Não recorrente',
   daily: 'Diariamente',
@@ -257,6 +268,22 @@ function tkParseDate(ds) {
 
 function tkToDateString(date) {
   return tkDateLocalString(date);
+}
+
+function tkGetNationalHolidayEntries(year, month) {
+  return TK_NATIONAL_HOLIDAY_DEFS.filter(function (holiday) {
+    return holiday.month === month + 1;
+  }).map(function (holiday) {
+    var ds = year + '-' + String(holiday.month).padStart(2, '0') + '-' + String(holiday.day).padStart(2, '0');
+    return {
+      id: 'holiday-' + ds,
+      nome: holiday.name,
+      data: ds,
+      icon: '🎉',
+      isHoliday: true,
+      holidayType: 'Feriado nacional'
+    };
+  });
 }
 
 function tkAddDays(ds, amount) {
@@ -2051,6 +2078,7 @@ tkCalRender = function () {
   const daysInMo = new Date(year, month + 1, 0).getDate();
   const daysInPrev = new Date(year, month, 0).getDate();
   const byDay = {};
+  const holidayMap = {};
   S.tasks.forEach(function (task) {
     if (!task.data) return;
     const parts = task.data.split('-').map(Number);
@@ -2058,6 +2086,12 @@ tkCalRender = function () {
       if (!byDay[parts[2]]) byDay[parts[2]] = [];
       byDay[parts[2]].push(task);
     }
+  });
+  tkGetNationalHolidayEntries(year, month).forEach(function (holiday) {
+    const day = Number(holiday.data.slice(-2));
+    holidayMap[day] = holiday;
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(holiday);
   });
   getDreamCalendarEntries(year, month).forEach(function (dream) {
     const day = Number(dream.data.slice(-2));
@@ -2082,13 +2116,22 @@ tkCalRender = function () {
   }
   for (let d = 1; d <= daysInMo; d++) {
     const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const cls = ['tk-day', ds === today ? 'today' : '', ds === selected ? 'selected' : ''].filter(Boolean).join(' ');
+    const holiday = holidayMap[d] || null;
+    const cls = ['tk-day', ds === today ? 'today' : '', ds === selected ? 'selected' : '', holiday ? 'holiday' : ''].filter(Boolean).join(' ');
     const miniCards = (byDay[d] || []).slice().sort(function (a, b) {
+      if (!!a.isHoliday !== !!b.isHoliday) return a.isHoliday ? -1 : 1;
       if (!!a.isDream !== !!b.isDream) return a.isDream ? -1 : 1;
       if (!!a.isReview !== !!b.isReview) return a.isReview ? -1 : 1;
       if (a.done !== b.done) return a.done ? 1 : -1;
       return (a.hora || '99:99').localeCompare(b.hora || '99:99');
     }).map(function (task) {
+      if (task.isHoliday) {
+        return `<div class="tk-cal-task-card tk-cal-holiday-card"
+          onclick="event.stopPropagation()"
+          title="${task.holidayType}: ${task.nome}">
+        <span class="tk-cal-holiday-icon">${task.icon}</span>${task.nome}
+      </div>`;
+      }
       if (task.isDream) {
         return `<div class="tk-cal-task-card tk-cal-dream-card"
           style="--tk-color:#7c6fcd"
@@ -2128,7 +2171,7 @@ tkCalRender = function () {
         data-date="${ds}"
         onclick="tkCalSelectDay('${ds}')"
         ondblclick="tkModalOpenForDate('${ds}')"
-        title="Clique para selecionar · Duplo clique para adicionar tarefa">
+        title="${holiday ? holiday.holidayType + ': ' + holiday.nome + ' · ' : ''}Clique para selecionar · Duplo clique para adicionar tarefa">
       <span class="tk-day-num">${d}</span>
       <div class="tk-day-tasks">${miniCards}</div>
     </div>`);
