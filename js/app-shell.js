@@ -3902,6 +3902,7 @@
     if (!tx) return 0;
     var value = Number(tx.value || 0);
     if (tx.type === "in") return value;
+    if (tx.type === "save_withdraw") return value;
     if (tx.type === "out" || tx.type === "save") return -value;
     return 0;
   }
