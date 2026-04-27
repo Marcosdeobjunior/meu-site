@@ -331,6 +331,40 @@ function tkDiffDays(fromDate, toDate) {
   return Math.round((b - a) / 86400000);
 }
 
+function tkNormalizeRecurringMeta(task) {
+  if (!task || task.isRecurringClone) return task;
+  if (!task.recurrence || task.recurrence === 'none') {
+    task.recurrenceSeedDate = task.data || '';
+    task.recurrenceExceptions = [];
+    task.recurrenceMasterId = task.id;
+    task.recurrenceIndex = 0;
+    return task;
+  }
+  if (!task.recurrenceSeedDate) task.recurrenceSeedDate = task.data || '';
+  if (!Array.isArray(task.recurrenceExceptions)) task.recurrenceExceptions = [];
+  task.recurrenceMasterId = task.id;
+  if (typeof task.recurrenceIndex !== 'number' || task.recurrenceIndex < 0) task.recurrenceIndex = 0;
+  return task;
+}
+
+function tkGetRecurringMaster(task) {
+  if (!task) return null;
+  if (!task.isRecurringClone) return task;
+  return S.tasks.find(function (item) { return item.id === task.recurrenceMasterId; }) || null;
+}
+
+function tkGetNextRecurringIndex(seedDate, recurrence, exceptionsSet, startIndex) {
+  var step = Math.max(0, Number(startIndex) || 0);
+  var guard = 0;
+  while (guard < 1000) {
+    var occurrenceDate = tkAdvanceRecurrence(seedDate, recurrence, step);
+    if (!exceptionsSet.has(occurrenceDate)) return step;
+    step += 1;
+    guard += 1;
+  }
+  return Math.max(0, Number(startIndex) || 0);
+}
+
 function tkGetChildren(taskId) {
   return S.tasks.filter(function (item) { return item.parentId === taskId; });
 }
@@ -401,6 +435,7 @@ function tkOpenGymDay(dateStr) {
 function tkSyncRecurringSeries(masterId) {
   var master = S.tasks.find(function (item) { return item.id === masterId; });
   if (!master || master.isRecurringClone) return;
+  tkNormalizeRecurringMeta(master);
   var existingClones = S.tasks.filter(function (item) {
     return item.isRecurringClone && item.recurrenceMasterId === masterId;
   });
@@ -413,16 +448,24 @@ function tkSyncRecurringSeries(masterId) {
   });
   var limit = TK_RECURRENCE_LIMIT[master.recurrence] || 0;
   if (!master.recurrence || master.recurrence === 'none' || !limit) return;
-  for (var i = 1; i <= limit; i++) {
-    var existing = cloneByIndex[i];
+  var seedDate = master.recurrenceSeedDate || master.data;
+  var exceptions = new Set(master.recurrenceExceptions || []);
+  var masterIndex = tkGetNextRecurringIndex(seedDate, master.recurrence, exceptions, 0);
+  master.data = tkAdvanceRecurrence(seedDate, master.recurrence, masterIndex);
+  master.recurrenceIndex = masterIndex;
+  master.recurrenceMasterId = master.id;
+  var nextIndex = masterIndex + 1;
+  for (var i = 0; i < limit; i++) {
+    var occurrenceIndex = tkGetNextRecurringIndex(seedDate, master.recurrence, exceptions, nextIndex);
+    var existing = cloneByIndex[occurrenceIndex];
     S.tasks.push({
-      id: existing ? existing.id : Date.now() + Math.floor(Math.random() * 100000) + i,
+      id: existing ? existing.id : Date.now() + Math.floor(Math.random() * 100000) + i + 1,
       nome: master.nome,
       nota: master.nota,
       prior: master.prior,
       cat: master.cat,
       hora: master.hora,
-      data: tkAdvanceRecurrence(master.data, master.recurrence, i),
+      data: tkAdvanceRecurrence(seedDate, master.recurrence, occurrenceIndex),
       cor: master.cor,
       done: existing ? existing.done : false,
       subtarefas: existing ? existing.subtarefas || [] : tkCloneSubtasks(master.subtarefas),
@@ -430,8 +473,9 @@ function tkSyncRecurringSeries(masterId) {
       parentId: existing ? existing.parentId || null : null,
       isRecurringClone: true,
       recurrenceMasterId: master.id,
-      recurrenceIndex: i
+      recurrenceIndex: occurrenceIndex
     });
+    nextIndex = occurrenceIndex + 1;
   }
 }
 
@@ -455,14 +499,17 @@ function tkApplyRecurringEdits(taskId, updates) {
   var nextRecurrence = hasNextRecurrence ? updates.recurrence : (task.recurrence || master.recurrence || 'none');
   var nextDate = hasNextDate ? updates.data : (task.data || master.data);
   var nextMasterDate = nextDate;
-  if (task.isRecurringClone && task.recurrenceIndex) {
+  if (task.recurrenceIndex) {
     nextMasterDate = tkRewindRecurrence(nextDate, nextRecurrence, task.recurrenceIndex);
   }
 
-  Object.assign(master, updates, { data: nextMasterDate });
+  Object.assign(master, updates, {
+    data: nextMasterDate,
+    recurrenceSeedDate: nextMasterDate
+  });
   master.isRecurringClone = false;
   master.recurrenceMasterId = master.id;
-  master.recurrenceIndex = 0;
+  if (!Array.isArray(master.recurrenceExceptions)) master.recurrenceExceptions = [];
   tkSyncRecurringSeries(master.id);
   return S.tasks.find(function (item) { return item.id === taskId; }) || master;
 }
@@ -491,6 +538,8 @@ function tkMigrate() {
     if (typeof t.isRecurringClone === 'undefined') t.isRecurringClone = false;
     if (typeof t.recurrenceMasterId === 'undefined' || t.recurrenceMasterId === null) t.recurrenceMasterId = t.isRecurringClone ? null : t.id;
     if (typeof t.recurrenceIndex === 'undefined') t.recurrenceIndex = 0;
+    if (typeof t.recurrenceSeedDate === 'undefined' || t.recurrenceSeedDate === null) t.recurrenceSeedDate = t.isRecurringClone ? null : (t.data || '');
+    if (!Array.isArray(t.recurrenceExceptions)) t.recurrenceExceptions = [];
     return t;
   });
   tkEnsureRecurringTasks();
@@ -503,41 +552,27 @@ function tkCloneSubtasks(subs) {
 }
 
 function tkEnsureRecurringTasks() {
-  var existingKeys = new Set();
-  S.tasks.forEach(function (task) {
-    if (task.recurrenceMasterId) existingKeys.add(task.recurrenceMasterId + ':' + task.recurrenceIndex);
+  var masterIds = new Set(S.tasks.filter(function (task) {
+    return !task.isRecurringClone;
+  }).map(function (task) {
+    return task.id;
+  }));
+
+  S.tasks = S.tasks.filter(function (task) {
+    return !task.isRecurringClone || masterIds.has(task.recurrenceMasterId);
   });
 
-  var additions = [];
   S.tasks.forEach(function (task) {
-    if (task.isRecurringClone || !task.recurrence || task.recurrence === 'none') return;
-    task.recurrenceMasterId = task.id;
-    task.recurrenceIndex = 0;
-    var limit = TK_RECURRENCE_LIMIT[task.recurrence] || 0;
-    for (var i = 1; i <= limit; i++) {
-      var key = task.id + ':' + i;
-      if (existingKeys.has(key)) continue;
-      additions.push({
-        id: Date.now() + Math.floor(Math.random() * 100000) + i,
-        nome: task.nome,
-        nota: task.nota,
-        prior: task.prior,
-        cat: task.cat,
-        hora: task.hora,
-        data: tkAdvanceRecurrence(task.data, task.recurrence, i),
-        cor: task.cor,
-        done: false,
-        subtarefas: tkCloneSubtasks(task.subtarefas),
-        recurrence: task.recurrence,
-        parentId: null,
-        isRecurringClone: true,
-        recurrenceMasterId: task.id,
-        recurrenceIndex: i
-      });
-      existingKeys.add(key);
-    }
+    if (!task.isRecurringClone) tkNormalizeRecurringMeta(task);
   });
-  if (additions.length) S.tasks = S.tasks.concat(additions);
+
+  S.tasks.filter(function (task) {
+    return !task.isRecurringClone && task.recurrence && task.recurrence !== 'none';
+  }).map(function (task) {
+    return task.id;
+  }).forEach(function (masterId) {
+    tkSyncRecurringSeries(masterId);
+  });
 }
 
 // KPIs
@@ -636,6 +671,7 @@ function tkRenderFocus() {
 let tkListTab = 'pendentes';
 let tkListPage = 1;
 let tkQuickActionState = null;
+const tkDeletePopupState = { onChoice: null };
 
 function tkGetListPageSize() {
   const width = window.innerWidth || 1280;
@@ -1372,6 +1408,8 @@ function tkModalSave() {
     isRecurringClone: false,
     recurrenceMasterId: null,
     recurrenceIndex: 0,
+    recurrenceSeedDate: selectedDate,
+    recurrenceExceptions: [],
   };
   task.recurrenceMasterId = task.id;
   S.tasks.push(task);
@@ -1382,15 +1420,45 @@ function tkModalSave() {
 // Compatibilidade com código antigo
 function addTask() { tkModalOpenForDate(tkCalState.selected); }
 function toggleTask(id) { tkQuickToggle(id); }
-function delTask(id) { S.tasks = S.tasks.filter(x => x.id !== id); save(); renderTasks(); }
+function delTask(id) { tkDeleteTaskById(id); }
 
 function tkGetTaskById(id) {
   return S.tasks.find(function (item) { return item.id === id; }) || null;
 }
 
+function tkDeleteTaskSeriesById(id) {
+  const task = tkGetTaskById(id);
+  if (!task) return false;
+  const master = tkGetRecurringMaster(task) || task;
+  const targetId = master.id;
+  const removedIds = new Set([targetId]);
+  S.tasks.forEach(function (item) {
+    if (item.isRecurringClone && item.recurrenceMasterId === targetId) removedIds.add(item.id);
+  });
+  const nextParentId = master.parentId || null;
+  S.tasks.forEach(function (item) {
+    if (removedIds.has(item.parentId)) item.parentId = nextParentId;
+  });
+  S.tasks = S.tasks.filter(function (item) {
+    return !removedIds.has(item.id);
+  });
+  tkCalendarSelection.ids.delete(targetId);
+  tkCalendarSelection.ids.delete(id);
+  if (taskHubState.id === id || taskHubState.id === targetId) {
+    taskHubDrawerClose();
+    taskHubClose();
+  }
+  save();
+  renderTasks();
+  return true;
+}
+
 function tkDeleteTaskById(id) {
   const task = tkGetTaskById(id);
   if (!task) return false;
+  if (task.recurrence && task.recurrence !== 'none') {
+    return tkDeleteTaskSeriesById(id);
+  }
   const nextParentId = task.parentId || null;
   S.tasks.forEach(function (item) {
     if (item.parentId === id) item.parentId = nextParentId;
@@ -1408,6 +1476,143 @@ function tkDeleteTaskById(id) {
   save();
   renderTasks();
   return true;
+}
+
+function tkDeleteRecurringOccurrence(id) {
+  const task = tkGetTaskById(id);
+  if (!task) return false;
+  if (!task.recurrence || task.recurrence === 'none') return tkDeleteTaskById(id);
+  const master = tkGetRecurringMaster(task);
+  if (!master) return tkDeleteTaskById(id);
+  tkNormalizeRecurringMeta(master);
+
+  const occurrenceDate = task.data || '';
+  if (occurrenceDate && master.recurrenceExceptions.indexOf(occurrenceDate) === -1) {
+    master.recurrenceExceptions.push(occurrenceDate);
+  }
+
+  if (task.id !== master.id) {
+    const nextParentId = task.parentId || null;
+    S.tasks.forEach(function (item) {
+      if (item.parentId === id) item.parentId = nextParentId;
+    });
+    S.tasks = S.tasks.filter(function (item) { return item.id !== id; });
+    tkCalendarSelection.ids.delete(id);
+  }
+
+  tkSyncRecurringSeries(master.id);
+  if (taskHubState.id === id && task.id !== master.id) {
+    taskHubDrawerClose();
+    taskHubClose();
+  }
+  save();
+  renderTasks();
+  if (taskHubState.id === master.id) taskHubRender(master);
+  return true;
+}
+
+function tkDeletePopupClose() {
+  const backdrop = document.getElementById('tk-delete-bd');
+  if (backdrop) backdrop.classList.remove('open');
+  tkDeletePopupState.onChoice = null;
+}
+
+function tkDeletePopupCloseOutside(event) {
+  if (event.target && event.target.id === 'tk-delete-bd') tkDeletePopupClose();
+}
+
+function tkDeletePopupChoose(choice) {
+  const onChoice = tkDeletePopupState.onChoice;
+  tkDeletePopupClose();
+  if (typeof onChoice === 'function') onChoice(choice);
+}
+
+function tkDeletePopupOpen(config) {
+  const backdrop = document.getElementById('tk-delete-bd');
+  const kicker = document.getElementById('tk-delete-kicker');
+  const title = document.getElementById('tk-delete-title');
+  const text = document.getElementById('tk-delete-text');
+  const meta = document.getElementById('tk-delete-meta');
+  const actions = document.getElementById('tk-delete-actions');
+  if (!backdrop || !kicker || !title || !text || !meta || !actions) return;
+
+  kicker.textContent = config.kicker || 'Excluir tarefa';
+  title.textContent = config.title || 'Tem certeza?';
+  text.textContent = config.text || '';
+  meta.innerHTML = (config.meta || []).map(function (item) {
+    return '<span class="tk-delete-chip">' + item + '</span>';
+  }).join('');
+  meta.classList.toggle('has-meta', !!(config.meta && config.meta.length));
+  actions.innerHTML = (config.actions || []).map(function (action) {
+    return '<button type="button" class="tk-delete-action ' + (action.className || '') + '" onclick="tkDeletePopupChoose(\'' + action.value + '\')">' +
+      '<span class="tk-delete-action-title">' + action.title + '</span>' +
+      (action.sub ? '<span class="tk-delete-action-sub">' + action.sub + '</span>' : '') +
+      '</button>';
+  }).join('');
+  tkDeletePopupState.onChoice = config.onChoice || null;
+  backdrop.classList.add('open');
+}
+
+function tkRequestDeleteTask(task, onChoice) {
+  if (!task) return;
+  const isRecurring = !!(task.recurrence && task.recurrence !== 'none');
+  const meta = [];
+  if (task.data) meta.push(tkFmtDate(task.data));
+  if (task.cat) meta.push(task.cat);
+  if (isRecurring) meta.push(TK_RECURRENCE_LABEL[task.recurrence] || 'Recorrente');
+
+  if (isRecurring) {
+    tkDeletePopupOpen({
+      kicker: 'Tarefa recorrente',
+      title: 'Como voce quer excluir "' + task.nome + '"?',
+      text: 'Voce pode remover somente esta ocorrencia ou apagar toda a repeticao.',
+      meta: meta,
+      actions: [
+        {
+          value: 'occurrence',
+          title: 'Excluir apenas esta data',
+          sub: 'Remove somente a ocorrencia atual e mantem as proximas repeticoes.',
+          className: 'primary'
+        },
+        {
+          value: 'series',
+          title: 'Excluir serie inteira',
+          sub: 'Apaga esta tarefa recorrente e todas as outras ocorrencias da repeticao.',
+          className: 'danger'
+        },
+        {
+          value: 'cancel',
+          title: 'Manter tarefa',
+          sub: 'Fecha o popup sem excluir nada.',
+          className: 'ghost'
+        }
+      ],
+      onChoice: onChoice
+    });
+    return;
+  }
+
+  tkDeletePopupOpen({
+    kicker: 'Confirmar exclusao',
+    title: 'Excluir "' + task.nome + '"?',
+    text: 'Essa acao remove a tarefa atual da sua lista.',
+    meta: meta,
+    actions: [
+      {
+        value: 'delete',
+        title: 'Excluir tarefa',
+        sub: 'Remove esta tarefa imediatamente.',
+        className: 'danger'
+      },
+      {
+        value: 'cancel',
+        title: 'Cancelar',
+        sub: 'Volta sem fazer alteracoes.',
+        className: 'ghost'
+      }
+    ],
+    onChoice: onChoice
+  });
 }
 
 function tkDuplicateTask(id) {
@@ -1431,9 +1636,12 @@ function tkDuplicateTask(id) {
     parentId: original.parentId || null,
     isRecurringClone: false,
     recurrenceMasterId: copyId,
-    recurrenceIndex: 0
+    recurrenceIndex: 0,
+    recurrenceSeedDate: original.data || '',
+    recurrenceExceptions: []
   };
   S.tasks.push(duplicated);
+  if (duplicated.recurrence && duplicated.recurrence !== 'none') tkSyncRecurringSeries(duplicated.id);
   save();
   renderTasks();
   return duplicated;
@@ -1522,9 +1730,12 @@ function tkQuickActionDeleteTask() {
   if (!tkQuickActionState) return;
   const task = tkGetTaskById(tkQuickActionState.id);
   if (!task) return;
-  if (!confirm('Excluir "' + task.nome + '"?')) return;
   tkQuickActionsClose();
-  tkDeleteTaskById(task.id);
+  tkRequestDeleteTask(task, function (mode) {
+    if (mode === 'occurrence') tkDeleteRecurringOccurrence(task.id);
+    else if (mode === 'series') tkDeleteTaskSeriesById(task.id);
+    else if (mode === 'delete') tkDeleteTaskById(task.id);
+  });
 }
 
 // ======================================================================
@@ -1825,12 +2036,13 @@ function taskHubDrawerSalvar() {
 }
 
 function taskHubDelete() {
-  const t = S.tasks.find(x => x.id === taskHubState.id);
-  const nome = t ? t.nome : 'esta tarefa';
-  if (!confirm('Excluir "' + nome + '"')) return;
-  S.tasks = S.tasks.filter(x => x.id !== taskHubState.id);
-  save(); renderTasks();
-  taskHubDrawerClose(); taskHubClose();
+  const task = S.tasks.find(x => x.id === taskHubState.id);
+  if (!task) return;
+  tkRequestDeleteTask(task, function (mode) {
+    if (mode === 'occurrence') tkDeleteRecurringOccurrence(task.id);
+    else if (mode === 'series') tkDeleteTaskSeriesById(task.id);
+    else if (mode === 'delete') tkDeleteTaskById(taskHubState.id);
+  });
 }
 
 var tkCalPointerState = null;
@@ -2521,7 +2733,9 @@ tkModalSave = function () {
     parentId: null,
     isRecurringClone: false,
     recurrenceMasterId: null,
-    recurrenceIndex: 0
+    recurrenceIndex: 0,
+    recurrenceSeedDate: selectedDate,
+    recurrenceExceptions: []
   };
   task.recurrenceMasterId = task.id;
   if (taskLinkPendingCreate === 'child') task.parentId = taskHubState.id;
@@ -2560,22 +2774,12 @@ taskHubDrawerSalvar = function () {
 
 taskHubDelete = function () {
   const task = S.tasks.find(function (item) { return item.id === taskHubState.id; });
-  const nome = task ? task.nome : 'esta tarefa';
-  if (!confirm('Excluir "' + nome + '"')) return;
-  const nextParentId = task ? task.parentId : null;
-  S.tasks.forEach(function (item) {
-    if (item.parentId === taskHubState.id) item.parentId = nextParentId;
+  if (!task) return;
+  tkRequestDeleteTask(task, function (mode) {
+    if (mode === 'occurrence') tkDeleteRecurringOccurrence(task.id);
+    else if (mode === 'series') tkDeleteTaskSeriesById(task.id);
+    else if (mode === 'delete') tkDeleteTaskById(taskHubState.id);
   });
-  S.tasks = S.tasks.filter(function (item) {
-    if (item.id === taskHubState.id) return false;
-    if (task && !task.isRecurringClone && item.isRecurringClone && item.recurrenceMasterId === task.id) return false;
-    return true;
-  });
-  tkCalendarSelection.ids.delete(taskHubState.id);
-  save();
-  renderTasks();
-  taskHubDrawerClose();
-  taskHubClose();
 };
 
 
@@ -2586,7 +2790,10 @@ document.addEventListener('click', function (event) {
 });
 document.addEventListener('scroll', tkQuickActionsClose, true);
 window.addEventListener('keydown', function (event) {
-  if (event.key === 'Escape') tkQuickActionsClose();
+  if (event.key === 'Escape') {
+    tkDeletePopupClose();
+    tkQuickActionsClose();
+  }
 });
 window.addEventListener('resize', tkRenderList);
 window.addEventListener('resize', tkQuickActionsClose);

@@ -417,6 +417,23 @@
   </div>
 </div>
 
+  <div class="tk-delete-bd" id="tk-delete-bd" onclick="tkDeletePopupCloseOutside(event)">
+    <div class="tk-delete-modal" role="dialog" aria-modal="true" aria-labelledby="tk-delete-title">
+      <div class="tk-delete-stripe"></div>
+      <div class="tk-delete-head">
+        <div class="tk-delete-kicker" id="tk-delete-kicker">Excluir tarefa</div>
+        <button class="tk-delete-close" type="button" onclick="tkDeletePopupClose()">✕</button>
+      </div>
+      <div class="tk-delete-body">
+        <div class="tk-delete-icon">✦</div>
+        <div class="tk-delete-title" id="tk-delete-title">Tem certeza?</div>
+        <div class="tk-delete-text" id="tk-delete-text">Escolha como deseja excluir esta tarefa.</div>
+        <div class="tk-delete-meta" id="tk-delete-meta"></div>
+        <div class="tk-delete-actions" id="tk-delete-actions"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="tk-analytics"></div>
 
   <script src="js/firebase-config.js"></script>
