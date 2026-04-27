@@ -1614,7 +1614,7 @@
   var FINANCE_NOTIF_PREFIX = "finance-";
   var TASK_NOTIF_PREFIX = "task-";
   var GYM_NOTIF_ID = "gym-today";
-  var ABANDON_RULES = { watch: 7, risk: 14, critical: 30 };
+  var ABANDON_RULES = { watch: 2, risk: 14, critical: 30 };
   var ABANDON_TRACKER_LABELS = { livros: "Livraria", cinema: "Cinema", mangas: "Mang\u00e1s" };
   var ABANDON_ACTIVE_STATUSES = {
     livros: { lendo: true, relendo: true, pausado: true },

@@ -2320,7 +2320,7 @@ function getTimelineRows(item) {
     return true;
   }).sort((a,b)=>b.at-a.at).slice(0,8);
 }
-const ABANDON_RULES = { watch: 7, risk: 14, critical: 30 };
+const ABANDON_RULES = { watch: 2, risk: 14, critical: 30 };
 const ABANDON_NOTIF_PREFIX = 'tracker-abandon-';
 const ABANDON_TRACKER_LABELS = { livros: 'Livraria', cinema: 'Cinema', mangas: 'Mangás' };
 const ABANDON_ACTIVE_STATUSES = {
