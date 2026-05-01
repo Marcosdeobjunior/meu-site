@@ -400,35 +400,93 @@ function tkGetAcademiaState() {
   return appState.data && appState.data.academiaTracker ? appState.data.academiaTracker : null;
 }
 
+function tkGetGymExercisesForDay(academia, dow) {
+  var exercises = academia && Array.isArray(academia.exercises) ? academia.exercises : [];
+  return exercises.filter(function (exercise) {
+    return (exercise.days || []).map(Number).includes(dow);
+  });
+}
+
+function tkHasGymWorkoutOnDate(academia, date) {
+  if (!academia || !academia.profile || !Array.isArray(academia.profile.trainDays)) return false;
+  var dow = date.getDay();
+  var trainDays = academia.profile.trainDays.map(function (day) { return Number(day); });
+  return trainDays.includes(dow) && tkGetGymExercisesForDay(academia, dow).length > 0;
+}
+
+function tkGetGymTaskEntryForDate(dateStr) {
+  var academia = tkGetAcademiaState();
+  var date = tkParseDate(dateStr);
+  var doneByDate = academia && academia.todayDoneByDate && typeof academia.todayDoneByDate === 'object' ? academia.todayDoneByDate : {};
+  var doneMap = doneByDate[dateStr] || {};
+  var exercises;
+  var doneCount;
+  if (!date || !tkHasGymWorkoutOnDate(academia, date)) return null;
+  exercises = tkGetGymExercisesForDay(academia, date.getDay());
+  doneCount = exercises.filter(function (exercise) { return !!doneMap[exercise.id]; }).length;
+  return {
+    id: 'gym-' + dateStr,
+    kind: 'gym',
+    nome: 'Treino',
+    nota: exercises.length + ' exercício' + (exercises.length !== 1 ? 's' : '') + ' programado' + (exercises.length !== 1 ? 's' : '') + '.',
+    data: dateStr,
+    cat: 'Academia',
+    prior: 'media',
+    cor: '#5ec4a8',
+    done: exercises.length > 0 && doneCount === exercises.length,
+    isGym: true,
+    subtarefas: exercises.map(function (exercise) {
+      return {
+        texto: exercise.name || 'Exercício',
+        done: !!doneMap[exercise.id]
+      };
+    })
+  };
+}
+
+function tkGetGymListEntries(tab) {
+  var today = tkToday();
+  var base = tkParseDate(today);
+  var entries = tkGetGymCalendarEntries(base.getFullYear(), base.getMonth());
+  switch (tab) {
+    case 'pendentes': return entries.filter(function (item) { return !item.done && tkDaysFromNow(item.data) >= 0; });
+    case 'hoje': return entries.filter(function (item) { return item.data === today; });
+    case 'vencidas': return entries.filter(function (item) { return !item.done && tkDaysFromNow(item.data) < 0; });
+    case 'concluidas': return entries.filter(function (item) { return item.done; });
+    case 'sem-data': return [];
+    default: return entries;
+  }
+}
+
+function tkRemoveResidualGymTasks() {
+  var before = S.tasks.length;
+  S.tasks = S.tasks.filter(function (task) {
+    return !(task && (task.isGym || String(task.id || '').indexOf('gym-') === 0));
+  });
+  return S.tasks.length !== before;
+}
+
 function tkGetGymCalendarEntries(year, month) {
   var academia = tkGetAcademiaState();
   if (!academia || !academia.profile || !Array.isArray(academia.profile.trainDays)) return [];
-  var trainDays = academia.profile.trainDays.map(function (day) { return Number(day); });
-  var doneByDate = academia.todayDoneByDate && typeof academia.todayDoneByDate === 'object' ? academia.todayDoneByDate : {};
   var daysInMonth = new Date(year, month + 1, 0).getDate();
   var entries = [];
 
   for (var day = 1; day <= daysInMonth; day += 1) {
     var date = new Date(year, month, day);
-    if (!trainDays.includes(date.getDay())) continue;
+    if (!tkHasGymWorkoutOnDate(academia, date)) continue;
     var ds = tkToDateString(date);
-    var doneMap = doneByDate[ds] || {};
-    var completed = Object.keys(doneMap).some(function (id) { return !!doneMap[id]; });
-    entries.push({
-      id: 'gym-' + ds,
-      nome: 'Treino',
-      data: ds,
-      cor: '#5ec4a8',
-      done: completed,
-      isGym: true
-    });
+    var entry = tkGetGymTaskEntryForDate(ds);
+    if (entry) entries.push(entry);
   }
 
   return entries;
 }
 
 function tkOpenGymDay(dateStr) {
-  sessionStorage.setItem('academia_focus_date', dateStr);
+  try {
+    sessionStorage.setItem('academia_focus_date', dateStr);
+  } catch (err) { }
   window.location.href = 'academia.html';
 }
 
@@ -578,8 +636,14 @@ function tkEnsureRecurringTasks() {
 // KPIs
 function renderTasks() {
   tkMigrate();
+  if (tkRemoveResidualGymTasks()) save();
   const tk    = S.tasks;
   const today = tkToday();
+  const gymPend = tkGetGymListEntries('pendentes').length;
+  const gymHoje = tkGetGymListEntries('hoje').length;
+  const gymVenc = tkGetGymListEntries('vencidas').length;
+  const gymDone = tkGetGymListEntries('concluidas').length;
+  const gymTodas = tkGetGymListEntries('todas').length;
   const dreamPend = getDreamListEntries('pendentes').length;
   const dreamHoje = getDreamListEntries('hoje').length;
   const dreamVenc = getDreamListEntries('vencidas').length;
@@ -597,12 +661,12 @@ function renderTasks() {
   if (g('tk-pct'))   g('tk-pct').textContent   = pct + '%';
   // Contadores das abas
   const counts = {
-    pendentes:  tk.filter(t => !t.done && t.data && tkDaysFromNow(t.data) >= 0).length + dreamPend + reviewPend,
-    hoje:       tk.filter(t => t.data === today).length + dreamHoje + reviewHoje,
-    vencidas:   tk.filter(t => !t.done && t.data && tkDaysFromNow(t.data) < 0).length + dreamVenc + reviewVenc,
+    pendentes:  tk.filter(t => !t.done && t.data && tkDaysFromNow(t.data) >= 0).length + dreamPend + reviewPend + gymPend,
+    hoje:       tk.filter(t => t.data === today).length + dreamHoje + reviewHoje + gymHoje,
+    vencidas:   tk.filter(t => !t.done && t.data && tkDaysFromNow(t.data) < 0).length + dreamVenc + reviewVenc + gymVenc,
     'sem-data': tk.filter(t => !t.data || t.data === '').length,
-    concluidas: tk.filter(t => t.done).length,
-    todas:      tk.length + dreamTodas + reviewTodas,
+    concluidas: tk.filter(t => t.done).length + gymDone,
+    todas:      tk.length + dreamTodas + reviewTodas + gymTodas,
   };
   Object.entries(counts).forEach(([tab, n]) => {
     const el = g('tktc-' + tab);
@@ -618,7 +682,9 @@ function renderTasks() {
 // ============================================================================
 function tkRenderFocus() {
   const today   = tkToday();
+  const gymToday = tkGetGymTaskEntryForDate(today);
   const tasks   = S.tasks.filter(t => t.data === today)
+                         .concat(gymToday ? [gymToday] : [])
                          .sort((a,b) => {
                            if (a.done !== b.done) return a.done ? 1 : -1;
                            return (a.hora||'99:99').localeCompare(b.hora||'99:99');
@@ -644,6 +710,22 @@ function tkRenderFocus() {
     const subs  = t.subtarefas || [];
     const sDone = subs.filter(s=>s.done).length;
     const sPct  = subs.length ? Math.round(sDone/subs.length*100) : (t.done ? 100 : 0);
+    if (t.kind === 'gym') {
+      return `<div class="tk-focus-card ${t.done?'done-card':''}" style="--tk-color:${color}"
+          onclick="tkOpenGymDay('${t.data}')">
+        <div class="tk-focus-card-top">
+          <div class="tk-focus-card-check ${t.done?'checked':''}">${t.done?'✓':''}</div>
+          <div class="tk-focus-card-nome">${t.nome}</div>
+        </div>
+        <div class="tk-focus-card-meta">
+          <span class="tk-focus-card-pill">Média</span>
+          <span class="tk-focus-card-pill" style="background:rgba(255,255,255,.06);color:var(--muted);border-color:rgba(255,255,255,.1)">Academia</span>
+        </div>
+        <div class="tk-focus-card-prog">
+          <div class="tk-focus-card-prog-fill" style="width:${sPct}%"></div>
+        </div>
+      </div>`;
+    }
     return `<div class="tk-focus-card ${t.done?'done-card':''}" style="--tk-color:${color}"
         oncontextmenu="return tkQuickActionsOpen(event, ${t.id})"
         onclick="taskHubOpen(${t.id})">
@@ -668,16 +750,13 @@ function tkRenderFocus() {
 
 // ============================================================================
 // LISTA COM ABAS
-let tkListTab = 'pendentes';
+let tkListTab = 'hoje';
 let tkListPage = 1;
 let tkQuickActionState = null;
 const tkDeletePopupState = { onChoice: null };
 
 function tkGetListPageSize() {
-  const width = window.innerWidth || 1280;
-  if (width <= 900) return 2;
-  if (width <= 1300) return 4;
-  return 6;
+  return 8;
 }
 
 function tkRenderListPagination(totalItems, pageSize, currentPage) {
@@ -719,16 +798,17 @@ function tkListSetTab(tab) {
 function tkRenderList() {
   const today  = tkToday();
   const all    = S.tasks;
+  const gymItems = tkGetGymListEntries(tkListTab);
   const dreamItems = getDreamListEntries(tkListTab);
   const reviewItems = getReviewListEntries(tkListTab);
   let items;
   switch (tkListTab) {
-    case 'pendentes':  items = all.filter(t => !t.done && t.data && tkDaysFromNow(t.data) >= 0).concat(dreamItems, reviewItems); break;
-    case 'hoje':       items = all.filter(t => t.data === today).concat(dreamItems, reviewItems); break;
-    case 'vencidas':   items = all.filter(t => !t.done && t.data && tkDaysFromNow(t.data) < 0).concat(dreamItems, reviewItems); break;
+    case 'pendentes':  items = all.filter(t => !t.done && t.data && tkDaysFromNow(t.data) >= 0).concat(dreamItems, reviewItems, gymItems); break;
+    case 'hoje':       items = all.filter(t => t.data === today).concat(dreamItems, reviewItems, gymItems); break;
+    case 'vencidas':   items = all.filter(t => !t.done && t.data && tkDaysFromNow(t.data) < 0).concat(dreamItems, reviewItems, gymItems); break;
     case 'sem-data':   items = all.filter(t => !t.data || t.data === ''); break;
-    case 'concluidas': items = all.filter(t => t.done); break;
-    default:           items = [...all].concat(dreamItems, reviewItems);
+    case 'concluidas': items = all.filter(t => t.done).concat(gymItems); break;
+    default:           items = [...all].concat(dreamItems, reviewItems, gymItems);
   }
   // sort: vencidas por data asc, resto por data asc depois done
   items.sort((a,b) => {
@@ -808,6 +888,35 @@ function tkRenderList() {
           ${t.cat ? `<span class="tk-task-card-pill" style="background:rgba(124,111,205,.12);color:#d8d1ff;border:1px solid rgba(124,111,205,.22)">${t.cat}</span>` : ''}
           <span class="tk-task-card-date ${dateCls}">${dateLbl}</span>
         </div>
+      </div>`;
+    }
+    if (t.kind === 'gym') {
+      const color  = t.cor || '#5ec4a8';
+      const subs   = t.subtarefas || [];
+      const sDone  = subs.filter(s=>s.done).length;
+      const sPct   = subs.length ? Math.round(sDone/subs.length*100) : (t.done?100:0);
+      const diff   = t.data ? tkDaysFromNow(t.data) : null;
+      const dateCls = diff===null?'': diff<0&&!t.done?'late': diff===0?'today-date':'';
+      const dateLbl = diff===null?'Sem data': diff===0?'Hoje': diff===1?'Amanhã': diff===-1?'Ontem':
+                      diff<0?`${Math.abs(diff)}d atrás`:`em ${diff}d`;
+      return `<div class="tk-task-card ${t.done?'done-card':''}" style="--tk-color:${color}"
+          onclick="tkOpenGymDay('${t.data}')">
+        <div class="tk-task-card-top">
+          <div class="tk-task-card-check ${t.done?'checked':''}">${t.done?'✓':''}</div>
+          <div class="tk-task-card-nome">${t.nome}</div>
+        </div>
+        ${t.nota ? `<div class="tk-task-card-nota">${t.nota}</div>` : ''}
+        <div class="tk-task-card-footer">
+          <span class="tk-task-card-pill" style="background:${color}1a;color:${color};border:1px solid ${color}33">Média</span>
+          <span class="tk-task-card-pill" style="background:rgba(255,255,255,.05);color:var(--muted);border:1px solid rgba(255,255,255,.08)">Academia</span>
+          <span class="tk-task-card-date ${dateCls}">${dateLbl}</span>
+        </div>
+        ${subs.length>0 ? `<div class="tk-task-card-sub-prog">
+          <div class="tk-task-card-sub-track">
+            <div class="tk-task-card-sub-fill" style="width:${sPct}%"></div>
+          </div>
+          <span class="tk-task-card-sub-lbl">${sDone}/${subs.length}</span>
+        </div>` : ''}
       </div>`;
     }
     const color  = t.cor || TK_PRIOR_COLOR[t.prior] || '#c8a96e';
