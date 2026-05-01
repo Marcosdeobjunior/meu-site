@@ -129,6 +129,115 @@
     var match = String(loadValue || "").replace(",", ".").match(/-?\d+(\.\d+)?/);
     return match ? parseFloat(match[0]) : null;
   }
+  function getPositiveNumber(value) {
+    var n = parseFloat(String(value || "").replace(",", "."));
+    return isFinite(n) && n > 0 ? n : null;
+  }
+  function getCurrentWeightForCalories() {
+    var latest = weightLog.length ? getPositiveNumber(weightLog[weightLog.length - 1].weight) : null;
+    return latest || getPositiveNumber(profile.goalWeight) || 70;
+  }
+  function isCardioExercise(ex) {
+    return ex && ex.tag === "cardio";
+  }
+  function getCardioTypeLabel(value) {
+    if (value === "run") return "Corrida";
+    if (value === "bike") return "Bicicleta";
+    return "Caminhada";
+  }
+  function getExerciseMet(ex) {
+    var intensity = ex.intensity || "moderate";
+    if (isCardioExercise(ex)) {
+      var cardioType = ex.cardioType || "walk";
+      var cardioMet = {
+        walk: { light: 3.0, moderate: 3.8, hard: 5.0 },
+        run: { light: 6.0, moderate: 8.3, hard: 10.5 },
+        bike: { light: 4.0, moderate: 6.8, hard: 8.8 }
+      };
+      return (cardioMet[cardioType] || cardioMet.walk)[intensity] || cardioMet.walk.moderate;
+    }
+    var table = {
+      light: { cardio: 5.5, abdomen: 2.8, defaultValue: 3.0 },
+      moderate: { cardio: 7.0, abdomen: 3.8, defaultValue: 4.0 },
+      hard: { cardio: 9.0, abdomen: 5.0, defaultValue: 6.0 }
+    };
+    var row = table[intensity] || table.moderate;
+    return row[ex.tag] || row.defaultValue;
+  }
+  function estimateExerciseDuration(ex) {
+    var explicit = getPositiveNumber(ex.duration);
+    if (explicit) return explicit;
+    if (isCardioExercise(ex)) return 30;
+    var sets = getPositiveNumber(ex.sets) || 3;
+    return Math.max(5, Math.round((sets * 2.5) + 4));
+  }
+  function estimateExerciseCalories(ex) {
+    var minutes = estimateExerciseDuration(ex);
+    var weight = getCurrentWeightForCalories();
+    var met = getExerciseMet(ex);
+    var kcal = Math.round((met * 3.5 * weight / 200) * minutes);
+    return {
+      kcal: kcal,
+      minutes: minutes,
+      weight: weight,
+      met: met
+    };
+  }
+  function getIntensityLabel(value) {
+    return value === "light" ? "Leve" : value === "hard" ? "Intensa" : "Moderada";
+  }
+  function formatKm(value) {
+    var n = getPositiveNumber(value);
+    return n ? n.toFixed(n >= 10 ? 1 : 2).replace(".", ",") + " km" : "—";
+  }
+  function formatPace(distance, duration) {
+    var km = getPositiveNumber(distance);
+    var min = getPositiveNumber(duration);
+    if (!km || !min) return "—";
+    var pace = min / km;
+    var paceMin = Math.floor(pace);
+    var paceSec = Math.round((pace - paceMin) * 60);
+    if (paceSec === 60) {
+      paceMin += 1;
+      paceSec = 0;
+    }
+    return paceMin + ":" + String(paceSec).padStart(2, "0") + "/km";
+  }
+  function getExerciseSummary(ex) {
+    var estimate = estimateExerciseCalories(ex);
+    if (isCardioExercise(ex)) {
+      return getCardioTypeLabel(ex.cardioType) + " · " + formatKm(ex.distance) + " · " + estimate.minutes + " min · " + estimate.kcal + " kcal";
+    }
+    return (ex.sets ? ex.sets + "x " : "") + (ex.reps || "") + (ex.load ? " · " + ex.load : "") + " · " + estimate.kcal + " kcal";
+  }
+  function getExerciseDraftFromForm() {
+    var tag = document.getElementById("ex-tag").value;
+    return {
+      tag: tag,
+      sets: document.getElementById("ex-sets").value,
+      cardioType: tag === "cardio" ? document.getElementById("ex-cardio-type").value : "",
+      distance: tag === "cardio" ? document.getElementById("ex-distance").value : "",
+      duration: tag === "cardio" ? document.getElementById("ex-duration").value : "",
+      intensity: tag === "cardio" ? document.getElementById("ex-intensity").value : "moderate"
+    };
+  }
+  function renderExerciseCaloriePreview() {
+    var el = document.getElementById("ex-calorie-preview");
+    if (!el) return;
+    var draft = getExerciseDraftFromForm();
+    var estimate = estimateExerciseCalories(draft);
+    var pace = isCardioExercise(draft) ? " · ritmo " + formatPace(draft.distance, estimate.minutes) : "";
+    el.textContent = "Estimativa: " + estimate.kcal + " kcal em " + estimate.minutes + " min" + pace + " (" + getIntensityLabel(draft.intensity).toLowerCase() + ")";
+  }
+  function syncExerciseFormMode() {
+    var tag = document.getElementById("ex-tag").value;
+    var modal = document.querySelector("#modal-ex .modal");
+    var isCardio = tag === "cardio";
+    if (modal) modal.classList.toggle("cardio-mode", isCardio);
+    document.getElementById("ex-duration-label").textContent = "Tempo (min)";
+    document.getElementById("ex-duration").placeholder = "Ex: 35";
+    renderExerciseCaloriePreview();
+  }
   function fmtShortDate(dateStr) {
     if (!dateStr) return "—";
     var parts = String(dateStr).split("-");
@@ -144,7 +253,11 @@
       load: getLoadNumber(ex.load),
       loadLabel: ex.load || "—",
       sets: ex.sets || "",
-      reps: ex.reps || ""
+      reps: ex.reps || "",
+      distance: getPositiveNumber(ex.distance),
+      duration: estimateExerciseDuration(ex),
+      cardioType: ex.cardioType || "",
+      calories: estimateExerciseCalories(ex).kcal
     };
     if (existing) {
       Object.assign(existing, next);
@@ -159,6 +272,34 @@
       var day = parseInt(chip.dataset.day, 10);
       chip.classList.toggle("active", selected.includes(day));
     });
+  }
+  function setExerciseImagePreview(src) {
+    exImageData = String(src || "").trim();
+    var previewImg = document.getElementById("ex-img-preview-img");
+    var previewLbl = document.getElementById("ex-img-preview-label");
+    if (exImageData) {
+      previewImg.src = exImageData;
+      previewImg.style.display = "block";
+      previewLbl.style.display = "none";
+    } else {
+      previewImg.src = "";
+      previewImg.style.display = "none";
+      previewLbl.style.display = "block";
+    }
+  }
+  function applyExerciseWebImage() {
+    var input = document.getElementById("ex-img-web");
+    var url = input.value.trim();
+    if (!url) {
+      setExerciseImagePreview("");
+      return;
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      toast("Use um link começando com http:// ou https://", "err");
+      return;
+    }
+    setExerciseImagePreview(url);
+    toast("Imagem web aplicada.", "ok");
   }
   function getExerciseDaySelection() {
     return Array.from(document.querySelectorAll("#ex-days .ex-day-chip.active")).map(function (chip) {
@@ -431,7 +572,9 @@
   function drawExerciseHubChart(exerciseId) {
     var canvas = document.getElementById("gym-hub-chart");
     if (!canvas) return;
-    var history = (exerciseHistory[exerciseId] || []).filter(function (item) { return typeof item.load === "number" && !isNaN(item.load); });
+    var ex = exercises.find(function (item) { return item.id === exerciseId; }) || {};
+    var metricKey = isCardioExercise(ex) ? "distance" : "load";
+    var history = (exerciseHistory[exerciseId] || []).filter(function (item) { return typeof item[metricKey] === "number" && !isNaN(item[metricKey]); });
     var dpr = window.devicePixelRatio || 1;
     var width = canvas.offsetWidth || 480;
     var height = 260;
@@ -446,11 +589,11 @@
       ctx.fillStyle = "rgba(255,255,255,.2)";
       ctx.font = "13px Syne, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Conclua o exercício mais vezes para ver a evolução da carga", width / 2, height / 2);
+      ctx.fillText(isCardioExercise(ex) ? "Conclua mais sessões para ver a evolução da distância" : "Conclua o exercício mais vezes para ver a evolução da carga", width / 2, height / 2);
       return;
     }
 
-    var vals = history.map(function (item) { return item.load; });
+    var vals = history.map(function (item) { return item[metricKey]; });
     var minV = Math.min.apply(null, vals);
     var maxV = Math.max.apply(null, vals);
     var rng = Math.max(maxV - minV, 1);
@@ -503,11 +646,24 @@
     }, -Infinity);
     var lastEntry = history.length ? history[history.length - 1] : null;
     var daysLabel = (ex.days || []).map(function (d) { return DAYS_PT[d]; }).join(", ") || "—";
-    var infoRows = [
+    var calorieEstimate = estimateExerciseCalories(ex);
+    var isCardio = isCardioExercise(ex);
+    var paceLabel = formatPace(ex.distance, calorieEstimate.minutes);
+    var infoRows = isCardio ? [
+      ["Atividade", getCardioTypeLabel(ex.cardioType)],
+      ["Distância", formatKm(ex.distance)],
+      ["Tempo", calorieEstimate.minutes + " min"],
+      ["Ritmo médio", paceLabel],
+      ["Intensidade", getIntensityLabel(ex.intensity)],
+      ["Gasto estimado", calorieEstimate.kcal + " kcal"],
+      ["Dias", daysLabel],
+      ["Observações", ex.notes || "Sem observações"]
+    ] : [
       ["Grupo", TAG_LABELS[ex.tag] || ex.tag || "—"],
       ["Séries", ex.sets || "—"],
       ["Repetições", ex.reps || "—"],
       ["Carga", ex.load || "—"],
+      ["Gasto estimado", calorieEstimate.kcal + " kcal"],
       ["Dias", daysLabel],
       ["Observações", ex.notes || "Sem observações"]
     ];
@@ -515,17 +671,27 @@
     document.getElementById("gym-hub-icon").textContent = getExEmoji(ex.tag);
     document.getElementById("gym-hub-badge").textContent = TAG_LABELS[ex.tag] || "Treino";
     document.getElementById("gym-hub-title").textContent = ex.name;
-    document.getElementById("gym-hub-meta").textContent = daysLabel;
-    document.getElementById("gym-hub-current-load").textContent = ex.load || "—";
+    document.getElementById("gym-hub-meta").textContent = isCardio ? getCardioTypeLabel(ex.cardioType) + " · " + daysLabel : daysLabel;
+    document.getElementById("gym-hub-primary-label").textContent = isCardio ? "Distância" : "Carga atual";
+    document.getElementById("gym-hub-primary-sub").textContent = isCardio ? getCardioTypeLabel(ex.cardioType).toLowerCase() : "configurada";
+    document.getElementById("gym-hub-current-load").textContent = isCardio ? formatKm(ex.distance) : ex.load || "—";
     document.getElementById("gym-hub-session-count").textContent = String(history.length);
-    document.getElementById("gym-hub-best-load").textContent = bestLoad > -Infinity ? String(bestLoad).replace(".", ",") + " kg" : "—";
+    document.getElementById("gym-hub-calories").textContent = calorieEstimate.kcal + " kcal";
+    document.getElementById("gym-hub-calories-sub").textContent = calorieEstimate.minutes + " min · " + getIntensityLabel(ex.intensity).toLowerCase();
+    document.getElementById("gym-hub-best-label").textContent = isCardio ? "Ritmo médio" : "Melhor carga";
+    document.getElementById("gym-hub-best-sub").textContent = isCardio ? "min/km" : "histórico";
+    document.getElementById("gym-hub-chart-title").textContent = isCardio ? "Evolução da Distância" : "Evolução da Carga";
+    document.getElementById("gym-hub-best-load").textContent = isCardio ? paceLabel : bestLoad > -Infinity ? String(bestLoad).replace(".", ",") + " kg" : "—";
     document.getElementById("gym-hub-last-date").textContent = lastEntry ? fmtShortDate(lastEntry.date) : "—";
     document.getElementById("gym-hub-info-list").innerHTML = infoRows.map(function (row) {
       return '<div class="gym-hub-info-row"><div class="gym-hub-info-label">' + row[0] + '</div><div class="gym-hub-info-value">' + row[1] + '</div></div>';
     }).join("");
     document.getElementById("gym-hub-history").innerHTML = history.length
       ? history.slice().reverse().map(function (entry) {
-          return '<div class="gym-hub-history-row"><div class="gym-hub-history-dot"></div><div class="gym-hub-history-label">Treino concluído</div><div class="gym-hub-history-value">' + (entry.loadLabel || "—") + '</div><div class="gym-hub-history-date">' + fmtShortDate(entry.date) + '</div></div>';
+          var histValue = isCardio
+            ? formatKm(entry.distance) + " · " + (entry.duration || calorieEstimate.minutes) + " min" + (entry.calories ? " · " + entry.calories + " kcal" : "")
+            : (entry.loadLabel || "—") + (entry.calories ? " · " + entry.calories + " kcal" : "");
+          return '<div class="gym-hub-history-row"><div class="gym-hub-history-dot"></div><div class="gym-hub-history-label">Treino concluído</div><div class="gym-hub-history-value">' + histValue + '</div><div class="gym-hub-history-date">' + fmtShortDate(entry.date) + '</div></div>';
         }).join("")
       : '<div class="ex-empty" style="padding:18px 8px;text-align:left"><p>Nenhuma sessão registrada ainda.</p></div>';
     var heroBg = document.getElementById("gym-hub-hero-bg");
@@ -621,7 +787,7 @@
       item.innerHTML = thumbHtml +
         '<div class="day-ex-body">' +
         '<div class="day-ex-name"' + (isDone ? ' style="text-decoration:line-through;opacity:.5"' : "") + ">" + ex.name + "</div>" +
-        '<div class="day-ex-meta">' + (ex.sets ? ex.sets + "x " : "") + (ex.reps || "") + (ex.load ? " · " + ex.load : "") + "</div>" +
+        '<div class="day-ex-meta">' + getExerciseSummary(ex) + "</div>" +
         "</div>" +
         '<span class="day-ex-tag tag-' + ex.tag + '">' + TAG_LABELS[ex.tag] + "</span>" +
         '<div class="done-check' + (isDone ? " done" : "") + '" data-id="' + ex.id + '">' +
@@ -675,7 +841,7 @@
         '<div class="ex-card-body">' +
         '<div class="ex-card-name">' + ex.name + "</div>" +
         '<span class="ex-card-tag tag-' + ex.tag + '">' + TAG_LABELS[ex.tag] + "</span>" +
-        '<div class="ex-card-sets">' + (ex.sets ? ex.sets + "x " : "") + (ex.reps || "") + (ex.load ? " · " + ex.load : "") + ' <span style="color:var(--muted)">' + daysLabel + "</span></div>" +
+        '<div class="ex-card-sets">' + getExerciseSummary(ex) + ' <span style="color:var(--muted)">' + daysLabel + "</span></div>" +
         "</div>" +
         '<button class="ex-card-del" data-id="' + ex.id + '"><i class="fas fa-times"></i></button>';
       card.addEventListener("click", function (e) { if (e.target.closest(".ex-card-del")) return; renderExerciseHub(ex.id); });
@@ -703,27 +869,22 @@
     document.getElementById("ex-del-btn").style.display = ex ? "inline-flex" : "none";
     document.getElementById("btn-save-ex").innerHTML = ex ? '<i class="fas fa-save"></i> Salvar' : '<i class="fas fa-plus"></i> Adicionar';
 
-    var previewImg = document.getElementById("ex-img-preview-img");
-    var previewLbl = document.getElementById("ex-img-preview-label");
-    if (ex && ex.image) {
-      previewImg.src = ex.image;
-      previewImg.style.display = "block";
-      previewLbl.style.display = "none";
-      exImageData = ex.image;
-    } else {
-      previewImg.src = "";
-      previewImg.style.display = "none";
-      previewLbl.style.display = "block";
-    }
+    setExerciseImagePreview(ex && ex.image ? ex.image : "");
+    document.getElementById("ex-img-web").value = ex && ex.image && /^https?:\/\//i.test(ex.image) ? ex.image : "";
 
     document.getElementById("ex-name").value = ex ? ex.name : "";
     document.getElementById("ex-tag").value = ex ? ex.tag : "peito";
     document.getElementById("ex-sets").value = ex ? ex.sets || "" : "";
     document.getElementById("ex-reps").value = ex ? ex.reps || "" : "";
+    document.getElementById("ex-cardio-type").value = ex ? ex.cardioType || "walk" : "walk";
+    document.getElementById("ex-distance").value = ex ? ex.distance || "" : "";
+    document.getElementById("ex-duration").value = ex ? ex.duration || "" : "";
+    document.getElementById("ex-intensity").value = ex ? ex.intensity || "moderate" : "moderate";
     document.getElementById("ex-load").value = ex ? ex.load || "" : "";
     document.getElementById("ex-notes").value = ex ? ex.notes || "" : "";
 
     setExerciseDaySelection(ex ? (ex.days || []) : []);
+    syncExerciseFormMode();
 
     openModal("modal-ex");
   }
@@ -812,6 +973,12 @@
       if (!chip) return;
       chip.classList.toggle("active");
     });
+    ["ex-tag", "ex-sets", "ex-cardio-type", "ex-distance", "ex-duration", "ex-intensity"].forEach(function (id) {
+      var field = document.getElementById(id);
+      if (!field) return;
+      field.addEventListener("input", id === "ex-tag" ? syncExerciseFormMode : renderExerciseCaloriePreview);
+      field.addEventListener("change", id === "ex-tag" ? syncExerciseFormMode : renderExerciseCaloriePreview);
+    });
 
     document.getElementById("ex-img-preview").addEventListener("click", function () {
       document.getElementById("ex-img-input").click();
@@ -821,28 +988,44 @@
       if (!file) return;
       var r = new FileReader();
       r.onload = function () {
-        exImageData = String(r.result || "");
-        var img = document.getElementById("ex-img-preview-img");
-        img.src = exImageData;
-        img.style.display = "block";
-        document.getElementById("ex-img-preview-label").style.display = "none";
+        setExerciseImagePreview(String(r.result || ""));
+        document.getElementById("ex-img-web").value = "";
       };
       r.readAsDataURL(file);
       e.target.value = "";
+    });
+    document.getElementById("btn-use-ex-img-web").addEventListener("click", applyExerciseWebImage);
+    document.getElementById("ex-img-web").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      applyExerciseWebImage();
     });
 
     document.getElementById("btn-save-ex").addEventListener("click", function () {
       var name = document.getElementById("ex-name").value.trim();
       if (!name) { toast("Insira um nome.", "err"); return; }
       var days = getExerciseDaySelection();
+      var tag = document.getElementById("ex-tag").value;
+      if (tag === "cardio" && !getPositiveNumber(document.getElementById("ex-distance").value)) {
+        toast("Informe a distância em km.", "err");
+        return;
+      }
+      if (tag === "cardio" && !getPositiveNumber(document.getElementById("ex-duration").value)) {
+        toast("Informe o tempo da atividade.", "err");
+        return;
+      }
       var current = editExId ? (exercises.find(function (x) { return x.id === editExId; }) || {}) : {};
       var ex = {
         id: editExId || uid(),
         name: name,
-        tag: document.getElementById("ex-tag").value,
+        tag: tag,
         days: days,
         sets: document.getElementById("ex-sets").value,
         reps: document.getElementById("ex-reps").value,
+        cardioType: tag === "cardio" ? document.getElementById("ex-cardio-type").value : "",
+        distance: tag === "cardio" ? document.getElementById("ex-distance").value : "",
+        duration: tag === "cardio" ? document.getElementById("ex-duration").value : "",
+        intensity: tag === "cardio" ? document.getElementById("ex-intensity").value : "moderate",
         load: document.getElementById("ex-load").value,
         notes: document.getElementById("ex-notes").value.trim(),
         image: exImageData || current.image || ""

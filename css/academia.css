@@ -432,6 +432,16 @@ canvas#weight-chart { width: 100%; height: 220px; display: block; }
   background: rgba(255,255,255,.03);
 }
 
+.gym-hub-calorie-metric {
+  border-color: rgba(94,196,168,.2);
+  background: linear-gradient(135deg, rgba(94,196,168,.09), rgba(255,255,255,.025));
+}
+
+.gym-hub-calorie-metric .v {
+  color: var(--teal);
+  font-size: 31px;
+}
+
 .gym-hub-metric .k {
   font-size: 10px;
   color: var(--muted);
@@ -592,6 +602,10 @@ body[data-page="academia"] .modal-acts { display: flex; gap: 10px; margin-top: 2
   font-weight: 700;
   cursor: pointer;
   transition: all .18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .ex-day-chip:hover {
   color: var(--text);
@@ -602,10 +616,41 @@ body[data-page="academia"] .modal-acts { display: flex; gap: 10px; margin-top: 2
   background: var(--gold);
   border-color: var(--gold);
 }
+.ex-calorie-preview {
+  margin: -2px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(94,196,168,.18);
+  border-radius: 10px;
+  background: rgba(94,196,168,.07);
+  color: var(--teal);
+  font-family: var(--fm);
+  font-size: 11px;
+  letter-spacing: .5px;
+}
+body[data-page="academia"] .ex-cardio-fields {
+  display: none;
+}
+body[data-page="academia"] .modal.cardio-mode .ex-cardio-fields {
+  display: grid;
+}
+body[data-page="academia"] .modal.cardio-mode .ex-strength-fields {
+  display: none;
+}
 .img-preview { width: 100%; height: 120px; border-radius: 10px; background: var(--bg3); border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; transition: border-color .2s; margin-bottom: 14px; }
 .img-preview:hover { border-color: var(--gold); }
 .img-preview img { width: 100%; height: 100%; object-fit: cover; }
 .img-preview span { font-size: 11px; font-family: var(--fm); color: var(--muted); }
+.ex-img-web-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+  margin: -4px 0 14px;
+}
+.ex-img-web-row .btn {
+  justify-content: center;
+  white-space: nowrap;
+}
 
 .tag-peito { background: rgba(224,107,139,.15); color: var(--rose); }
 .tag-costas { background: rgba(74,176,232,.15); color: var(--sky); }

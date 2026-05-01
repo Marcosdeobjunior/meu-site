@@ -237,19 +237,24 @@
             <div class="gym-hub-panel-title">Resumo</div>
             <div class="gym-hub-metrics">
               <div class="gym-hub-metric">
-                <div class="k">Carga atual</div>
+                <div class="k" id="gym-hub-primary-label">Carga atual</div>
                 <div class="v" id="gym-hub-current-load">—</div>
-                <div class="s">configurada</div>
+                <div class="s" id="gym-hub-primary-sub">configurada</div>
               </div>
               <div class="gym-hub-metric">
                 <div class="k">Sessões</div>
                 <div class="v" id="gym-hub-session-count">0</div>
                 <div class="s">registradas</div>
               </div>
+              <div class="gym-hub-metric gym-hub-calorie-metric">
+                <div class="k">Calorias</div>
+                <div class="v" id="gym-hub-calories">—</div>
+                <div class="s" id="gym-hub-calories-sub">estimadas</div>
+              </div>
               <div class="gym-hub-metric">
-                <div class="k">Melhor carga</div>
+                <div class="k" id="gym-hub-best-label">Melhor carga</div>
                 <div class="v" id="gym-hub-best-load">—</div>
-                <div class="s">histórico</div>
+                <div class="s" id="gym-hub-best-sub">histórico</div>
               </div>
               <div class="gym-hub-metric">
                 <div class="k">Última sessão</div>
@@ -259,7 +264,7 @@
             </div>
           </div>
           <div class="gym-hub-panel">
-            <div class="gym-hub-panel-title">Evolução da Carga</div>
+            <div class="gym-hub-panel-title" id="gym-hub-chart-title">Evolução da Carga</div>
             <div class="gym-hub-chart-wrap">
               <canvas id="gym-hub-chart"></canvas>
             </div>
@@ -306,6 +311,10 @@
         <span id="ex-img-preview-label"><i class="fas fa-image" style="margin-right:6px"></i>Clique para adicionar imagem</span>
       </div>
       <input type="file" id="ex-img-input" accept="image/*" style="display:none">
+      <div class="ex-img-web-row">
+        <input type="url" class="fi" id="ex-img-web" placeholder="Cole um link web da imagem">
+        <button class="btn btn-ghost btn-sm" type="button" id="btn-use-ex-img-web"><i class="fas fa-link"></i> Usar link</button>
+      </div>
       <div class="fg"><label class="fl">Nome do Exercício *</label><input type="text" class="fi" id="ex-name" placeholder="Ex: Supino Reto"></div>
       <div class="frow">
         <div class="fg"><label class="fl">Grupo Muscular</label>
@@ -333,11 +342,32 @@
           </div>
         </div>
       </div>
-      <div class="frow">
+      <div class="frow ex-strength-fields" id="ex-strength-rep-fields">
         <div class="fg"><label class="fl">Séries</label><input type="number" class="fi" id="ex-sets" placeholder="4" min="1" max="20"></div>
         <div class="fg"><label class="fl">Repetições</label><input type="text" class="fi" id="ex-reps" placeholder="Ex: 12, 10, 8"></div>
       </div>
-      <div class="fg"><label class="fl">Carga (kg)</label><input type="text" class="fi" id="ex-load" placeholder="Ex: 60kg ou —"></div>
+      <div class="frow ex-cardio-fields" id="ex-cardio-fields">
+        <div class="fg"><label class="fl">Atividade</label>
+          <select class="fsel" id="ex-cardio-type">
+            <option value="walk">Caminhada</option>
+            <option value="run">Corrida</option>
+            <option value="bike">Bicicleta</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Distância (km)</label><input type="number" class="fi" id="ex-distance" placeholder="Ex: 5" min="0.1" max="200" step="0.01"></div>
+      </div>
+      <div class="frow ex-cardio-fields">
+        <div class="fg"><label class="fl" id="ex-duration-label">Tempo (min)</label><input type="number" class="fi" id="ex-duration" placeholder="Ex: 35" min="1" max="240"></div>
+        <div class="fg"><label class="fl">Intensidade</label>
+          <select class="fsel" id="ex-intensity">
+            <option value="moderate">Moderada</option>
+            <option value="light">Leve</option>
+            <option value="hard">Intensa</option>
+          </select>
+        </div>
+      </div>
+      <div class="ex-calorie-preview" id="ex-calorie-preview">Estimativa: —</div>
+      <div class="fg ex-strength-fields" id="ex-strength-load-field"><label class="fl">Carga (kg)</label><input type="text" class="fi" id="ex-load" placeholder="Ex: 60kg ou —"></div>
       <div class="fg"><label class="fl">Observações</label><textarea class="fta" id="ex-notes" placeholder="Técnica, progressão..."></textarea></div>
       <div class="modal-acts">
         <button class="btn btn-rose btn-sm" id="ex-del-btn" style="display:none;margin-right:auto"><i class="fas fa-trash"></i> Excluir</button>
