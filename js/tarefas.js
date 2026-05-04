@@ -43,6 +43,12 @@ function save() {
   }
 }
 
+function syncStorageNow() {
+  if (window.SoterStorage && typeof window.SoterStorage.syncFirebaseNow === 'function') {
+    window.SoterStorage.syncFirebaseNow().catch(function () { });
+  }
+}
+
 function getDreams() {
   ensureState();
   var hub = appState.data && appState.data.sonhosHub;
@@ -414,6 +420,10 @@ function tkHasGymWorkoutOnDate(academia, date) {
   return trainDays.includes(dow) && tkGetGymExercisesForDay(academia, dow).length > 0;
 }
 
+function tkIsGymWorkoutSkipped(academia, dateStr) {
+  return !!(academia && academia.skippedByDate && academia.skippedByDate[dateStr]);
+}
+
 function tkGetGymTaskEntryForDate(dateStr) {
   var academia = tkGetAcademiaState();
   var date = tkParseDate(dateStr);
@@ -422,6 +432,7 @@ function tkGetGymTaskEntryForDate(dateStr) {
   var exercises;
   var doneCount;
   if (!date || !tkHasGymWorkoutOnDate(academia, date)) return null;
+  if (tkIsGymWorkoutSkipped(academia, dateStr)) return null;
   exercises = tkGetGymExercisesForDay(academia, date.getDay());
   doneCount = exercises.filter(function (exercise) { return !!doneMap[exercise.id]; }).length;
   return {
@@ -474,8 +485,9 @@ function tkGetGymCalendarEntries(year, month) {
 
   for (var day = 1; day <= daysInMonth; day += 1) {
     var date = new Date(year, month, day);
-    if (!tkHasGymWorkoutOnDate(academia, date)) continue;
     var ds = tkToDateString(date);
+    if (tkIsGymWorkoutSkipped(academia, ds)) continue;
+    if (!tkHasGymWorkoutOnDate(academia, date)) continue;
     var entry = tkGetGymTaskEntryForDate(ds);
     if (entry) entries.push(entry);
   }
@@ -488,6 +500,54 @@ function tkOpenGymDay(dateStr) {
     sessionStorage.setItem('academia_focus_date', dateStr);
   } catch (err) { }
   window.location.href = 'academia.html';
+}
+
+function tkDeleteGymWorkout(dateStr) {
+  var academia = tkGetAcademiaState();
+  if (!academia || !dateStr) return;
+  if (!academia.skippedByDate || typeof academia.skippedByDate !== 'object') academia.skippedByDate = {};
+  if (!academia.todayDoneByDate || typeof academia.todayDoneByDate !== 'object') academia.todayDoneByDate = {};
+  if (!academia.exerciseHistory || typeof academia.exerciseHistory !== 'object') academia.exerciseHistory = {};
+
+  academia.skippedByDate[dateStr] = true;
+  delete academia.todayDoneByDate[dateStr];
+  Object.keys(academia.exerciseHistory).forEach(function (exerciseId) {
+    if (!Array.isArray(academia.exerciseHistory[exerciseId])) return;
+    academia.exerciseHistory[exerciseId] = academia.exerciseHistory[exerciseId].filter(function (entry) {
+      return entry && entry.date !== dateStr;
+    });
+  });
+
+  save();
+  syncStorageNow();
+  renderTasks();
+}
+
+function tkRequestDeleteGymWorkout(dateStr) {
+  if (!dateStr) return;
+  tkDeletePopupOpen({
+    kicker: 'Treino da academia',
+    title: 'Excluir treino de ' + tkFmtDate(dateStr) + '?',
+    text: 'Esse treino sera removido das tarefas e marcado como pulado na Academia. A sua sequencia vai ignorar esse dia.',
+    meta: [tkFmtDate(dateStr), 'Academia'],
+    actions: [
+      {
+        value: 'delete-gym',
+        title: 'Excluir treino',
+        sub: 'Remove este dia de treino e recalcula a sequencia.',
+        className: 'danger'
+      },
+      {
+        value: 'cancel',
+        title: 'Cancelar',
+        sub: 'Volta sem fazer alteracoes.',
+        className: 'ghost'
+      }
+    ],
+    onChoice: function (mode) {
+      if (mode === 'delete-gym') tkDeleteGymWorkout(dateStr);
+    }
+  });
 }
 
 function tkSyncRecurringSeries(masterId) {
@@ -904,6 +964,9 @@ function tkRenderList() {
         <div class="tk-task-card-top">
           <div class="tk-task-card-check ${t.done?'checked':''}">${t.done?'✓':''}</div>
           <div class="tk-task-card-nome">${t.nome}</div>
+          <button type="button" class="tk-gym-delete-btn" onclick="event.stopPropagation();tkRequestDeleteGymWorkout('${t.data}')" title="Excluir treino">
+            🗑
+          </button>
         </div>
         ${t.nota ? `<div class="tk-task-card-nota">${t.nota}</div>` : ''}
         <div class="tk-task-card-footer">
@@ -2907,5 +2970,10 @@ window.addEventListener('keydown', function (event) {
 window.addEventListener('resize', tkRenderList);
 window.addEventListener('resize', tkQuickActionsClose);
 window.addEventListener('resize', taskHubClampBoardPosition);
+window.addEventListener('pageshow', function (event) {
+  if (!event.persisted) return;
+  load();
+  renderTasks();
+});
 
 

@@ -9,6 +9,7 @@
   var diet = { breakfast: [], lunch: [], snack: [], dinner: [] };
   var todayDone = {};
   var doneByDate = {};
+  var skippedByDate = {};
   var exFilter = "all";
   var editExId = null;
   var exImageData = "";
@@ -28,9 +29,14 @@
   function saveState(nextState) {
     if (window.SoterStorage && window.SoterStorage.save) window.SoterStorage.save(nextState);
   }
+  function syncStorageNow() {
+    if (window.SoterStorage && typeof window.SoterStorage.syncFirebaseNow === "function") {
+      window.SoterStorage.syncFirebaseNow().catch(function () { });
+    }
+  }
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
-  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function todayStr() { return formatDateLocal(new Date()); }
   function todayDOW() { return new Date().getDay(); }
   function parseDateLocal(str) {
     if (!str) return null;
@@ -63,6 +69,16 @@
     var dayDone = doneByDate[dateStr] || {};
     return dayExercises.every(function (ex) { return !!dayDone[ex.id]; });
   }
+  function isTrainingDaySkipped(dateStr) {
+    return !!skippedByDate[dateStr];
+  }
+  function resumeTrainingDay(dateStr) {
+    delete skippedByDate[dateStr];
+    if (!doneByDate[dateStr]) doneByDate[dateStr] = {};
+    if (dateStr === todayStr()) todayDone = Object.assign({}, doneByDate[dateStr]);
+    save();
+    syncStorageNow();
+  }
   function getMonthCompletedTrainingDays(referenceDate) {
     var year = referenceDate.getFullYear();
     var month = referenceDate.getMonth();
@@ -94,6 +110,7 @@
     var streak = 0;
     for (var i = 0; i < trainingDays.length; i += 1) {
       if (isTrainingDayCompleted(trainingDays[i])) streak += 1;
+      else if (isTrainingDaySkipped(trainingDays[i])) continue;
       else break;
     }
     return streak;
@@ -350,6 +367,7 @@
       exercises: exercises,
       exerciseHistory: exerciseHistory,
       diet: diet,
+      skippedByDate: skippedByDate,
       todayDoneByDate: (function () {
         doneByDate[todayStr()] = todayDone;
         return Object.assign({}, doneByDate);
@@ -369,6 +387,7 @@
       exercises = Array.isArray(data[DATA_KEY].exercises) ? data[DATA_KEY].exercises : [];
       exerciseHistory = data[DATA_KEY].exerciseHistory && typeof data[DATA_KEY].exerciseHistory === "object" ? Object.assign({}, data[DATA_KEY].exerciseHistory) : {};
       diet = Object.assign({ breakfast: [], lunch: [], snack: [], dinner: [] }, data[DATA_KEY].diet || {});
+      skippedByDate = data[DATA_KEY].skippedByDate && typeof data[DATA_KEY].skippedByDate === "object" ? Object.assign({}, data[DATA_KEY].skippedByDate) : {};
       doneByDate = data[DATA_KEY].todayDoneByDate && typeof data[DATA_KEY].todayDoneByDate === "object" ? Object.assign({}, data[DATA_KEY].todayDoneByDate) : {};
       todayDone = doneByDate[todayStr()] ? Object.assign({}, doneByDate[todayStr()]) : {};
     }
@@ -763,6 +782,8 @@
     var dow = todayDOW();
     var isTrain = profile.trainDays.includes(dow);
     var body = document.getElementById("day-workout-body");
+    var dateKey = todayStr();
+    var skippedToday = isTrainingDaySkipped(dateKey);
 
     if (!isTrain) {
       body.innerHTML = '<div class="rest-msg"><i class="fas fa-moon"></i><p>Dia de descanso.<br>Aproveite a recuperação!</p></div>';
@@ -772,6 +793,17 @@
     var dayExs = exercises.filter(function (e) { return (e.days || []).map(Number).includes(dow); });
     if (dayExs.length === 0) {
       body.innerHTML = '<div class="rest-msg"><i class="fas fa-dumbbell"></i><p>Nenhum exercício configurado para hoje.<br>Adicione exercícios e selecione este dia.</p></div>';
+      return;
+    }
+
+    if (skippedToday) {
+      body.innerHTML = '<div class="skip-workout-state"><i class="fas fa-forward"></i><p>Treino pulado hoje.</p><button class="btn btn-ghost btn-sm" id="btn-unskip-workout"><i class="fas fa-undo"></i> Retomar treino</button></div>';
+      document.getElementById("btn-unskip-workout").addEventListener("click", function () {
+        resumeTrainingDay(dateKey);
+        renderDayWorkout();
+        renderWeightStats();
+        toast("Treino retomado e visivel em Tarefas.", "info");
+      });
       return;
     }
 
@@ -798,18 +830,28 @@
     body.innerHTML = "";
 
     var pbar = document.createElement("div");
-    pbar.style.cssText = "padding:12px 16px 0;display:flex;align-items:center;gap:10px;";
-    pbar.innerHTML = '<div style="flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:var(--teal);width:' + Math.round(done / dayExs.length * 100) + '%;transition:width .5s"></div></div><span style="font-size:10px;font-family:var(--fm);color:var(--muted)">' + done + "/" + dayExs.length + "</span>";
+    pbar.className = "day-workout-progress";
+    pbar.innerHTML = '<div class="day-workout-track"><div class="day-workout-fill" style="width:' + Math.round(done / dayExs.length * 100) + '%"></div></div><span>' + done + "/" + dayExs.length + '</span><button class="btn btn-ghost btn-sm skip-workout-btn" id="btn-skip-workout"><i class="fas fa-forward"></i> Pular treino</button>';
     body.appendChild(pbar);
     body.appendChild(list);
+
+    document.getElementById("btn-skip-workout").addEventListener("click", function () {
+      skippedByDate[dateKey] = true;
+      save();
+      syncStorageNow();
+      renderDayWorkout();
+      renderWeightStats();
+      toast("Treino de hoje pulado.", "info");
+    });
 
     body.querySelectorAll(".done-check").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         var id = this.dataset.id;
+        delete skippedByDate[dateKey];
         todayDone[id] = !todayDone[id];
-        doneByDate[todayStr()] = Object.assign({}, todayDone);
-        if (todayDone[id]) trackExerciseCompletion(id, todayStr());
+        doneByDate[dateKey] = Object.assign({}, todayDone);
+        if (todayDone[id]) trackExerciseCompletion(id, dateKey);
         save();
         renderDayWorkout();
         renderWeightStats();
@@ -1104,6 +1146,12 @@
       }
     });
   }
+
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    loadAll();
+    renderAll();
+  });
 
   loadAll();
   bindEvents();

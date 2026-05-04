@@ -547,6 +547,12 @@
     return hasMeaningfulState(state);
   }
 
+  function isRemoteStateOlderThanLocal(remoteUpdatedAt, localState) {
+    var remoteTime = Date.parse(String(remoteUpdatedAt || ""));
+    var localTime = Date.parse(String(localState && localState.data && localState.data.lastVisitedAt || ""));
+    return Number.isFinite(remoteTime) && Number.isFinite(localTime) && remoteTime < localTime;
+  }
+
   function summarizeStateForSync(state) {
     state = compactStateForStorage(ensureStateShape(state));
     var data = state.data || {};
@@ -1280,9 +1286,14 @@
         updateFirebaseMeta({ enabled: true, hydrated: true, lastError: '' });
         return;
       }
+      var localState = loadState();
+      if (isRemoteStateOlderThanLocal(remote.updatedAt, localState)) {
+        queueFirebaseSync(localState);
+        return;
+      }
       var incoming = mergeAuthProfileIntoState(ensureStateShape(remote.state), firebaseCurrentUser);
       var serializedIncoming = JSON.stringify(compactStateForStorage(incoming));
-      var serializedLocal = JSON.stringify(compactStateForStorage(loadState()));
+      var serializedLocal = JSON.stringify(compactStateForStorage(localState));
       firebaseIsHydrated = true;
       updateFirebaseMeta({
         enabled: true,
@@ -1293,7 +1304,7 @@
       if (serializedIncoming === serializedLocal) return;
       firebaseIsApplyingRemote = true;
       try {
-        applySiteState(incoming, loadState());
+        applySiteState(incoming, localState);
       } finally {
         firebaseIsApplyingRemote = false;
       }
@@ -1318,6 +1329,12 @@
       return docSnap;
     }).then(function (docSnap) {
       if (docSnap && docSnap.exists && docSnap.data() && docSnap.data().state) {
+        if (isRemoteStateOlderThanLocal(docSnap.data().updatedAt, loadState())) {
+          queueFirebaseSync(loadState());
+          firebaseIsHydrated = true;
+          updateFirebaseMeta({ hydrated: true, lastError: '' });
+          return true;
+        }
         firebaseIsApplyingRemote = true;
         try {
           applySiteState(mergeAuthProfileIntoState(ensureStateShape(docSnap.data().state), firebaseCurrentUser), loadState());

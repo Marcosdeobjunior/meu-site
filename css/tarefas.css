@@ -1294,6 +1294,28 @@ body {
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .tk-task-card.done-card .tk-task-card-nome { text-decoration: line-through; color: var(--muted); }
+  .tk-gym-delete-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(224,107,139,.22);
+    background: rgba(224,107,139,.1);
+    color: var(--accent4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    opacity: .82;
+    transition: all .18s;
+  }
+  .tk-gym-delete-btn:hover {
+    opacity: 1;
+    background: rgba(224,107,139,.2);
+    border-color: rgba(224,107,139,.4);
+    transform: translateY(-1px);
+  }
   .tk-task-card-nota {
     font-size: 11.5px; color: var(--muted); line-height: 1.5; margin-bottom: 10px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
