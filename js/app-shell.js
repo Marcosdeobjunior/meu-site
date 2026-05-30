@@ -823,23 +823,68 @@
     }, 350);
   }
 
-  function buildLoginStars() {
-    var container = document.getElementById('lm-stars');
-    var html = '';
-    var i;
-    if (!container || container.childElementCount > 0) return;
-    for (i = 0; i < 55; i += 1) {
-      var x = Math.random() * 100;
-      var y = Math.random() * 100;
-      var size = Math.random() < 0.8 ? Math.random() * 1.4 + 0.4 : Math.random() * 2.2 + 1.2;
-      var dur = (Math.random() * 3 + 1.5).toFixed(1);
-      var del = (Math.random() * 5).toFixed(1);
-      html += '<div class="lm-star" style="left:' + x + '%;top:' + y + '%;width:' + size + 'px;height:' + size + 'px;--sd:' + dur + 's;--sy:-' + del + 's"></div>';
-    }
-    container.innerHTML = html;
-  }
 
   var authSkyState = { signin: 'night', signup: 'night' };
+  var vantaNightEffect = null;
+  var vantaDayEffect = null;
+
+  function initVantaNight() {
+    var el = document.getElementById('lm-sky-night');
+    if (!el || vantaNightEffect) return;
+    loadScript('js/three.r134.min.js').then(function () {
+      return loadScript('js/vanta.clouds2.min.js');
+    }).then(function () {
+      if (vantaNightEffect) return;
+      vantaNightEffect = window.VANTA.CLOUDS2({
+        el: '#lm-sky-night',
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        skyColor: 0xa2c55,
+        speed: 0.30,
+        texturePath: './gallery/noise.png'
+      });
+    }).catch(function () {});
+  }
+
+  function initVantaDay() {
+    var el = document.getElementById('lm-sky-day');
+    if (!el || vantaDayEffect) return;
+    loadScript('js/three.r134.min.js').then(function () {
+      return loadScript('js/vanta.clouds2.min.js');
+    }).then(function () {
+      if (vantaDayEffect) return;
+      vantaDayEffect = window.VANTA.CLOUDS2({
+        el: '#lm-sky-day',
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        skyColor: 0x76a3d9,
+        speed: 0.40,
+        texturePath: './gallery/noise.png'
+      });
+    }).catch(function () {});
+  }
+
+  function destroyVantaNight() {
+    if (vantaNightEffect) {
+      vantaNightEffect.destroy();
+      vantaNightEffect = null;
+    }
+  }
+
+  function destroyVantaDay() {
+    if (vantaDayEffect) {
+      vantaDayEffect.destroy();
+      vantaDayEffect = null;
+    }
+  }
 
   function setAuthSky(mode) {
     var modal = document.getElementById('firebase-auth-modal');
@@ -918,26 +963,8 @@
       '<div id="login-modal" role="dialog" aria-modal="true" aria-labelledby="soter-auth-title">',
       '  <div class="lm-shell">',
       '    <div class="lm-sky-header">',
-      '      <div id="lm-sky-night">',
-      '        <div style="position:absolute;inset:0;background:linear-gradient(180deg,#04060f 0%,#080d1e 50%,#0d1030 100%)"></div>',
-      '        <div id="lm-stars"></div>',
-      '        <div class="lm-moon"></div>',
-      '        <div class="lm-cloud-n" style="width:130px;height:32px;top:30px;animation:cloudDrift1 28s linear infinite 0s"></div>',
-      '        <div class="lm-cloud-n" style="width:90px;height:22px;top:55px;animation:cloudDrift2 38s linear infinite 6s"></div>',
-      '        <div class="lm-cloud-n" style="width:160px;height:28px;top:15px;animation:cloudDrift3 46s linear infinite 14s"></div>',
-      '        <div class="lm-cloud-n" style="width:80px;height:18px;top:70px;animation:cloudDrift1 33s linear infinite 22s"></div>',
-      '      </div>',
-      '      <div id="lm-sky-day">',
-      '        <div style="position:absolute;inset:0;background:linear-gradient(180deg,#1a3a7a 0%,#2a5ab8 45%,#4a90d8 100%)"></div>',
-      '        <div class="lm-sun-wrap">',
-      '          <div class="lm-sun-rays"></div>',
-      '          <div class="lm-sun-core"></div>',
-      '        </div>',
-      '        <div class="lm-cloud-d" style="width:140px;height:36px;top:28px;animation:cloudDrift1 32s linear infinite 2s"></div>',
-      '        <div class="lm-cloud-d" style="width:100px;height:26px;top:60px;animation:cloudDrift2 42s linear infinite 10s"></div>',
-      '        <div class="lm-cloud-d" style="width:170px;height:30px;top:10px;animation:cloudDrift3 52s linear infinite 18s"></div>',
-      '        <div class="lm-cloud-d" style="width:85px;height:20px;top:75px;animation:cloudDrift1 37s linear infinite 26s"></div>',
-      '      </div>',
+      '      <div id="lm-sky-night"></div>',
+      '      <div id="lm-sky-day"></div>',
       '      <div class="lm-sky-title">',
       '        <div class="lm-sky-title-brand" id="soter-auth-title"><em style="font-style:italic;color:var(--accent1)">S\u00f3l</em> de S\u00f3ter</div>',
       '        <div class="lm-sky-title-sub">acesse seu universo</div>',
@@ -997,9 +1024,12 @@
       '          </div>',
       '          <div>',
       '            <label class="lm-label">Confirmar senha</label>',
-      '            <div style="position:relative">',
-      '              <input id="firebase-auth-signup-password-confirm-input" type="password" placeholder="Repita sua senha" autocomplete="new-password" class="lm-field-inp">',
-      '              <button class="lm-eye-btn" id="firebase-auth-signup-password-confirm-eye" type="button" title="Mostrar/ocultar senha">\uD83C\uDF19</button>',
+      '            <div id="apc-indicator" class="apc-indicator" style="display:none"></div>',
+      '            <div class="apc-field-wrap" id="apc-field-wrap">',
+      '              <div style="position:relative">',
+      '                <input id="firebase-auth-signup-password-confirm-input" type="password" placeholder="Repita sua senha" autocomplete="new-password" class="lm-field-inp">',
+      '                <button class="lm-eye-btn" id="firebase-auth-signup-password-confirm-eye" type="button" title="Mostrar/ocultar senha">\uD83C\uDF19</button>',
+      '              </div>',
       '            </div>',
       '          </div>',
       '          <label class="lm-remember-row">',
@@ -1023,7 +1053,7 @@
       if (event.target && event.target.matches('[data-auth-close]')) closeAuthModal();
     });
 
-    buildLoginStars();
+
     var signinBtn = document.getElementById('firebase-auth-signin-btn');
     var signupBtn = document.getElementById('firebase-auth-signup-btn');
     var tabLogin = document.getElementById('ltab-login');
@@ -1188,6 +1218,84 @@
         finishAuthFlow('Conta criada com sucesso.', feedbackOk);
       }).catch(function (err) { showFeedback(formatAuthMessage(err, 'signup'), true); });
     });
+    // Assisted Password Confirmation
+    var apcPasswordInput = document.getElementById('firebase-auth-signup-password-input');
+    var apcConfirmInput = document.getElementById('firebase-auth-signup-password-confirm-input');
+    var apcIndicator = document.getElementById('apc-indicator');
+    var apcFieldWrap = document.getElementById('apc-field-wrap');
+    var apcShaking = false;
+
+    function buildApcDots(password) {
+      if (!apcIndicator) return;
+      apcIndicator.innerHTML = '';
+      var len = String(password || '').length;
+      if (!len) { apcIndicator.style.display = 'none'; return; }
+      apcIndicator.style.display = 'flex';
+      for (var i = 0; i < len; i++) {
+        var slot = document.createElement('div');
+        slot.className = 'apc-dot-slot';
+        var bg = document.createElement('div');
+        bg.className = 'apc-dot-bg';
+        var dot = document.createElement('div');
+        dot.className = 'apc-dot';
+        slot.appendChild(bg);
+        slot.appendChild(dot);
+        apcIndicator.appendChild(slot);
+      }
+    }
+
+    function updateApcState() {
+      if (!apcIndicator || !apcPasswordInput || !apcConfirmInput) return;
+      var password = apcPasswordInput.value;
+      var confirm = apcConfirmInput.value;
+      var slots = apcIndicator.querySelectorAll('.apc-dot-slot');
+      slots.forEach(function (slot, i) {
+        var bg = slot.querySelector('.apc-dot-bg');
+        if (i < confirm.length) {
+          slot.classList.add('filled');
+          bg.className = 'apc-dot-bg ' + (confirm[i] === password[i] ? 'apc-match-bg' : 'apc-mismatch-bg');
+        } else {
+          slot.classList.remove('filled');
+          bg.className = 'apc-dot-bg';
+        }
+      });
+      var matched = password.length > 0 && password === confirm;
+      apcIndicator.classList.toggle('apc-matched', matched);
+      apcConfirmInput.classList.toggle('apc-field-matched', matched);
+      if (matched && apcFieldWrap && !apcFieldWrap.classList.contains('apc-pulse')) {
+        apcFieldWrap.classList.add('apc-pulse');
+        setTimeout(function () { apcFieldWrap.classList.remove('apc-pulse'); }, 350);
+      }
+    }
+
+    if (apcPasswordInput) {
+      apcPasswordInput.addEventListener('input', function () {
+        buildApcDots(apcPasswordInput.value);
+        if (apcConfirmInput && apcConfirmInput.value.length > apcPasswordInput.value.length) {
+          apcConfirmInput.value = apcConfirmInput.value.slice(0, apcPasswordInput.value.length);
+        }
+        updateApcState();
+      });
+    }
+
+    if (apcConfirmInput) {
+      apcConfirmInput.addEventListener('input', function () {
+        var password = apcPasswordInput ? apcPasswordInput.value : '';
+        if (apcConfirmInput.value.length > password.length) {
+          apcConfirmInput.value = apcConfirmInput.value.slice(0, password.length);
+          if (!apcShaking && apcFieldWrap) {
+            apcShaking = true;
+            apcFieldWrap.classList.add('apc-shake');
+            setTimeout(function () {
+              apcFieldWrap.classList.remove('apc-shake');
+              apcShaking = false;
+            }, 450);
+          }
+        }
+        updateApcState();
+      });
+    }
+
     syncRememberInputs(authRememberDefault);
     setAuthTab('login');
   }
@@ -1208,6 +1316,7 @@
     authSkyState.signin = 'night';
     authSkyState.signup = 'night';
     syncAuthSky();
+    requestAnimationFrame(function () { initVantaNight(); initVantaDay(); });
     if (shell) {
       shell.style.display = 'block';
       shell.style.opacity = '0';
@@ -1236,6 +1345,8 @@
     setTimeout(function () {
       modal.hidden = true;
       document.body.classList.remove('auth-modal-open');
+      destroyVantaNight();
+      destroyVantaDay();
     }, 380);
   }
 

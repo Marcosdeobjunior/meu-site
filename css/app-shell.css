@@ -1568,14 +1568,15 @@ body.mobile-drawer-open {
 
 .lm-moon {
   position: absolute;
-  right: 28px;
+  left: 50%;
   top: 20px;
+  transform: translateX(-50%);
   width: 52px;
   height: 52px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #e8eeff, #c8d4f8 40%, #a0b4e8);
   animation: moonGlow 4s ease-in-out infinite;
-  z-index: 3;
+  z-index: -1;
   flex-shrink: 0;
 }
 
@@ -2105,4 +2106,102 @@ body.mobile-drawer-open {
 
 body.auth-modal-open {
   overflow: hidden;
+}
+
+/* ── Assisted Password Confirmation ─────────────────────────────── */
+.apc-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  min-height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  overflow: hidden;
+  transition: border-color .3s, background .3s;
+  flex-wrap: wrap;
+}
+
+.apc-indicator.apc-matched {
+  border-color: rgba(94,196,168,.38);
+  background: rgba(94,196,168,.06);
+}
+
+.apc-dot-slot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apc-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(232,228,240,.28);
+  position: relative;
+  z-index: 1;
+}
+
+.apc-dot-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.apc-dot-slot.filled .apc-dot-bg {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.apc-match-bg    { background: rgba(94,196,168,.3); }
+.apc-mismatch-bg { background: rgba(224,107,139,.3); }
+
+@keyframes apc-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-9px); }
+  45%  { transform: translateX(9px); }
+  65%  { transform: translateX(-7px); }
+  82%  { transform: translateX(7px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes apc-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.018); }
+  100% { transform: scale(1); }
+}
+
+.apc-field-wrap { border-radius: 10px; }
+
+.apc-field-wrap.apc-shake {
+  animation: apc-shake .45s ease;
+}
+
+.apc-field-wrap.apc-pulse {
+  animation: apc-pulse .35s ease;
+}
+
+.lm-field-inp.apc-field-matched {
+  border-color: rgba(94,196,168,.52) !important;
+  box-shadow: 0 0 0 3px rgba(94,196,168,.1) !important;
+}
+
+#firebase-auth-modal.sky-day .apc-indicator {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(120,160,230,.2);
+}
+
+#firebase-auth-modal.sky-day .apc-indicator.apc-matched {
+  border-color: rgba(60,200,160,.4);
+  background: rgba(60,200,160,.08);
 }
