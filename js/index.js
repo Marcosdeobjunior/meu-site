@@ -20,6 +20,53 @@
   var shoots = [];
   var mouse = { x: -9999, y: -9999 };
 
+  // Hero constellation — real patterns mapped onto background stars
+  var heroConns    = [];
+  var heroConnDist = 150;
+  var heroScrollY  = 0;
+  var heroZoneX0   = 0;
+  var heroZoneX1   = 0;
+  var HERO_BREAK_DIST = 16;
+  var HERO_FADE       = 0.03;
+  var HERO_MAX_DEG    = 3;
+
+  // Real constellation shapes — node positions as fractions of (zone width, viewport height)
+  // Each edge is an index pair into that constellation's nodes array
+  var HERO_CONSTS = [
+    {
+      name: 'Lyra',            // upper zone — harp shape with Vega at top
+      nodes: [
+        { rx: 0.50, ry: 0.11 }, // Vega (α) — brightest
+        { rx: 0.30, ry: 0.24 }, // ε¹ Lyr
+        { rx: 0.34, ry: 0.37 }, // ε² Lyr
+        { rx: 0.70, ry: 0.22 }, // ζ¹ Lyr
+        { rx: 0.65, ry: 0.35 }  // ζ² Lyr
+      ],
+      edges: [[0,1],[0,3],[1,2],[3,4],[2,4]]
+    },
+    {
+      name: 'Crux',            // middle zone — Southern Cross
+      nodes: [
+        { rx: 0.50, ry: 0.44 }, // γ Cru — Gacrux (top)
+        { rx: 0.76, ry: 0.53 }, // β Cru — Mimosa (right)
+        { rx: 0.50, ry: 0.62 }, // α Cru — Acrux (bottom)
+        { rx: 0.24, ry: 0.53 }  // δ Cru (left)
+      ],
+      edges: [[0,2],[1,3]]
+    },
+    {
+      name: 'Cassiopeia',      // lower zone — W shape
+      nodes: [
+        { rx: 0.08, ry: 0.79 }, // ε Cas — Segin
+        { rx: 0.28, ry: 0.71 }, // δ Cas — Ruchbah
+        { rx: 0.50, ry: 0.79 }, // γ Cas
+        { rx: 0.72, ry: 0.71 }, // α Cas — Schedar
+        { rx: 0.92, ry: 0.79 }  // β Cas — Caph
+      ],
+      edges: [[0,1],[1,2],[2,3],[3,4]]
+    }
+  ];
+
   var hueMap = {
     white: [220, 215, 255],
     gold: [200, 169, 110],
@@ -72,6 +119,171 @@
       speed: rand(8, 16),
       alpha: 1
     });
+  }
+
+  // Distance from point (px,py) to segment (ax,ay)→(bx,by)
+  function distToSeg(px, py, ax, ay, bx, by) {
+    var dx = bx - ax, dy = by - ay;
+    var lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay));
+    var t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+    var qx = ax + t * dx, qy = ay + t * dy;
+    return Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy));
+  }
+
+  // Snap each constellation node to the nearest available background star
+  function buildHeroConns() {
+    var conns = [];
+    var used  = {};
+    var zoneW = heroZoneX1 - heroZoneX0;
+    var snap  = Math.min(zoneW, H) * 0.22; // search radius per node
+
+    HERO_CONSTS.forEach(function (constl) {
+      // Map constellation node index → global star index (-1 if none found)
+      var nodeMap = [];
+      constl.nodes.forEach(function (n, ni) {
+        var tx = heroZoneX0 + n.rx * zoneW;
+        var ty = n.ry * H;
+        var best = -1, bestD = Infinity;
+        for (var j = 0; j < stars.length; j++) {
+          if (used[j]) continue;
+          var dx = stars[j].x - tx, dy = stars[j].y - ty;
+          var d  = Math.sqrt(dx * dx + dy * dy);
+          if (d < snap && d < bestD) { bestD = d; best = j; }
+        }
+        nodeMap[ni] = best;
+        if (best >= 0) used[best] = true;
+      });
+
+      // Create connections only when both endpoints were resolved
+      constl.edges.forEach(function (e) {
+        var a = nodeMap[e[0]], b = nodeMap[e[1]];
+        if (a >= 0 && b >= 0) {
+          conns.push({ a: a, b: b, op: 0, dir: 1, breaking: false, born: performance.now() });
+        }
+      });
+    });
+
+    return conns;
+  }
+
+  function initHeroConstellation() {
+    heroConns = [];
+    if (prefersReducedMotion || W < 900) return;
+    var contentW  = Math.min(1785, W - 40);
+    var leftPad   = (W - contentW) / 2;
+    heroZoneX0    = leftPad + contentW * 0.60;
+    heroZoneX1    = heroZoneX0 + contentW * 0.40;
+    heroConnDist  = Math.min(contentW * 0.40, H) * 0.28;
+    heroConns     = buildHeroConns();
+  }
+
+  // Find a new connection partner for star idx, excluding star exclude
+  function heroReconnect(idx, exclude) {
+    var deg = 0, connSet = {}, k, c, jDeg, dx, dy, d, best = -1, bestD = Infinity;
+    for (k = 0; k < heroConns.length; k++) {
+      c = heroConns[k];
+      if (c.a === idx || c.b === idx) {
+        deg++;
+        connSet[c.a === idx ? c.b : c.a] = true;
+      }
+    }
+    if (deg >= HERO_MAX_DEG) return;
+    for (var j = 0; j < stars.length; j++) {
+      if (j === idx || j === exclude || connSet[j]) continue;
+      if (stars[j].x < heroZoneX0 || stars[j].x > heroZoneX1) continue;
+      jDeg = 0;
+      for (k = 0; k < heroConns.length; k++) {
+        if (heroConns[k].a === j || heroConns[k].b === j) jDeg++;
+      }
+      if (jDeg >= HERO_MAX_DEG) continue;
+      dx = stars[idx].x - stars[j].x;
+      dy = stars[idx].y - stars[j].y;
+      d  = Math.sqrt(dx * dx + dy * dy);
+      if (d < heroConnDist * 1.5 && d < bestD) { bestD = d; best = j; }
+    }
+    if (best >= 0) heroConns.push({ a: idx, b: best, op: 0, dir: 1, breaking: false, born: performance.now() });
+  }
+
+  function drawHeroConstellation() {
+    if (prefersReducedMotion || W < 900) return;
+    var t      = performance.now() * 0.001;
+    var fadeIn = Math.max(0, Math.min(1, 1 - heroScrollY / H));
+    if (fadeIn <= 0 || heroConns.length === 0) return;
+
+    var toRemove = [], connectedSet = {};
+    var i, conn, sa, sb, midX, midY, mdist, nearBoost, lineOp, lineW;
+
+    for (i = 0; i < heroConns.length; i++) {
+      conn = heroConns[i];
+
+      if (conn.dir > 0) {
+        conn.op = Math.min(0.22, conn.op + HERO_FADE * 0.6);
+      } else {
+        conn.op = Math.max(0, conn.op - HERO_FADE);
+        if (conn.op <= 0) { toRemove.push(i); continue; }
+      }
+
+      sa = stars[conn.a]; sb = stars[conn.b];
+
+      // Auto-break when a star drifts out of the zone
+      if (!conn.breaking && (sa.x < heroZoneX0 || sa.x > heroZoneX1 || sb.x < heroZoneX0 || sb.x > heroZoneX1)) {
+        conn.breaking = true;
+        conn.dir = -1;
+      }
+
+      // Break when mouse cuts through the line (300ms grace period)
+      if (!conn.breaking && conn.dir > 0 && conn.op > 0.10 && (t * 1000 - conn.born) > 300) {
+        if (distToSeg(mouse.x, mouse.y, sa.x, sa.y, sb.x, sb.y) < HERO_BREAK_DIST) {
+          conn.breaking = true;
+          conn.dir = -1;
+        }
+      }
+
+      if (conn.op > 0.005) {
+        connectedSet[conn.a] = true;
+        connectedSet[conn.b] = true;
+        midX      = (sa.x + sb.x) * 0.5;
+        midY      = (sa.y + sb.y) * 0.5;
+        mdist     = Math.sqrt((midX - mouse.x) * (midX - mouse.x) + (midY - mouse.y) * (midY - mouse.y));
+        nearBoost = conn.breaking ? 0 : Math.max(0, (1 - mdist / 130) * 0.3);
+        lineOp    = (conn.op + nearBoost) * fadeIn;
+        lineW     = conn.breaking ? 0.35 : (nearBoost > 0.1 ? 0.8 : 0.45);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(201,169,110,' + lineOp.toFixed(3) + ')';
+        ctx.lineWidth   = lineW;
+        ctx.beginPath();
+        ctx.moveTo(sa.x, sa.y);
+        ctx.lineTo(sb.x, sb.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Remove faded connections and reconnect orphaned stars that remain in zone
+    for (var r = toRemove.length - 1; r >= 0; r--) {
+      var gone = heroConns.splice(toRemove[r], 1)[0];
+      if (gone.breaking) {
+        var gaIn = stars[gone.a].x >= heroZoneX0 && stars[gone.a].x <= heroZoneX1;
+        var gbIn = stars[gone.b].x >= heroZoneX0 && stars[gone.b].x <= heroZoneX1;
+        if (gaIn) heroReconnect(gone.a, gone.b);
+        if (gbIn) heroReconnect(gone.b, gone.a);
+      }
+    }
+
+    // Golden glow overlay on connected stars so they stand out from the background
+    var keys = Object.keys(connectedSet);
+    for (i = 0; i < keys.length; i++) {
+      var s  = stars[Number(keys[i])];
+      var gr = s.r * 6 * fadeIn;
+      var gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, gr);
+      gg.addColorStop(0, 'rgba(201,169,110,0.30)');
+      gg.addColorStop(1, 'rgba(201,169,110,0)');
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, gr, 0, Math.PI * 2);
+      ctx.fillStyle = gg;
+      ctx.fill();
+    }
   }
 
   function drawNebula(cx, cy, r, color) {
@@ -167,6 +379,8 @@
       ctx.fill();
     }
 
+    drawHeroConstellation();
+
     for (var k = shoots.length - 1; k >= 0; k -= 1) {
       var sh = shoots[k];
       sh.x -= Math.cos(sh.angle) * sh.speed;
@@ -205,6 +419,7 @@
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
     initStars();
+    initHeroConstellation();
   }
 
   function ensureAnimationLoop() {
@@ -492,6 +707,9 @@
       mouse.x = e.touches[0].clientX;
       mouse.y = e.touches[0].clientY;
     }
+  }, { passive: true });
+  window.addEventListener("scroll", function () {
+    heroScrollY = window.pageYOffset || window.scrollY || 0;
   }, { passive: true });
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
