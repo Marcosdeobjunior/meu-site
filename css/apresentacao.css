@@ -23,7 +23,6 @@
       position: fixed;
       inset: 0;
       z-index: 2;
-      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -34,47 +33,6 @@
 
     #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-    #starfield {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .star {
-      position: absolute;
-      border-radius: 50%;
-      background: #fff;
-      animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: var(--min-op, 0.1); transform: scale(1); }
-      50% { opacity: var(--max-op, 0.9); transform: scale(1.3); }
-    }
-
-    .shoot {
-      position: absolute;
-      width: 120px;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(255,255,255,0), #fff);
-      transform-origin: right;
-      animation: shoot var(--sdur, 4s) linear infinite var(--sdelay, 0s);
-      opacity: 0;
-    }
-
-    @keyframes shoot {
-      0% { opacity: 0; transform: translate(0, 0) rotate(-30deg) scaleX(0); }
-      5% { opacity: 1; transform: translate(0, 0) rotate(-30deg) scaleX(1); }
-      30% { opacity: 0; transform: translate(-400px, 200px) rotate(-30deg) scaleX(1); }
-      100% { opacity: 0; transform: translate(-400px, 200px) rotate(-30deg) scaleX(0); }
-    }
-
-    .nebula {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-    }
 
     .splash-content {
       position: relative;

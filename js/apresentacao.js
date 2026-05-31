@@ -1,34 +1,3 @@
-function buildStarfield() {
-  const field = document.getElementById("starfield");
-  if (!field) return;
-
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-  const count = Math.min(280, Math.floor(W * H / 6000));
-  let html = "";
-
-  for (let i = 0; i < count; i++) {
-    const x = Math.random() * 100;
-    const y = Math.random() * 100;
-    const size = Math.random() < 0.85 ? Math.random() * 1.5 + 0.5 : Math.random() * 2.5 + 1.5;
-    const dur = (Math.random() * 4 + 2).toFixed(1);
-    const delay = (Math.random() * 6).toFixed(1);
-    const minOp = (Math.random() * 0.1 + 0.05).toFixed(2);
-    const maxOp = (Math.random() * 0.6 + 0.4).toFixed(2);
-    html += `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;--dur:${dur}s;--delay:-${delay}s;--min-op:${minOp};--max-op:${maxOp}"></div>`;
-  }
-
-  for (let i = 0; i < 4; i++) {
-    const x = 30 + Math.random() * 60;
-    const y = 5 + Math.random() * 40;
-    const dur = (Math.random() * 5 + 4).toFixed(1);
-    const delay = (Math.random() * 10).toFixed(1);
-    html += `<div class="shoot" style="left:${x}%;top:${y}%;--sdur:${dur}s;--sdelay:${delay}s"></div>`;
-  }
-
-  field.innerHTML = html;
-}
-
 function enterSite() {
   sessionStorage.setItem("soter_allow_index", "1");
   if (window.SoterStorage && typeof window.SoterStorage.tryAutoEnter === "function") {
@@ -93,7 +62,6 @@ function setupEnterButtonRipple() {
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
     initStars();
-    buildStarfield();
   }
 
   function rand(a, b) {
