@@ -1,6 +1,8 @@
 ﻿(function () {
   "use strict";
 
+  var _rpgXpLiquid = null;
+
   var XP_PER_TREINO = 25;
   var XP_PER_HORA_ESTUDO = 20;
   var XP_PER_SONHO = 15;
@@ -1190,7 +1192,22 @@
     setText("rpg-qs-tarefas", String(quickStats.tarefas || 0));
 
     var xpBar = document.getElementById("rpg-xp-bar");
-    if (xpBar) xpBar.style.width = pct + "%";
+    if (xpBar) {
+      if (xpBar.tagName === 'CANVAS' && window.createLiquidBar) {
+        if (!_rpgXpLiquid) {
+          _rpgXpLiquid = window.createLiquidBar(xpBar, {
+            col0: 'rgba(158, 146, 235, 0.95)',
+            col1: '#9278c8',
+            col2: '#c8a96e',
+            horizontal: true,
+            causticRGB: '220,215,255'
+          });
+        }
+        _rpgXpLiquid.set(pct);
+      } else {
+        xpBar.style.width = pct + "%";
+      }
+    }
 
     var avatarWrap = document.getElementById("rpg-avatar");
     var avatarImg = document.getElementById("rpg-avatar-img");

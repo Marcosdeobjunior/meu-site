@@ -548,16 +548,24 @@ body {
 
 .integrated-home .xp-bar-wrap,
 .integrated-home .attr-bar-wrap {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .integrated-home .xp-bar-wrap {
   width: 100%;
-  height: 2px;
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
   margin-bottom: 0.6rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35), inset 0 -1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.integrated-home .xp-bar,
+.integrated-home canvas.xp-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .integrated-home .attr-bar {
   height: 100%;
   background: var(--home-gold);

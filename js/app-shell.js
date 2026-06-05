@@ -5106,6 +5106,219 @@
   initFirebaseSync().catch(function () { });
 }());
 
+window.createLiquidBar = function (canvas, opts) {
+  var o = opts || {};
+  var col0 = o.col0 || 'rgba(255, 232, 108, 0.96)';
+  var col1 = o.col1 || '#c9a96e';
+  var col2 = o.col2 || 'rgba(88, 50, 6, 0.98)';
+  var hGrad = !!o.horizontal;
+  var causticRGB = o.causticRGB || '255,252,215';
+
+  var ctx = canvas.getContext('2d');
+  var target = 0, current = 0;
+  var t = 0;
+  var slosh = 0, sloshVel = 0;
+  var bubbles = [];
+  var lw = 0, lh = 0;
+  var raf = null, active = false;
+
+  // 4-component wave system — freq, base-amp, speed, phase
+  var WF = [0.030, 0.058, 0.108, 0.016];
+  var WA = [1.5,   0.95,  0.52,  0.85];
+  var WS = [1.05, -0.62,  1.75, -0.35];
+  var WP = [0.0,   2.1,   4.3,   1.0 ];
+
+  function waveY(x) {
+    var y = 0, sm = 1.0 + Math.abs(slosh) * 0.55;
+    for (var i = 0; i < 4; i++) {
+      y += Math.sin(x * WF[i] + t * WS[i] + WP[i]) * WA[i];
+    }
+    return y * sm;
+  }
+
+  function resize() {
+    var p = canvas.parentElement;
+    if (!p) return;
+    var r = p.getBoundingClientRect();
+    lw = r.width  || p.offsetWidth  || 0;
+    lh = r.height || p.offsetHeight || 0;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width  = Math.round(lw * dpr);
+    canvas.height = Math.round(lh * dpr);
+  }
+
+  function spawnBubbles(fw) {
+    var n = 3 + Math.floor(Math.random() * 5);
+    for (var i = 0; i < n; i++) {
+      bubbles.push({
+        x: Math.random() * Math.max(1, fw * 0.85),
+        y: lh * (0.55 + Math.random() * 0.45),
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: -(0.4 + Math.random() * 1.2),
+        r: 0.8 + Math.random() * 2.4,
+        life: 0.7 + Math.random() * 0.3,
+        decay: 0.008 + Math.random() * 0.012
+      });
+    }
+  }
+
+  function tracePath(fw) {
+    var FADE = 20;
+    ctx.beginPath();
+    ctx.moveTo(0, lh);
+    ctx.lineTo(0, waveY(0));
+    for (var x = 2; x <= fw; x += 2) {
+      var wy = waveY(x);
+      if (fw < lw * 0.98 && x > fw - FADE) {
+        wy *= Math.max(0, (fw - x) / FADE);
+      }
+      ctx.lineTo(x, wy);
+    }
+    ctx.lineTo(fw, lh);
+    ctx.closePath();
+  }
+
+  function tick() {
+    if (!lw || !lh) resize();
+    t += 0.022;
+    current += (target - current) * 0.045;
+
+    // Spring-damped slosh oscillator
+    sloshVel = (sloshVel - slosh * 0.18) * 0.83;
+    slosh += sloshVel;
+    if (Math.abs(slosh) < 0.01 && Math.abs(sloshVel) < 0.01) slosh = sloshVel = 0;
+
+    // Bubble physics
+    for (var i = bubbles.length - 1; i >= 0; i--) {
+      var b = bubbles[i];
+      b.x += b.vx + Math.sin(t * 2.7 + i * 1.4) * 0.12;
+      b.y += b.vy;
+      b.vy *= 0.997;
+      b.life -= b.decay;
+      if (b.life <= 0) bubbles.splice(i, 1);
+    }
+
+    var dpr = window.devicePixelRatio || 1;
+    var W = lw, H = lh;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!W || !H) { raf = requestAnimationFrame(tick); return; }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    var fw = Math.max(0, (current / 100) * W);
+
+    if (fw > 0.5) {
+      // ── Main fill ─────────────────────────────────────────
+      tracePath(fw);
+      var mainGrad = hGrad
+        ? ctx.createLinearGradient(0, 0, W, 0)
+        : ctx.createLinearGradient(0, 0, 0, H);
+      mainGrad.addColorStop(0.00, col0);
+      mainGrad.addColorStop(0.45, col1);
+      mainGrad.addColorStop(1.00, col2);
+      ctx.fillStyle = mainGrad;
+      ctx.fill();
+
+      // ── Inner effects (clipped to liquid shape) ────────────
+      ctx.save();
+      tracePath(fw);
+      ctx.clip();
+
+      // Caustic blob 1 — large, slow drift
+      var c1x = fw * (0.20 + 0.14 * Math.sin(t * 0.63));
+      var c1y = H  * (0.28 + 0.12 * Math.sin(t * 0.44 + 1.2));
+      var cg1 = ctx.createRadialGradient(c1x, c1y, 0, c1x, c1y, fw * 0.52);
+      cg1.addColorStop(0, 'rgba(' + causticRGB + ',0.22)');
+      cg1.addColorStop(1, 'rgba(' + causticRGB + ',0.00)');
+      ctx.fillStyle = cg1;
+      ctx.fillRect(0, 0, fw, H);
+
+      // Caustic blob 2 — smaller, faster
+      var c2x = fw * (0.65 + 0.17 * Math.sin(t * 1.05 + 2.4));
+      var c2y = H  * (0.52 + 0.14 * Math.cos(t * 0.82 + 0.7));
+      var cg2 = ctx.createRadialGradient(c2x, c2y, 0, c2x, c2y, fw * 0.28);
+      cg2.addColorStop(0, 'rgba(' + causticRGB + ',0.16)');
+      cg2.addColorStop(1, 'rgba(' + causticRGB + ',0.00)');
+      ctx.fillStyle = cg2;
+      ctx.fillRect(0, 0, fw, H);
+
+      // Glass shine on surface
+      var sg = ctx.createLinearGradient(0, 0, 0, H * 0.58);
+      sg.addColorStop(0.00, 'rgba(255,255,255,0.36)');
+      sg.addColorStop(0.28, 'rgba(255,255,255,0.10)');
+      sg.addColorStop(1.00, 'rgba(255,255,255,0.00)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(0, 0, fw, H * 0.58);
+
+      // Depth shadow at bottom
+      var dg = ctx.createLinearGradient(0, H * 0.52, 0, H);
+      dg.addColorStop(0, 'rgba(0,0,0,0.00)');
+      dg.addColorStop(1, 'rgba(0,0,0,0.28)');
+      ctx.fillStyle = dg;
+      ctx.fillRect(0, H * 0.52, fw, H * 0.48);
+
+      // Bubbles
+      for (var bi = 0; bi < bubbles.length; bi++) {
+        var bb = bubbles[bi];
+        if (bb.x > fw || bb.y < waveY(bb.x)) continue;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, bb.life) * 0.75;
+        ctx.beginPath();
+        ctx.arc(bb.x, bb.y, bb.r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(bb.x - bb.r * 0.28, bb.y - bb.r * 0.28, bb.r * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.restore(); // end inner clip
+
+      // ── Leading-edge glow (outside clip) ──────────────────
+      if (fw < W - 3) {
+        var ey = H * 0.5 + waveY(fw) * 0.35;
+        var eg = ctx.createRadialGradient(fw, ey, 0, fw, ey, H * 1.1);
+        eg.addColorStop(0.00, 'rgba(255,242,148,0.70)');
+        eg.addColorStop(0.30, 'rgba(255,228,100,0.25)');
+        eg.addColorStop(1.00, 'rgba(255,228,100,0.00)');
+        ctx.fillStyle = eg;
+        ctx.beginPath();
+        ctx.arc(fw, ey, H * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    if (active) return;
+    active = true;
+    resize();
+    raf = requestAnimationFrame(tick);
+    window.addEventListener('resize', resize);
+  }
+
+  return {
+    set: function (pct) {
+      pct = Math.max(0, Math.min(100, Number(pct) || 0));
+      if (Math.abs(pct - target) > 0.5) {
+        slosh = 10;
+        sloshVel = 5;
+        spawnBubbles((current / 100) * lw);
+      }
+      target = pct;
+      if (!active) start();
+    },
+    start: start
+  };
+};
+
 
 
 

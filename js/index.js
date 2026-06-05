@@ -20,50 +20,125 @@
   var shoots = [];
   var mouse = { x: -9999, y: -9999 };
 
-  // Hero constellation — real patterns mapped onto background stars
-  var heroConns    = [];
-  var heroConnDist = 150;
+  // Hero constellation — stars travel between pool and background, never disappear
+  var HERO_ZONE_X0 = 0;
+  var HERO_ZONE_W  = 0;
   var heroScrollY  = 0;
-  var heroZoneX0   = 0;
-  var heroZoneX1   = 0;
-  var HERO_BREAK_DIST = 16;
-  var HERO_FADE       = 0.03;
-  var HERO_MAX_DEG    = 3;
+  var heroIdx      = 0;
+  var heroPhase    = 'morphing'; // 'morphing' | 'forming' | 'holding'
+  var heroPhaseT   = 0;
+  var HERO_MORPH   = 2400;  // ms for stars to travel to new positions
+  var HERO_FORM    = 3200;  // ms to draw all connections
+  var HERO_HOLD    = 20000; // ms to hold constellation
+  var heroPool     = [];    // hero stars (NOT in stars[])
+  var heroEdges    = [];    // { a, b } — indices into non-leaving heroPool entries
 
-  // Real constellation shapes — node positions as fractions of (zone width, viewport height)
-  // Each edge is an index pair into that constellation's nodes array
+  // Real constellation shapes — positions based on actual sky patterns
   var HERO_CONSTS = [
     {
-      name: 'Lyra',            // upper zone — harp shape with Vega at top
+      name: 'Orion',
       nodes: [
-        { rx: 0.50, ry: 0.11 }, // Vega (α) — brightest
-        { rx: 0.30, ry: 0.24 }, // ε¹ Lyr
-        { rx: 0.34, ry: 0.37 }, // ε² Lyr
-        { rx: 0.70, ry: 0.22 }, // ζ¹ Lyr
-        { rx: 0.65, ry: 0.35 }  // ζ² Lyr
+        { rx: 0.36, ry: 0.20 }, // 0 Betelgeuse α
+        { rx: 0.64, ry: 0.22 }, // 1 Bellatrix γ
+        { rx: 0.30, ry: 0.68 }, // 2 Rigel β
+        { rx: 0.70, ry: 0.70 }, // 3 Saiph κ
+        { rx: 0.40, ry: 0.44 }, // 4 Alnitak ζ
+        { rx: 0.50, ry: 0.42 }, // 5 Alnilam ε
+        { rx: 0.60, ry: 0.44 }  // 6 Mintaka δ
       ],
-      edges: [[0,1],[0,3],[1,2],[3,4],[2,4]]
+      edges: [[0,1],[0,4],[1,6],[4,5],[5,6],[0,2],[1,3]]
     },
     {
-      name: 'Crux',            // middle zone — Southern Cross
+      name: 'Cassiopeia',
       nodes: [
-        { rx: 0.50, ry: 0.44 }, // γ Cru — Gacrux (top)
-        { rx: 0.76, ry: 0.53 }, // β Cru — Mimosa (right)
-        { rx: 0.50, ry: 0.62 }, // α Cru — Acrux (bottom)
-        { rx: 0.24, ry: 0.53 }  // δ Cru (left)
-      ],
-      edges: [[0,2],[1,3]]
-    },
-    {
-      name: 'Cassiopeia',      // lower zone — W shape
-      nodes: [
-        { rx: 0.08, ry: 0.79 }, // ε Cas — Segin
-        { rx: 0.28, ry: 0.71 }, // δ Cas — Ruchbah
-        { rx: 0.50, ry: 0.79 }, // γ Cas
-        { rx: 0.72, ry: 0.71 }, // α Cas — Schedar
-        { rx: 0.92, ry: 0.79 }  // β Cas — Caph
+        { rx: 0.08, ry: 0.30 }, // 0 β Cas Caph
+        { rx: 0.30, ry: 0.42 }, // 1 α Cas Schedar
+        { rx: 0.50, ry: 0.30 }, // 2 γ Cas center
+        { rx: 0.70, ry: 0.42 }, // 3 δ Cas Ruchbah
+        { rx: 0.92, ry: 0.30 }  // 4 ε Cas Segin
       ],
       edges: [[0,1],[1,2],[2,3],[3,4]]
+    },
+    {
+      name: 'Crux',
+      nodes: [
+        { rx: 0.50, ry: 0.22 }, // 0 γ Cru Gacrux top
+        { rx: 0.78, ry: 0.44 }, // 1 β Cru Mimosa right
+        { rx: 0.50, ry: 0.66 }, // 2 α Cru Acrux bottom
+        { rx: 0.22, ry: 0.44 }, // 3 δ Cru left
+        { rx: 0.63, ry: 0.32 }  // 4 ε Cru upper-right
+      ],
+      edges: [[0,2],[1,3],[0,4]]
+    },
+    {
+      name: 'Lyra',
+      nodes: [
+        { rx: 0.50, ry: 0.12 }, // 0 α Lyr Vega
+        { rx: 0.32, ry: 0.30 }, // 1 ζ¹ Lyr
+        { rx: 0.36, ry: 0.44 }, // 2 ζ² Lyr
+        { rx: 0.68, ry: 0.28 }, // 3 β Lyr
+        { rx: 0.64, ry: 0.42 }, // 4 γ Lyr
+        { rx: 0.50, ry: 0.50 }  // 5 δ¹ Lyr
+      ],
+      edges: [[0,1],[0,3],[1,2],[3,4],[2,5],[4,5]]
+    },
+    {
+      name: 'Scorpius',
+      nodes: [
+        { rx: 0.46, ry: 0.12 }, // 0 σ Sco
+        { rx: 0.60, ry: 0.12 }, // 1 τ Sco
+        { rx: 0.50, ry: 0.22 }, // 2 α Sco Antares
+        { rx: 0.64, ry: 0.26 }, // 3 δ Sco Dschubba
+        { rx: 0.52, ry: 0.36 }, // 4 π Sco
+        { rx: 0.52, ry: 0.50 }, // 5 μ¹ Sco
+        { rx: 0.58, ry: 0.63 }, // 6 ζ¹ Sco
+        { rx: 0.68, ry: 0.74 }, // 7 η Sco
+        { rx: 0.74, ry: 0.84 }, // 8 θ Sco
+        { rx: 0.76, ry: 0.90 }  // 9 ι Sco stinger
+      ],
+      edges: [[0,2],[1,3],[2,3],[2,4],[4,5],[5,6],[6,7],[7,8],[8,9]]
+    },
+    {
+      name: 'Leo',
+      nodes: [
+        { rx: 0.20, ry: 0.56 }, // 0 α Leo Regulus
+        { rx: 0.25, ry: 0.40 }, // 1 η Leo
+        { rx: 0.38, ry: 0.30 }, // 2 γ Leo Algieba
+        { rx: 0.50, ry: 0.24 }, // 3 ζ Leo
+        { rx: 0.58, ry: 0.20 }, // 4 μ Leo sickle top
+        { rx: 0.60, ry: 0.34 }, // 5 ε Leo
+        { rx: 0.55, ry: 0.48 }, // 6 δ Leo Zosma
+        { rx: 0.78, ry: 0.44 }, // 7 β Leo Denebola
+        { rx: 0.68, ry: 0.60 }  // 8 θ Leo
+      ],
+      edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,2],[5,6],[6,0],[6,8],[8,7]]
+    },
+    {
+      name: 'Ursa Major',
+      nodes: [
+        { rx: 0.92, ry: 0.20 }, // 0 η UMa Alkaid handle tip
+        { rx: 0.76, ry: 0.30 }, // 1 ζ UMa Mizar
+        { rx: 0.62, ry: 0.36 }, // 2 ε UMa Alioth
+        { rx: 0.50, ry: 0.40 }, // 3 δ UMa Megrez junction
+        { rx: 0.56, ry: 0.58 }, // 4 γ UMa Phecda
+        { rx: 0.40, ry: 0.66 }, // 5 β UMa Merak
+        { rx: 0.36, ry: 0.50 }  // 6 α UMa Dubhe
+      ],
+      edges: [[0,1],[1,2],[2,3],[3,6],[6,5],[5,4],[4,3]]
+    },
+    {
+      name: 'Perseus',
+      nodes: [
+        { rx: 0.50, ry: 0.26 }, // 0 α Per Mirfak center
+        { rx: 0.30, ry: 0.18 }, // 1 γ Per
+        { rx: 0.66, ry: 0.20 }, // 2 δ Per
+        { rx: 0.74, ry: 0.36 }, // 3 ε Per
+        { rx: 0.76, ry: 0.52 }, // 4 ζ Per Atik
+        { rx: 0.60, ry: 0.62 }, // 5 ξ Per Menkib
+        { rx: 0.36, ry: 0.56 }, // 6 η Per
+        { rx: 0.20, ry: 0.42 }  // 7 τ Per
+      ],
+      edges: [[1,0],[0,2],[2,3],[3,4],[4,5],[5,6],[6,0],[0,7]]
     }
   ];
 
@@ -121,168 +196,253 @@
     });
   }
 
-  // Distance from point (px,py) to segment (ax,ay)→(bx,by)
-  function distToSeg(px, py, ax, ay, bx, by) {
-    var dx = bx - ax, dy = by - ay;
-    var lenSq = dx * dx + dy * dy;
-    if (lenSq === 0) return Math.sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay));
-    var t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
-    var qx = ax + t * dx, qy = ay + t * dy;
-    return Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy));
+  function heroEase(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
 
-  // Snap each constellation node to the nearest available background star
-  function buildHeroConns() {
-    var conns = [];
-    var used  = {};
-    var zoneW = heroZoneX1 - heroZoneX0;
-    var snap  = Math.min(zoneW, H) * 0.22; // search radius per node
+  function recruitBgStar(targetX, targetY) {
+    var best = -1, bestD = Infinity;
+    for (var i = 0; i < stars.length; i++) {
+      var dx = stars[i].x - targetX, dy = stars[i].y - targetY;
+      var d  = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    var src = best >= 0 ? stars.splice(best, 1)[0]
+            : { x: targetX + rand(-80, 80), y: targetY + rand(-60, 60),
+                r: rand(0.5, 1.0), alpha: rand(0.5, 0.9),
+                twinkleSpeed: rand(0.006, 0.018), twinkleDir: 1, hue: 'white', layer: 1 };
+    return {
+      x: src.x, y: src.y,
+      r: Math.max(src.r, 0.5),
+      alpha: src.alpha,
+      twinkleSpeed: src.twinkleSpeed || 0.010,
+      twinkleDir: src.twinkleDir || 1,
+      hue: 'gold', layer: src.layer || 1,
+      baseX: targetX, baseY: targetY,
+      startX: src.x, startY: src.y,
+      leaving: false, leaveAlpha: 1,
+      leaveVx: 0, leaveVy: 0,
+      t_freq:  0.18 + Math.random() * 0.18,
+      t_amp:   0.8  + Math.random() * 1.8,
+      t_phase: Math.random() * Math.PI * 2
+    };
+  }
 
-    HERO_CONSTS.forEach(function (constl) {
-      // Map constellation node index → global star index (-1 if none found)
-      var nodeMap = [];
-      constl.nodes.forEach(function (n, ni) {
-        var tx = heroZoneX0 + n.rx * zoneW;
-        var ty = n.ry * H;
-        var best = -1, bestD = Infinity;
-        for (var j = 0; j < stars.length; j++) {
-          if (used[j]) continue;
-          var dx = stars[j].x - tx, dy = stars[j].y - ty;
-          var d  = Math.sqrt(dx * dx + dy * dy);
-          if (d < snap && d < bestD) { bestD = d; best = j; }
-        }
-        nodeMap[ni] = best;
-        if (best >= 0) used[best] = true;
-      });
+  function releaseHeroStar(star) {
+    star.leaving    = true;
+    star.leaveAlpha = 1;
+    star.leaveVx    = rand(-0.06, 0.06);
+    star.leaveVy    = rand(-0.05, 0.05);
+  }
 
-      // Create connections only when both endpoints were resolved
-      constl.edges.forEach(function (e) {
-        var a = nodeMap[e[0]], b = nodeMap[e[1]];
-        if (a >= 0 && b >= 0) {
-          conns.push({ a: a, b: b, op: 0, dir: 1, breaking: false, born: performance.now() });
-        }
-      });
+  function buildConstellation(constl) {
+    var positions = constl.nodes.map(function (n) {
+      return { x: HERO_ZONE_X0 + n.rx * HERO_ZONE_W, y: n.ry * H };
     });
 
-    return conns;
+    var available = heroPool.filter(function (s) { return !s.leaving; });
+    var usedAvail = {}, assignments = [], i, j;
+
+    for (i = 0; i < positions.length; i++) {
+      var best = -1, bestD = Infinity;
+      for (j = 0; j < available.length; j++) {
+        if (usedAvail[j]) continue;
+        var dx = available[j].x - positions[i].x;
+        var dy = available[j].y - positions[i].y;
+        var d  = dx * dx + dy * dy;
+        if (d < bestD) { bestD = d; best = j; }
+      }
+      assignments[i] = best;
+      if (best >= 0) usedAvail[best] = true;
+    }
+
+    for (j = 0; j < available.length; j++) {
+      if (!usedAvail[j]) releaseHeroStar(available[j]);
+    }
+
+    var newPool = heroPool.filter(function (s) { return s.leaving; });
+
+    for (i = 0; i < positions.length; i++) {
+      var pos  = positions[i];
+      var star;
+      if (assignments[i] >= 0) {
+        star         = available[assignments[i]];
+        star.startX  = star.x;
+        star.startY  = star.y;
+        star.baseX   = pos.x;
+        star.baseY   = pos.y;
+        star.t_phase = Math.random() * Math.PI * 2;
+        star.t_freq  = 0.18 + Math.random() * 0.18;
+        star.t_amp   = 0.8  + Math.random() * 1.8;
+      } else {
+        star = recruitBgStar(pos.x, pos.y);
+      }
+      newPool.push(star);
+    }
+
+    heroPool  = newPool;
+    heroEdges = constl.edges.map(function (e) { return { a: e[0], b: e[1] }; });
   }
 
   function initHeroConstellation() {
-    heroConns = [];
+    // Return current pool to background before rebuilding
+    for (var k = 0; k < heroPool.length; k++) {
+      var s = heroPool[k];
+      s.vx = rand(-0.04, 0.04);
+      s.vy = rand(-0.02, 0.03);
+      s.hue = 'white';
+      stars.push(s);
+    }
+    heroPool  = [];
+    heroEdges = [];
     if (prefersReducedMotion || W < 900) return;
     var contentW  = Math.min(1785, W - 40);
     var leftPad   = (W - contentW) / 2;
-    heroZoneX0    = leftPad + contentW * 0.60;
-    heroZoneX1    = heroZoneX0 + contentW * 0.40;
-    heroConnDist  = Math.min(contentW * 0.40, H) * 0.28;
-    heroConns     = buildHeroConns();
+    HERO_ZONE_X0  = leftPad + contentW * 0.60;
+    HERO_ZONE_W   = contentW * 0.40;
+    heroIdx   = 0;
+    heroPhase = 'morphing';
+    heroPhaseT = performance.now();
+    buildConstellation(HERO_CONSTS[heroIdx]);
   }
 
-  // Find a new connection partner for star idx, excluding star exclude
-  function heroReconnect(idx, exclude) {
-    var deg = 0, connSet = {}, k, c, jDeg, dx, dy, d, best = -1, bestD = Infinity;
-    for (k = 0; k < heroConns.length; k++) {
-      c = heroConns[k];
-      if (c.a === idx || c.b === idx) {
-        deg++;
-        connSet[c.a === idx ? c.b : c.a] = true;
-      }
+  function drawSparkle(x, y, r, alpha) {
+    var outerR = r, innerR = r * 0.13;
+    var gr = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+    gr.addColorStop(0, 'rgba(201,169,110,' + (0.40 * alpha).toFixed(3) + ')');
+    gr.addColorStop(1, 'rgba(201,169,110,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+    ctx.fillStyle = gr;
+    ctx.fill();
+    ctx.beginPath();
+    for (var p = 0; p < 4; p++) {
+      var ao = (p / 4) * Math.PI * 2 - Math.PI / 2;
+      var ai = ao + Math.PI / 4;
+      var ox = x + Math.cos(ao) * outerR, oy = y + Math.sin(ao) * outerR;
+      var ix = x + Math.cos(ai) * innerR, iy = y + Math.sin(ai) * innerR;
+      if (p === 0) { ctx.moveTo(ox, oy); } else { ctx.lineTo(ox, oy); }
+      ctx.lineTo(ix, iy);
     }
-    if (deg >= HERO_MAX_DEG) return;
-    for (var j = 0; j < stars.length; j++) {
-      if (j === idx || j === exclude || connSet[j]) continue;
-      if (stars[j].x < heroZoneX0 || stars[j].x > heroZoneX1) continue;
-      jDeg = 0;
-      for (k = 0; k < heroConns.length; k++) {
-        if (heroConns[k].a === j || heroConns[k].b === j) jDeg++;
-      }
-      if (jDeg >= HERO_MAX_DEG) continue;
-      dx = stars[idx].x - stars[j].x;
-      dy = stars[idx].y - stars[j].y;
-      d  = Math.sqrt(dx * dx + dy * dy);
-      if (d < heroConnDist * 1.5 && d < bestD) { bestD = d; best = j; }
-    }
-    if (best >= 0) heroConns.push({ a: idx, b: best, op: 0, dir: 1, breaking: false, born: performance.now() });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(225,205,155,' + alpha.toFixed(3) + ')';
+    ctx.fill();
   }
 
   function drawHeroConstellation() {
-    if (prefersReducedMotion || W < 900) return;
-    var t      = performance.now() * 0.001;
-    var fadeIn = Math.max(0, Math.min(1, 1 - heroScrollY / H));
-    if (fadeIn <= 0 || heroConns.length === 0) return;
+    if (prefersReducedMotion || W < 900 || !heroPool.length) return;
 
-    var toRemove = [], connectedSet = {};
-    var i, conn, sa, sb, midX, midY, mdist, nearBoost, lineOp, lineW;
+    var scrollFade = Math.max(0, Math.min(1, 1 - heroScrollY / (H * 0.65)));
+    if (scrollFade <= 0) return;
 
-    for (i = 0; i < heroConns.length; i++) {
-      conn = heroConns[i];
+    var now     = performance.now();
+    var t       = now * 0.001;
+    var elapsed = now - heroPhaseT;
+    var i, k;
 
-      if (conn.dir > 0) {
-        conn.op = Math.min(0.22, conn.op + HERO_FADE * 0.6);
+    // Phase transitions
+    if (heroPhase === 'morphing' && elapsed >= HERO_MORPH) {
+      heroPhase  = 'forming';
+      heroPhaseT = now;
+      elapsed    = 0;
+    }
+    if (heroPhase === 'forming' && elapsed >= HERO_FORM) {
+      heroPhase  = 'holding';
+      heroPhaseT = now;
+      elapsed    = 0;
+    }
+    if (heroPhase === 'holding' && elapsed >= HERO_HOLD) {
+      heroPhase  = 'morphing';
+      heroPhaseT = now;
+      elapsed    = 0;
+      heroIdx    = (heroIdx + 1) % HERO_CONSTS.length;
+      buildConstellation(HERO_CONSTS[heroIdx]);
+    }
+
+    // Compute positions for non-leaving hero stars
+    var active = [];
+    for (k = 0; k < heroPool.length; k++) {
+      if (!heroPool[k].leaving) active.push(heroPool[k]);
+    }
+
+    var activePos = active.map(function (star) {
+      var x, y;
+      if (heroPhase === 'morphing') {
+        var ease = heroEase(Math.min(1, elapsed / HERO_MORPH));
+        x = star.startX + (star.baseX - star.startX) * ease;
+        y = star.startY + (star.baseY - star.startY) * ease;
       } else {
-        conn.op = Math.max(0, conn.op - HERO_FADE);
-        if (conn.op <= 0) { toRemove.push(i); continue; }
+        x = star.baseX + Math.sin(t * star.t_freq + star.t_phase) * star.t_amp;
+        y = star.baseY + Math.cos(t * star.t_freq * 0.7 + star.t_phase + 1.3) * star.t_amp * 0.6;
       }
+      star.x = x;
+      star.y = y;
+      return { x: x, y: y };
+    });
 
-      sa = stars[conn.a]; sb = stars[conn.b];
-
-      // Auto-break when a star drifts out of the zone
-      if (!conn.breaking && (sa.x < heroZoneX0 || sa.x > heroZoneX1 || sb.x < heroZoneX0 || sb.x > heroZoneX1)) {
-        conn.breaking = true;
-        conn.dir = -1;
-      }
-
-      // Break when mouse cuts through the line (300ms grace period)
-      if (!conn.breaking && conn.dir > 0 && conn.op > 0.10 && (t * 1000 - conn.born) > 300) {
-        if (distToSeg(mouse.x, mouse.y, sa.x, sa.y, sb.x, sb.y) < HERO_BREAK_DIST) {
-          conn.breaking = true;
-          conn.dir = -1;
-        }
-      }
-
-      if (conn.op > 0.005) {
-        connectedSet[conn.a] = true;
-        connectedSet[conn.b] = true;
-        midX      = (sa.x + sb.x) * 0.5;
-        midY      = (sa.y + sb.y) * 0.5;
-        mdist     = Math.sqrt((midX - mouse.x) * (midX - mouse.x) + (midY - mouse.y) * (midY - mouse.y));
-        nearBoost = conn.breaking ? 0 : Math.max(0, (1 - mdist / 130) * 0.3);
-        lineOp    = (conn.op + nearBoost) * fadeIn;
-        lineW     = conn.breaking ? 0.35 : (nearBoost > 0.1 ? 0.8 : 0.45);
-        ctx.save();
-        ctx.strokeStyle = 'rgba(201,169,110,' + lineOp.toFixed(3) + ')';
-        ctx.lineWidth   = lineW;
-        ctx.beginPath();
-        ctx.moveTo(sa.x, sa.y);
-        ctx.lineTo(sb.x, sb.y);
-        ctx.stroke();
-        ctx.restore();
+    // Update leaving stars (drift and fade back into background)
+    for (k = heroPool.length - 1; k >= 0; k--) {
+      var ls = heroPool[k];
+      if (!ls.leaving) continue;
+      ls.x += ls.leaveVx;
+      ls.y += ls.leaveVy;
+      ls.leaveAlpha -= 0.0035;
+      if (ls.leaveAlpha <= 0) {
+        ls.hue   = Math.random() < 0.15 ? (Math.random() < 0.5 ? 'gold' : 'violet') : 'white';
+        ls.vx    = rand(-0.04, 0.04);
+        ls.vy    = rand(-0.02, 0.03);
+        ls.alpha = rand(0.3, 0.8);
+        stars.push(ls);
+        heroPool.splice(k, 1);
       }
     }
 
-    // Remove faded connections and reconnect orphaned stars that remain in zone
-    for (var r = toRemove.length - 1; r >= 0; r--) {
-      var gone = heroConns.splice(toRemove[r], 1)[0];
-      if (gone.breaking) {
-        var gaIn = stars[gone.a].x >= heroZoneX0 && stars[gone.a].x <= heroZoneX1;
-        var gbIn = stars[gone.b].x >= heroZoneX0 && stars[gone.b].x <= heroZoneX1;
-        if (gaIn) heroReconnect(gone.a, gone.b);
-        if (gbIn) heroReconnect(gone.b, gone.a);
-      }
-    }
+    // Draw connections (staggered draw during 'forming', full during 'holding')
+    var n       = heroEdges.length;
+    var stagger = n > 1 ? (HERO_FORM * 0.50) / (n - 1) : 0;
+    var connDur = HERO_FORM * 0.50;
 
-    // Golden glow overlay on connected stars so they stand out from the background
-    var keys = Object.keys(connectedSet);
-    for (i = 0; i < keys.length; i++) {
-      var s  = stars[Number(keys[i])];
-      var gr = s.r * 6 * fadeIn;
-      var gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, gr);
-      gg.addColorStop(0, 'rgba(201,169,110,0.30)');
-      gg.addColorStop(1, 'rgba(201,169,110,0)');
+    ctx.save();
+    for (i = 0; i < heroEdges.length; i++) {
+      var edge = heroEdges[i];
+      var pa = activePos[edge.a];
+      var pb = activePos[edge.b];
+      if (!pa || !pb) continue;
+
+      var prog = 0;
+      if (heroPhase === 'holding') {
+        prog = 1;
+      } else if (heroPhase === 'forming') {
+        var ce = elapsed - i * stagger;
+        prog = Math.max(0, Math.min(1, ce / connDur));
+      }
+      if (prog <= 0.002) continue;
+
+      var ex = pa.x + (pb.x - pa.x) * prog;
+      var ey = pa.y + (pb.y - pa.y) * prog;
+      ctx.strokeStyle = 'rgba(201,169,110,' + (0.28 * prog * scrollFade).toFixed(3) + ')';
+      ctx.lineWidth   = 0.5;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, gr, 0, Math.PI * 2);
-      ctx.fillStyle = gg;
-      ctx.fill();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Draw active hero sparkles
+    for (i = 0; i < active.length; i++) {
+      var star = active[i];
+      star.alpha += star.twinkleSpeed * star.twinkleDir;
+      if (star.alpha >= 1)   { star.alpha = 1;   star.twinkleDir = -1; }
+      if (star.alpha <= 0.2) { star.alpha = 0.2; star.twinkleDir =  1; }
+      drawSparkle(activePos[i].x, activePos[i].y, 3.5, scrollFade * star.alpha * 0.92);
+    }
+
+    // Draw leaving stars (fading back into background)
+    for (k = 0; k < heroPool.length; k++) {
+      var ls = heroPool[k];
+      if (!ls.leaving) continue;
+      drawSparkle(ls.x, ls.y, 2.8, ls.leaveAlpha * scrollFade * 0.65);
     }
   }
 
@@ -507,9 +667,18 @@
     });
   }
 
+  var _xpLiquid = null;
+
   function setBar(id, percent) {
     var node = document.getElementById(id);
     if (!node) return;
+    if (node.tagName === 'CANVAS') {
+      if (id === 'hs-xp-bar-2' && window.createLiquidBar) {
+        if (!_xpLiquid) _xpLiquid = window.createLiquidBar(node);
+        _xpLiquid.set(percent);
+      }
+      return;
+    }
     node.style.width = Math.max(0, Math.min(100, percent)) + "%";
   }
 
