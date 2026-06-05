@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "npx serve .",
+    "build": "node build.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,5 +25,8 @@
   "homepage": "https://github.com/Marcosdeobjunior/meu-site#readme",
   "dependencies": {
     "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
   }
 }

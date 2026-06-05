@@ -6,13 +6,14 @@
   <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
   <title>Sol de Sóter · Sonhos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/app-shell.css">
   <link rel="stylesheet" href="css/sonhos.css">
 </head>
 <body data-page="sonhos">
-  <canvas id="bg-canvas"></canvas>
+  <canvas id="bg-canvas" aria-hidden="true" role="presentation"></canvas>
   <div data-app-header></div>
 
   <main class="main sonhos-content">
@@ -440,7 +441,7 @@
 
   <div class="sn-modal-backdrop" id="sn-modal" onclick="snCloseModalOutside(event)">
     <div class="sn-modal" style="position:relative">
-      <button class="sn-modal-close" onclick="snCloseModal()">✕</button>
+      <button class="sn-modal-close" onclick="snCloseModal()" aria-label="Fechar modal">✕</button>
       <!-- Cover upload zone -->
       <div class="sn-modal-cover-zone" id="sn-modal-cover-zone" onclick="document.getElementById('sn-img-input').click()">
         <img id="sn-modal-cover-img" src="" alt="">
@@ -507,7 +508,7 @@
         <div id="sn-modal-metas-list" style="margin-bottom:8px"></div>
         <div style="display:flex;gap:6px;margin-bottom:20px">
           <input class="sn-meta-input" id="sn-m-nova-meta" placeholder="+ Adicionar meta ou passo?" onkeydown="if(event.key==='Enter')snModalAddMeta()">
-          <button class="sn-meta-add-btn" onclick="snModalAddMeta()">+</button>
+          <button class="sn-meta-add-btn" onclick="snModalAddMeta()" aria-label="Adicionar meta">+</button>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" style="flex:1" onclick="snSalvar()">💾 &nbsp;Salvar</button>

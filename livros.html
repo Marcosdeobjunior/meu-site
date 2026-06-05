@@ -6,6 +6,7 @@
   <link rel="icon" type="image/png" href="img/soldesoter_logo.png">
   <title>Sol de Sóter · Livraria</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/design-system.css">
   <link rel="stylesheet" href="css/app-shell.css">
@@ -1224,7 +1225,7 @@
 <body data-page="livros">
 
 <!-- STARFIELD -->
-<canvas id="bg-canvas"></canvas>
+<canvas id="bg-canvas" aria-hidden="true" role="presentation"></canvas>
 
 <!-- OVERLAY -->
 <div class="overlay" id="overlay" onclick="closeMobileNav()"></div>
@@ -1241,7 +1242,7 @@
 <!-- MODAL -->
 <div class="modal-backdrop" id="tracker-modal" onclick="closeModalOutside(event)">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()" title="Fechar">✕</button>
+    <button class="modal-close" onclick="closeModal()" title="Fechar" aria-label="Fechar modal">✕</button>
 
     <div class="modal-hero">
       <div class="modal-hero-blur" id="modal-hero-blur"></div>
@@ -1443,7 +1444,7 @@
         <div class="hd-head-title" id="th-drawer-title">Editar</div>
         <div class="hd-head-sub">Alterações salvas ao clicar em salvar</div>
       </div>
-      <button class="hd-close-btn" onclick="thDrawerClose()">✕</button>
+      <button class="hd-close-btn" onclick="thDrawerClose()" aria-label="Fechar painel">✕</button>
     </div>
     <div class="hd-body">
       <div class="hd-cover-zone" id="th-cover-zone" onclick="document.getElementById('th-img-input').click()">

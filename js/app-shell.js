@@ -1456,6 +1456,12 @@
       firebaseIsHydrated = true;
       updateFirebaseMeta({ hydrated: true, lastError: '' });
       return true;
+    }).catch(function (err) {
+      var msg = String((err && err.message) || err || 'hydrate_failed');
+      firebaseLastError = msg;
+      updateFirebaseMeta({ enabled: true, hydrated: false, lastError: msg });
+      console.error('[SoterStorage] Falha ao carregar dados do Firebase:', err);
+      throw err;
     });
   }
 
@@ -1508,6 +1514,13 @@
       }
       firebaseCurrentUser = user || null;
       rememberLastAuthUid(firebaseCurrentUser ? firebaseCurrentUser.uid : '');
+      try {
+        if (firebaseCurrentUser) {
+          sessionStorage.setItem("soter_allow_index", "1");
+        } else {
+          sessionStorage.removeItem("soter_allow_index");
+        }
+      } catch (e) {}
       if (firebaseUserUnsubscribe) {
         try { firebaseUserUnsubscribe(); } catch (err) { }
         firebaseUserUnsubscribe = null;
@@ -5318,6 +5331,15 @@ window.createLiquidBar = function (canvas, opts) {
     start: start
   };
 };
+
+// Registro do Service Worker (cache offline)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function (err) {
+      console.warn("[SW] Registro falhou:", err);
+    });
+  });
+}
 
 
 

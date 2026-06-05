@@ -16,7 +16,9 @@
   --accent6: #4ab0e8;
 
   --font-display: "Playfair Display", Georgia, serif;
+  --font-editorial: "Cormorant Garamond", Georgia, serif;
   --font-ui: "Syne", system-ui, sans-serif;
+  --font-label: "Josefin Sans", system-ui, sans-serif;
   --font-mono: "DM Mono", "Courier New", monospace;
 
   --radius: 16px;
