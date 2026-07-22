@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;600;700;800&family=Josefin+Sans:wght@400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/design-system.css">
+<link rel="stylesheet" href="css/app-shell.css">
 <style>
 /* ===========================================================
    RUBRICA — mesa de escrita do Sól de Sóter
@@ -37,11 +39,10 @@
   --side-w:264px;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-html{scrollbar-width:thin;scrollbar-color:rgba(200,169,110,.18) rgba(255,255,255,.02)}
+html{height:100%;scrollbar-width:thin;scrollbar-color:rgba(200,169,110,.18) rgba(255,255,255,.02)}
 body{
-  background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;
-  line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;
+  margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;
+  line-height:1.5;-webkit-font-smoothing:antialiased;
 }
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}
@@ -56,7 +57,7 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 [contenteditable]{outline:none}
 
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
-#app{position:relative;z-index:1;display:flex;height:100%}
+#app{position:relative;z-index:1;display:flex;height:calc(100vh - 58px);margin-top:58px}
 
 /* ---------------- área de trabalho ---------------- */
 .side{
@@ -323,7 +324,7 @@ td.nm:hover{color:var(--accent1)}
 .nada{font-family:var(--font-mono);font-size:11px;color:var(--muted);opacity:.6;margin-bottom:16px}
 
 /* ---------------- exibição lateral / janela ---------------- */
-#peekLayer{position:fixed;inset:0;z-index:60;pointer-events:none}
+#peekLayer{position:fixed;top:58px;left:0;right:0;bottom:0;z-index:60;pointer-events:none}
 #peekLayer.on{pointer-events:auto}
 .peek-bd{position:absolute;inset:0;background:rgba(5,4,12,.62);backdrop-filter:blur(3px);animation:fade .25s ease}
 .peek{
@@ -487,7 +488,7 @@ td.nm:hover{color:var(--accent1)}
   font-family:var(--font-mono);font-size:9.5px;color:var(--muted);line-height:1.6;
 }
 
-.overlay{position:fixed;inset:0;background:rgba(5,4,12,.62);backdrop-filter:blur(4px);z-index:95;display:grid;place-items:start center;padding-top:13vh}
+.overlay{position:fixed;top:58px;left:0;right:0;bottom:0;background:rgba(5,4,12,.62);backdrop-filter:blur(4px);z-index:95;display:grid;place-items:start center;padding-top:13vh}
 .spot{
   width:min(580px,92vw);background:rgba(10,9,20,.97);border:1px solid var(--border-2);
   border-radius:var(--radius);box-shadow:0 30px 80px rgba(0,0,0,.7);overflow:hidden;
@@ -551,6 +552,7 @@ body.zen .side,body.zen .crumb{display:none}
 </head>
 <body data-page="projetos">
 <canvas id="bg-canvas" aria-hidden="true"></canvas>
+<div data-app-header></div>
 
 <div id="app">
   <aside class="side">
@@ -588,9 +590,13 @@ body.zen .side,body.zen .crumb{display:none}
   </main>
 </div>
 
+<div data-app-footer></div>
+
 <div id="peekLayer"></div>
 <div class="toast" id="toast"></div>
 
+<script src="js/firebase-config.js"></script>
+<script src="js/app-shell.js"></script>
 <script>
 /* ============================================================
    página = {id, icon, title, parentId, blocks[], props{}, propOrder[],
