@@ -61,10 +61,12 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 
 /* ---------------- área de trabalho ---------------- */
 .side{
-  width:var(--side-w);flex:0 0 var(--side-w);
+  width:var(--side-w);flex:0 0 var(--side-w);overflow:hidden;
   background:rgba(19,19,28,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
   border-right:1px solid var(--border);display:flex;flex-direction:column;user-select:none;
+  transition:width .2s ease,flex-basis .2s ease,opacity .15s ease,border-color .2s ease;
 }
+body.side-collapsed .side{width:0;min-width:0;flex:0 0 0;opacity:0;pointer-events:none;border-right-color:transparent}
 .ws{display:flex;align-items:center;gap:10px;padding:14px 18px 10px;border-bottom:1px solid var(--border)}
 .ws .mark{
   font-family:var(--font-display);font-size:19px;color:var(--accent1);letter-spacing:.5px;
@@ -110,6 +112,8 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 .row .add{opacity:0;font-size:14px;color:var(--muted);padding:0 3px;border-radius:4px}
 .row:hover .add{opacity:.8}
 .row .add:hover{color:var(--accent1)}
+.row .add[data-trashrow]{font-size:12px}
+.row .add[data-trashrow]:hover{color:var(--accent4)}
 .kids{display:none}
 .kids.open{display:block}
 .foot{padding:8px 0 16px;border-top:1px solid var(--border)}
@@ -538,6 +542,8 @@ body.zen .side,body.zen .crumb{display:none}
 @media (max-width:900px){
   .side{position:absolute;top:0;bottom:0;left:0;z-index:70;box-shadow:0 0 50px rgba(0,0,0,.6)}
   body:not(.show-side) .side{display:none}
+  body.side-collapsed .side{width:var(--side-w);flex:0 0 var(--side-w);opacity:1;pointer-events:auto}
+  #btnCollapseSide{display:none}
   .page,.backl{padding-left:22px;padding-right:22px}
   .page.wide{padding-left:22px;padding-right:22px}
   .blk .gut{left:-26px}
@@ -579,6 +585,7 @@ body.zen .side,body.zen .crumb{display:none}
   <main class="main">
     <header class="top">
       <button class="tbtn icon" id="togSide" style="display:none">☰</button>
+      <button class="tbtn icon" id="btnCollapseSide" title="Recolher barra lateral (Ctrl+\)">⟨</button>
       <nav class="crumb" id="crumb"></nav>
       <span class="sp"></span>
       <button class="tbtn icon" id="btnMore" title="Opções da página">⋯</button>
@@ -705,6 +712,16 @@ function purgePage(id){
 }
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1900)}
+function applySideCollapsed(){
+  const on=!!(S&&S.sideCollapsed);
+  document.body.classList.toggle('side-collapsed',on);
+  const b=$('#btnCollapseSide');
+  if(b){b.textContent=on?'⟩':'⟨';b.title=(on?'Expandir':'Recolher')+' barra lateral (Ctrl+\\)'}
+}
+function toggleSideCollapse(){
+  S.sideCollapsed=!S.sideCollapsed;
+  applySideCollapsed();save();
+}
 
 async function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
 function save(){
@@ -822,6 +839,7 @@ function treeHTML(parentId,depth){
         <span class="nm">${esc(p.title||'Sem título')}</span>
         ${ch.length&&!p.expanded?`<span class="cnt">${ch.length}</span>`:''}
         <button class="add" data-addsub="${p.id}" title="Nova subpágina">+</button>
+        <button class="add" data-trashrow="${p.id}" title="Mover para a lixeira">🗑</button>
       </div>
       <div class="kids ${p.expanded?'open':''}">${p.expanded?treeHTML(p.id,depth+1):''}</div>
     </div>`;
@@ -1208,6 +1226,7 @@ document.addEventListener('keydown',e=>{
   if(mod&&e.key.toLowerCase()==='k'){e.preventDefault();return spotlight()}
   if(mod&&e.key.toLowerCase()==='g'){e.preventDefault();S.view=S.view==='graph'?'page':'graph';save();return render()}
   if(mod&&e.key==='.'){e.preventDefault();return document.body.classList.toggle('zen')}
+  if(mod&&e.key==='\\'){e.preventDefault();return toggleSideCollapse()}
   if(mod&&(e.key===';'||e.key===':')){e.preventDefault();
     if(S.peekId){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
     else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
@@ -1426,8 +1445,7 @@ function pmMoveTo(p,newParentId){
   const par=newParentId?S.pages[newParentId]:null;if(par)par.expanded=true;
   save();render();toast('página movida');
 }
-function pmTrash(p){
-  if(!confirm('Mover "'+(p.title||'Sem título')+'" e suas subpáginas para a lixeira?'))return;
+function trashWithFallback(p){
   trashPage(p.id);
   if(S.peekId&&!visible(S.peekId))S.peekId=null;
   if(!visible(S.activeId)){
@@ -1437,6 +1455,10 @@ function pmTrash(p){
     S.activeId=altId||mkPage('',null,'📄');
   }
   save();render();
+}
+function pmTrash(p){
+  if(!confirm('Mover "'+(p.title||'Sem título')+'" e suas subpáginas para a lixeira?'))return;
+  trashWithFallback(p);
   toast('movida para a lixeira');
 }
 function pmToggleCfg(p,key,onVal,offVal){
@@ -1683,6 +1705,16 @@ document.addEventListener('click',e=>{
     e.stopPropagation();
     const parent=S.pages[addsub.dataset.addsub];parent.expanded=true;
     return go(mkPage('',parent.id,'📄'));
+  }
+  const trashrow=t.closest('[data-trashrow]');
+  if(trashrow){
+    e.stopPropagation();
+    const pg=S.pages[trashrow.dataset.trashrow];
+    if(pg&&confirm('Mover "'+(pg.title||'Sem título')+'" e suas subpáginas para a lixeira?')){
+      trashWithFallback(pg);
+      toast('movida para a lixeira');
+    }
+    return;
   }
 
   const host=hostOf(t);
@@ -2011,6 +2043,7 @@ $('#btnZen').onclick=()=>document.body.classList.toggle('zen');
 $('#btnExport').onclick=exportMD;
 $('#btnTrash').onclick=()=>{S.view='trash';save();render()};
 $('#togSide').onclick=()=>document.body.classList.toggle('show-side');
+$('#btnCollapseSide').onclick=()=>toggleSideCollapse();
 $('#btnAllToggle').onclick=e=>{
   const any=Object.values(S.pages).some(p=>p.expanded&&kids(p.id).length);
   Object.values(S.pages).forEach(p=>p.expanded=!any);
@@ -2107,6 +2140,7 @@ if(window.innerWidth<900)$('#togSide').style.display='block';
   else if(!S.activeId||!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0];
   if(S.view==='graph'||S.view==='trash')S.view='page';
   S.peekId=null;
+  applySideCollapsed();
   render();save();
 })();
 </script>
