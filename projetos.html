@@ -160,7 +160,7 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 .cover .swap:hover{color:var(--accent1);border-color:rgba(200,169,110,.4)}
 
 .page{max-width:var(--page-w,760px);margin:0 auto;padding:0 56px 40vh;position:relative}
-.page.wide{max-width:none;padding-left:76px;padding-right:76px}
+.page.wide{max-width:90%;padding-left:76px;padding-right:76px}
 .pico{
   font-size:56px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;
   width:78px;height:78px;border-radius:20px;background:rgba(19,19,28,.86);
@@ -308,7 +308,7 @@ td.nm:hover{color:var(--accent1)}
 
 /* ---------------- retrolinks ---------------- */
 .backl{max-width:var(--page-w,760px);margin:26px auto 0;padding:0 56px 70px}
-.page.wide+.backl,.wide-back{max-width:none;padding-left:76px;padding-right:76px}
+.page.wide+.backl,.wide-back{max-width:90%;padding-left:76px;padding-right:76px}
 .backl h4{
   font-family:var(--font-mono);font-size:9.5px;letter-spacing:2.4px;text-transform:uppercase;
   color:var(--accent1);opacity:.8;margin:0 0 12px;font-weight:400;
@@ -639,7 +639,7 @@ const TAM={pequeno:'17px',normal:'20px',grande:'23px'};
 const LH={compacto:'1.42',normal:'1.68',arejado:'1.98'};
 const GAP={justo:'0px',normal:'2px',solto:'9px'};
 const REC={nenhum:'0',medio:'1.6em',grande:'3em'};
-const LARG={estreito:'620px',normal:'760px',largo:'980px',total:'none'};
+const LARG={estreito:'620px',normal:'760px',largo:'980px',total:'90%'};
 const MODO_NOME={full:'tela cheia',left:'lateral esq.',right:'lateral dir.',popup:'janela'};
 function cfg(p,k){const c=p.cfg||{};return c[k]!==undefined?c[k]:CFG_DEF[k]}
 function setCfg(p,k,v){p.cfg=p.cfg||{};p.cfg[k]=v;p.updated=Date.now()}
