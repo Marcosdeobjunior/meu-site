@@ -4499,6 +4499,12 @@
       '        <a class="hn-menu-item" data-page="mangas" href="mangas.html">Mang\u00e1s</a>',
       '      </div>',
       '    </div>',
+      '    <div class="hn-dropdown" id="dd-livro">',
+      '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Livro <span class="hn-chevron">\u25be</span></button>',
+      '      <div class="hn-menu">',
+      '        <a class="hn-menu-item" data-page="projetos" href="projetos.html">Projetos</a>',
+      '      </div>',
+      '    </div>',
       '  </nav>',
       '  <div class="header-desktop-actions">',
       '  <div class="hn-dropdown hn-notif" id="dd-notif">',
@@ -4581,6 +4587,8 @@
       '    <a class="header-mobile-link" href="livros.html">Livraria</a>',
       '    <a class="header-mobile-link" href="cinema.html">Cinema</a>',
       '    <a class="header-mobile-link" href="mangas.html">Mang\u00e1s</a>',
+      '    <div class="header-mobile-group-label">Livro</div>',
+      '    <a class="header-mobile-link" href="projetos.html">Projetos</a>',
       '  </nav>',
       '  <div class="header-mobile-drawer-actions">',
       '    <a class="header-mobile-action" href="rpg.html">Usu\u00e1rio</a>',
@@ -4888,10 +4896,16 @@
 
     var bibliotecaPages = ["livros", "cinema", "mangas"];
     var pessoalPages = ["sonhos", "viagens", "wishlist", "financas", "tarefas", "academia"];
+    var livroPages = ["projetos"];
 
     if (bibliotecaPages.indexOf(page) >= 0) {
       var ddB = document.getElementById("dd-biblioteca");
       if (ddB) ddB.classList.add("has-active");
+    }
+
+    if (livroPages.indexOf(page) >= 0) {
+      var ddL = document.getElementById("dd-livro");
+      if (ddL) ddL.classList.add("has-active");
     }
 
     if (pessoalPages.indexOf(page) >= 0) {
