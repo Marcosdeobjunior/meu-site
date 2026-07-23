@@ -645,6 +645,10 @@ body.zen .side,body.zen .crumb{display:none}
 
 <div id="peekLayer"></div>
 <div class="toast" id="toast"></div>
+<div id="boot" style="position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  background:var(--bg);font-family:var(--font-mono);font-size:10px;letter-spacing:2.4px;
+  text-transform:uppercase;color:var(--accent1);opacity:.85">
+  <span>✦ carregando a sua conta ✦</span></div>
 
 <script src="js/firebase-config.js"></script>
 <script src="js/app-shell.js"></script>
@@ -768,18 +772,100 @@ function toggleSideCollapse(){
   applySideCollapsed();save();
 }
 
-async function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
+/* ---------------- armazenamento ----------------
+   Grava dentro do estado do Sól de Sóter (window.SoterStorage), que sincroniza
+   com o Firestore em users/{uid}/private/siteState. O localStorage continua
+   sendo escrito como espelho local — é a base do desfazer e o que segura o
+   trabalho quando a rede cai. Sem o app-shell, funciona só local. */
+const DKEY='rubrica';
+const temShell=()=>!!(window.SoterStorage&&typeof window.SoterStorage.getState==='function');
+const espera=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* o app-shell carrega o SDK do Firebase de forma assíncrona; só faz sentido
+   esperar por ele se a página realmente o incluiu */
+const shellPrevisto=()=>!!document.querySelector('script[src*="app-shell"]');
+async function esperaShell(limite){
+  if(temShell())return true;
+  if(!shellPrevisto())return false;
+  const fim=Date.now()+(limite||2500);
+  while(Date.now()<fim){if(temShell())return true;await espera(100)}
+  return temShell();
+}
+/* espera o primeiro snapshot do Firestore, senão abriríamos com dados velhos */
+async function esperaNuvem(limite){
+  if(!temShell()||typeof window.SoterStorage.getFirebaseStatus!=='function')return;
+  const fim=Date.now()+(limite||8000);
+  while(Date.now()<fim){
+    let st=null;
+    try{st=await window.SoterStorage.getFirebaseStatus()}catch(e){return}
+    if(!st||!st.configured)return;       /* sem firebase configurado */
+    if(st.hydrated)return;               /* já trouxe o estado remoto */
+    if(st.lastError)return;              /* falhou: segue com o local */
+    await espera(150);
+  }
+}
+
+async function load(){
+  await esperaShell(2500);
+  if(temShell()){
+    await esperaNuvem(8000);
+    try{
+      const st=window.SoterStorage.getState();
+      const d=st&&st.data?st.data[DKEY]:null;
+      if(d&&d.pages&&Object.keys(d.pages).length)return d;
+    }catch(e){}
+    /* primeira vez na nuvem: adota o que existir só neste navegador */
+    try{
+      const legado=localStorage.getItem(KEY);
+      if(legado){const j=JSON.parse(legado);if(j&&j.pages)return j}
+    }catch(e){}
+    return null;
+  }
+  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}
+  return null;
+}
+
+function gravaNuvem(serial){
+  if(!temShell())return;
+  try{
+    const st=window.SoterStorage.getState();
+    if(!st.data||typeof st.data!=='object')st.data={};
+    st.data[DKEY]=JSON.parse(serial);
+    window.SoterStorage.save(st);
+    nuvemErro=false;
+  }catch(e){
+    if(!nuvemErro){nuvemErro=true;toast('não consegui sincronizar com a nuvem — o texto está salvo neste aparelho')}
+  }
+}
+let nuvemErro=false;
 function save(){
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
+    const serial=JSON.stringify(S);
     try{
       const prev=localStorage.getItem(KEY);
-      if(prev){undoStack.push(prev);if(undoStack.length>40)undoStack.shift()}
-      localStorage.setItem(KEY,JSON.stringify(S));
+      if(prev&&prev!==serial){undoStack.push(prev);if(undoStack.length>40)undoStack.shift()}
+      localStorage.setItem(KEY,serial);
     }
     catch(e){if(!memOnly){memOnly=true;toast('sem gravação permanente aqui — exporte um backup ao terminar')}}
+    gravaNuvem(serial);
   },500);
 }
+
+/* ao entrar na conta em outro aparelho, traz o que está na nuvem */
+window.addEventListener('soter:firebase-auth-changed',async function(){
+  if(!temShell())return;
+  await esperaNuvem(8000);
+  let d=null;
+  try{const st=window.SoterStorage.getState();d=st&&st.data?st.data[DKEY]:null}catch(e){}
+  if(!d||!d.pages||!Object.keys(d.pages).length)return;
+  if(JSON.stringify(d)===JSON.stringify(S))return;
+  if(document.querySelector('.ct:focus,[data-title]:focus'))return;   /* não interrompe quem escreve */
+  S=d;
+  if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
+  S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
+  render();toast('sincronizado com a sua conta');
+});
 function undo(){
   if(!undoStack.length){toast('nada para desfazer');return}
   const snap=undoStack.pop();
@@ -788,7 +874,9 @@ function undo(){
   if(S.view==='graph')S.view='page';
   if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
   render();
-  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  const serial=JSON.stringify(S);
+  try{localStorage.setItem(KEY,serial)}catch(e){}
+  gravaNuvem(serial);
   toast('desfeito');
 }
 
@@ -2241,6 +2329,8 @@ if(window.innerWidth<900)$('#togSide').style.display='block';
   S.peekId=null;
   applySideCollapsed();
   render();save();
+  const boot=document.getElementById('boot');
+  if(boot){boot.style.transition='opacity .3s';boot.style.opacity='0';setTimeout(()=>boot.remove(),320)}
 })();
 </script>
 </body>
