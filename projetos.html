@@ -163,7 +163,7 @@ body.side-collapsed .side{width:0;min-width:0;flex:0 0 0;opacity:0;pointer-event
 .cover:hover .swap{opacity:1}
 .cover .swap:hover{color:var(--accent1);border-color:rgba(200,169,110,.4)}
 
-.page{max-width:var(--page-w,760px);margin:0 auto;padding:0 56px 40vh;position:relative}
+.page{max-width:var(--page-w,760px);margin:0 auto;padding:0 56px 90px;position:relative}
 .page.wide{max-width:90%;padding-left:76px;padding-right:76px}
 .pico{
   font-size:56px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;
@@ -212,7 +212,7 @@ body.side-collapsed .side{width:0;min-width:0;flex:0 0 0;opacity:0;pointer-event
 .addprop:hover{opacity:1;color:var(--accent1)}
 
 /* ---------------- blocos ---------------- */
-.blocks{padding-top:14px}
+.blocks{padding-top:14px;padding-bottom:26vh}
 .blk{position:relative;display:flex;align-items:flex-start;padding:var(--blk-gap,2px) 0}
 .blk .gut{position:absolute;left:-48px;top:2px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
 .blk:hover .gut{opacity:1}
@@ -358,8 +358,8 @@ td.nm:hover{color:var(--accent1)}
 .card small{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
 
 /* ---------------- retrolinks ---------------- */
-.backl{max-width:var(--page-w,760px);margin:26px auto 0;padding:0 56px 70px}
-.page.wide+.backl,.wide-back{max-width:90%;padding-left:76px;padding-right:76px}
+.backl{margin:0;padding:22px 0 0;border-top:1px solid var(--border)}
+
 .backl h4{
   font-family:var(--font-mono);font-size:9.5px;letter-spacing:2.4px;text-transform:uppercase;
   color:var(--accent1);opacity:.8;margin:0 0 12px;font-weight:400;
@@ -404,7 +404,7 @@ td.nm:hover{color:var(--accent1)}
 }
 .peek-scroll{flex:1;overflow-y:auto}
 .peek .page{padding:0 34px 90px}
-.peek .backl{padding:0 34px 60px}
+.peek .backl{padding:20px 0 0}
 .peek .cover{height:130px}
 .peek .ptitle{font-size:32px}
 .peek .pico{width:62px;height:62px;font-size:42px}
@@ -621,7 +621,7 @@ body.zen .side,body.zen .crumb{display:none}
   body:not(.show-side) .side{display:none}
   body.side-collapsed .side{width:var(--side-w);flex:0 0 var(--side-w);opacity:1;pointer-events:auto}
   #btnCollapseSide{display:none}
-  .page,.backl{padding-left:22px;padding-right:22px}
+  .page{padding-left:22px;padding-right:22px}
   .page.wide{padding-left:22px;padding-right:22px}
   .blk .gut{left:-26px}
   .ptitle{font-size:31px}
@@ -1265,8 +1265,8 @@ function surfaceHTML(p){
       </div>
       ${propsHTML(p)}
       ${blocksHTML(p)}
+      ${backHTML(p)}
     </div>
-    ${backHTML(p).replace('class="backl"','class="backl '+(wide?'wide-back':'')+'"')}
   </div>`;
 }
 
