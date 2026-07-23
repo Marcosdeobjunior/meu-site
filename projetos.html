@@ -58,9 +58,6 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
 #app{position:relative;z-index:1;display:flex;height:calc(100vh - 58px);margin-top:58px}
-html,body{height:100%;overflow:hidden}
-[data-app-footer]{display:block}
-#scroll>[data-app-footer]{margin-top:40px}
 
 /* ---------------- área de trabalho ---------------- */
 .side{
@@ -1371,27 +1368,15 @@ function pmCustomHTML(p){
     <button class="reset" data-cfgreset>restaurar padrões</button>
   </div>`;
 }
-/* o rodapé do Sól de Sóter nasce fora da área rolável, o que obrigava a rolar
-   a janela inteira para vê-lo. Aqui ele é reancorado como último filho do
-   conteúdo, para vir depois dos retrolinks numa rolagem só. */
-let rodapeEl=null;
-function ancoraRodape(){
-  const sc=$('#scroll');if(!sc)return;
-  /* guardamos a referência: innerHTML destrói o nó no render seguinte,
-     mas o objeto sobrevive em memória e volta a ser anexado aqui */
-  if(!rodapeEl||!rodapeEl.hasAttribute)rodapeEl=document.querySelector('[data-app-footer]');
-  if(rodapeEl)sc.appendChild(rodapeEl);
-}
 function render(){
   renderTree();renderCrumb();renderPeek();updateTrashCount();
   const sc=$('#scroll');
   if(anim){cancelAnimationFrame(anim);anim=null}
-  if(S.view==='graph'){renderGraph(sc);return}
-  if(S.view==='trash'){renderTrash(sc);ancoraRodape();return}
+  if(S.view==='graph')return renderGraph(sc);
+  if(S.view==='trash')return renderTrash(sc);
   const p=P();
-  if(!p){sc.innerHTML='<div class="page"><div class="nada" style="padding-top:60px">nenhuma página aberta</div></div>';ancoraRodape();return}
+  if(!p){sc.innerHTML='<div class="page"><div class="nada" style="padding-top:60px">nenhuma página aberta</div></div>';return}
   sc.innerHTML=surfaceHTML(p);
-  ancoraRodape();
 }
 function updateTrashCount(){
   const el=$('#trashCount');if(!el)return;
