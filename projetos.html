@@ -438,7 +438,13 @@ td.nm:hover{color:var(--accent1)}
   border:1px solid var(--border);display:grid;place-items:center;font-size:24px;cursor:pointer;transition:border-color .2s;
 }
 .cfgHead .ic:hover{border-color:rgba(200,169,110,.45)}
-.cfgHead .nm{min-width:0}
+.cfgHead .nm{min-width:0;flex:1}
+.cfgX{
+  width:28px;height:28px;flex:0 0 28px;border-radius:8px;border:1px solid var(--border);
+  color:var(--muted);display:grid;place-items:center;font-size:12px;align-self:flex-start;
+  transition:color .2s,border-color .2s;
+}
+.cfgX:hover{color:var(--accent1);border-color:rgba(200,169,110,.45)}
 .cfgHead b{
   display:block;font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -1276,6 +1282,7 @@ function cfgHTML(p){
         <b>${esc(p.title||'Sem título')}</b>
         <small>${pageWords(p)} palavras · ${kids(p.id).length} filhas · ${backlinks(p).length} retrolinks</small>
       </span>
+      <button class="cfgX" data-cfgfechar title="Fechar (Esc)">✕</button>
     </div>
 
     <div class="qrow">
@@ -1482,6 +1489,9 @@ document.addEventListener('keydown',e=>{
   if(mod&&e.key.toLowerCase()==='g'){e.preventDefault();S.view=S.view==='graph'?'page':'graph';save();return render()}
   if(mod&&e.key==='.'){e.preventDefault();return document.body.classList.toggle('zen')}
   if(mod&&e.key==='\\'){e.preventDefault();return toggleSideCollapse()}
+  if(e.key==='Escape'&&(S.cfgOpen||S.cfgPeek)&&!menuEl&&!document.querySelector('.overlay')){
+    e.preventDefault();fechaCfg();return;
+  }
   if(mod&&(e.key===';'||e.key===':')){e.preventDefault();
     if(S.peekId){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
     else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
@@ -1724,9 +1734,19 @@ function pmToggleLock(p){
   setCfg(p,'travada',!cfg(p,'travada'));
   save();render();
 }
+let cfgFresh=false;
+function marcaCfgFresh(){cfgFresh=true;setTimeout(()=>{cfgFresh=false},0)}
+function fechaCfg(){
+  let mudou=false;
+  if(S.cfgOpen){S.cfgOpen=false;mudou=true;renderCfg()}
+  if(S.cfgPeek){S.cfgPeek=false;mudou=true;renderPeek()}
+  if(mudou)save();
+  return mudou;
+}
 function pmOpenCustomize(p){
-  if(S.peekId===p.id){S.cfgPeek=true;save();renderPeek()}
-  else{S.cfgOpen=true;save();renderCfg()}
+  marcaCfgFresh();
+  if(S.peekId===p.id){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
+  else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
 }
 function pmImport(p){
   const i=document.createElement('input');i.type='file';i.accept='.md,.txt';
@@ -1898,7 +1918,16 @@ document.addEventListener('click',e=>{
     if(p)openPageMenu(t.closest('[data-peekmore]'),p);
     return;
   }
+  if(t.closest('[data-cfgfechar]')){fechaCfg();return}
+  /* clique fora do painel fecha — ignorando o clique que acabou de abri-lo,
+     menus flutuantes e os controles que comandam o próprio painel */
+  if((S.cfgOpen||S.cfgPeek)&&!cfgFresh
+     &&!t.closest('.pcfg')&&!t.closest('.menu')&&!t.closest('.pmenu')
+     &&!t.closest('[data-opencfg]')&&!t.closest('#btnMore')){
+    fechaCfg();
+  }
   if(t.closest('[data-opencfg]')){
+    marcaCfgFresh();
     const h=hostOf(t);
     if(h&&S.peekId===h.dataset.pid){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
     else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
