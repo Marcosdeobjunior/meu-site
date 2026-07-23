@@ -773,16 +773,23 @@ function toggleSideCollapse(){
 }
 
 /* ---------------- armazenamento ----------------
-   Grava dentro do estado do Sól de Sóter (window.SoterStorage), que sincroniza
-   com o Firestore em users/{uid}/private/siteState. O localStorage continua
-   sendo escrito como espelho local — é a base do desfazer e o que segura o
-   trabalho quando a rede cai. Sem o app-shell, funciona só local. */
+   Três camadas, da mais rápida para a mais durável:
+
+   1. localStorage  — espelho local, base do desfazer, segura o texto offline
+   2. Firestore     — users/{uid}/rubrica/{pageId}: UMA PÁGINA POR DOCUMENTO.
+                      O limite de 1 MB passa a valer por página, não pelo
+                      site inteiro, e cada gravação envia só o que mudou.
+   3. SoterStorage  — só a migração do formato antigo (blob em data.rubrica)
+
+   Se o Firestore recusar (regras, rede, sem login), tudo continua funcionando
+   em local e o app avisa uma vez. */
 const DKEY='rubrica';
+const COL='rubrica';
+const META='__meta';
 const temShell=()=>!!(window.SoterStorage&&typeof window.SoterStorage.getState==='function');
 const espera=ms=>new Promise(r=>setTimeout(r,ms));
+let nuvemErro=false, nuvemOk=false, sincronizado=new Map();
 
-/* o app-shell carrega o SDK do Firebase de forma assíncrona; só faz sentido
-   esperar por ele se a página realmente o incluiu */
 const shellPrevisto=()=>!!document.querySelector('script[src*="app-shell"]');
 async function esperaShell(limite){
   if(temShell())return true;
@@ -791,53 +798,120 @@ async function esperaShell(limite){
   while(Date.now()<fim){if(temShell())return true;await espera(100)}
   return temShell();
 }
-/* espera o primeiro snapshot do Firestore, senão abriríamos com dados velhos */
-async function esperaNuvem(limite){
-  if(!temShell()||typeof window.SoterStorage.getFirebaseStatus!=='function')return;
-  const fim=Date.now()+(limite||8000);
-  while(Date.now()<fim){
-    let st=null;
-    try{st=await window.SoterStorage.getFirebaseStatus()}catch(e){return}
-    if(!st||!st.configured)return;       /* sem firebase configurado */
-    if(st.hydrated)return;               /* já trouxe o estado remoto */
-    if(st.lastError)return;              /* falhou: segue com o local */
-    await espera(150);
+
+/* instância do Firestore criada pelo app-shell (app nomeado) */
+function fb(){
+  try{
+    if(!window.firebase||!window.firebase.app)return null;
+    const cfg=window.SOTER_FIREBASE_CONFIG||{};
+    const app=window.firebase.app(cfg.appName||'soter-app');
+    const uid=app.auth().currentUser&&app.auth().currentUser.uid;
+    if(!uid)return null;
+    return {db:app.firestore(),uid:String(uid),
+      raiz:app.firestore().collection(cfg.userCollection||'users').doc(String(uid)).collection(COL)};
+  }catch(e){return null}
+}
+/* pergunta ao app-shell se há sessão, em vez de ficar tentando às cegas —
+   sem login, o app abre local na hora */
+async function esperaLogin(limite){
+  const f0=fb();if(f0)return f0;
+  if(!temShell()||typeof window.SoterStorage.getFirebaseAuthStatus!=='function')return null;
+  let st=null;
+  try{st=await Promise.race([window.SoterStorage.getFirebaseAuthStatus(),
+    espera(limite||5000).then(()=>null)])}catch(e){return null}
+  if(!st||!st.configured||!st.signedIn)return null;
+  const fim=Date.now()+2000;
+  while(Date.now()<fim){const f=fb();if(f)return f;await espera(100)}
+  return fb();
+}
+function avisaNuvem(e){
+  const msg=String((e&&e.code)||(e&&e.message)||e||'');
+  if(nuvemErro)return;
+  nuvemErro=true;
+  toast(/permission|insufficient/i.test(msg)
+    ? 'a nuvem recusou a gravação — verifique as regras do Firestore'
+    : 'sem sincronizar com a nuvem agora — o texto está salvo neste aparelho');
+  console.warn('[Rubrica] Firestore:',msg);
+}
+
+/* ---- leitura ---- */
+async function nuvemCarregar(){
+  const f=await esperaLogin(8000);
+  if(!f)return null;
+  try{
+    const snap=await f.raiz.get();
+    if(snap.empty)return {vazio:true};
+    const pages={};let meta=null;
+    snap.forEach(d=>{
+      if(d.id===META)meta=d.data();
+      else{const v=d.data();if(v&&v.p){pages[d.id]=v.p;sincronizado.set(d.id,JSON.stringify(v.p))}}
+    });
+    if(!Object.keys(pages).length)return {vazio:true};
+    nuvemOk=true;
+    return Object.assign({},meta&&meta.s?meta.s:{},{pages});
+  }catch(e){avisaNuvem(e);return null}
+}
+
+/* ---- gravação incremental ---- */
+let gravando=false,pendente=false;
+async function nuvemGravar(){
+  if(gravando){pendente=true;return}
+  const f=fb();if(!f)return;
+  gravando=true;
+  try{
+    const resto=Object.assign({},S);delete resto.pages;
+    const lote=f.db.batch();let ops=0;
+    for(const id in S.pages){
+      const j=JSON.stringify(S.pages[id]);
+      if(sincronizado.get(id)===j)continue;
+      if(j.length>900000){toast('a página “'+(S.pages[id].title||'sem título')+'” está perto do limite de 1 MB');continue}
+      lote.set(f.raiz.doc(id),{p:S.pages[id],em:new Date().toISOString()});
+      sincronizado.set(id,j);ops++;
+      if(ops>=400)break;
+    }
+    for(const id of Array.from(sincronizado.keys())){
+      if(S.pages[id])continue;
+      lote.delete(f.raiz.doc(id));sincronizado.delete(id);ops++;
+    }
+    lote.set(f.raiz.doc(META),{s:resto,em:new Date().toISOString()});ops++;
+    await lote.commit();
+    nuvemOk=true;nuvemErro=false;
+  }catch(e){avisaNuvem(e)}
+  finally{
+    gravando=false;
+    if(pendente){pendente=false;setTimeout(nuvemGravar,400)}
   }
 }
 
 async function load(){
   await esperaShell(2500);
-  if(temShell()){
-    await esperaNuvem(8000);
+
+  /* 1 · a nuvem é a fonte da verdade quando existe */
+  const nuv=await nuvemCarregar();
+  if(nuv&&!nuv.vazio)return nuv;
+
+  /* 2 · migração do blob antigo dentro do estado do site */
+  if(nuv&&nuv.vazio&&temShell()){
     try{
       const st=window.SoterStorage.getState();
       const d=st&&st.data?st.data[DKEY]:null;
-      if(d&&d.pages&&Object.keys(d.pages).length)return d;
+      if(d&&d.pages&&Object.keys(d.pages).length){
+        setTimeout(async()=>{
+          await nuvemGravar();
+          try{const s2=window.SoterStorage.getState();
+            if(s2.data&&s2.data[DKEY]){delete s2.data[DKEY];window.SoterStorage.save(s2)}}catch(e){}
+          toast('trabalho movido para a sua conta');
+        },800);
+        return d;
+      }
     }catch(e){}
-    /* primeira vez na nuvem: adota o que existir só neste navegador */
-    try{
-      const legado=localStorage.getItem(KEY);
-      if(legado){const j=JSON.parse(legado);if(j&&j.pages)return j}
-    }catch(e){}
-    return null;
   }
-  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}
+
+  /* 3 · o que existir só neste navegador */
+  try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)return j}}catch(e){}
   return null;
 }
 
-function gravaNuvem(serial){
-  if(!temShell())return;
-  try{
-    const st=window.SoterStorage.getState();
-    if(!st.data||typeof st.data!=='object')st.data={};
-    st.data[DKEY]=JSON.parse(serial);
-    window.SoterStorage.save(st);
-    nuvemErro=false;
-  }catch(e){
-    if(!nuvemErro){nuvemErro=true;toast('não consegui sincronizar com a nuvem — o texto está salvo neste aparelho')}
-  }
-}
-let nuvemErro=false;
 function save(){
   clearTimeout(saveT);
   saveT=setTimeout(()=>{
@@ -848,19 +922,17 @@ function save(){
       localStorage.setItem(KEY,serial);
     }
     catch(e){if(!memOnly){memOnly=true;toast('sem gravação permanente aqui — exporte um backup ao terminar')}}
-    gravaNuvem(serial);
+    nuvemGravar();
   },500);
 }
 
 /* ao entrar na conta em outro aparelho, traz o que está na nuvem */
 window.addEventListener('soter:firebase-auth-changed',async function(){
-  if(!temShell())return;
-  await esperaNuvem(8000);
-  let d=null;
-  try{const st=window.SoterStorage.getState();d=st&&st.data?st.data[DKEY]:null}catch(e){}
-  if(!d||!d.pages||!Object.keys(d.pages).length)return;
-  if(JSON.stringify(d)===JSON.stringify(S))return;
-  if(document.querySelector('.ct:focus,[data-title]:focus'))return;   /* não interrompe quem escreve */
+  sincronizado=new Map();
+  const d=await nuvemCarregar();
+  if(!d||d.vazio||!d.pages)return;
+  if(JSON.stringify(d.pages)===JSON.stringify(S.pages))return;
+  if(document.querySelector('.ct:focus,[data-title]:focus'))return;
   S=d;
   if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
   S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
@@ -874,9 +946,8 @@ function undo(){
   if(S.view==='graph')S.view='page';
   if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
   render();
-  const serial=JSON.stringify(S);
-  try{localStorage.setItem(KEY,serial)}catch(e){}
-  gravaNuvem(serial);
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  nuvemGravar();
   toast('desfeito');
 }
 
