@@ -285,6 +285,9 @@ body.side-collapsed .side{width:0;min-width:0;flex:0 0 0;opacity:0;pointer-event
 }
 .dbtabs button:hover{color:var(--text)}
 .dbtabs button.on{color:var(--accent1);background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.3)}
+.dbtabs button{white-space:nowrap}
+.dbtabs .vadd{padding:4px 9px;font-size:13px;line-height:1;opacity:.55;letter-spacing:0}
+.dbtabs .vadd:hover{opacity:1;color:var(--accent1);background:rgba(200,169,110,.08)}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{
   text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;
@@ -1158,21 +1161,35 @@ function resumo(p,n){
     .replace(/\[\[([^\[\]]+)\]\]/g,'$1').replace(/[*`~_#]/g,'').trim();
   return t.length>n?t.slice(0,n).replace(/\s+\S*$/,'')+'…':t;
 }
+/* um bloco guarda várias vistas nomeadas; b.t espelha a ativa para que as
+   checagens de bloco não textual continuem valendo */
+const VNOME={table:'Tabela',board:'Quadro',gallery:'Galeria'};
+const VICO={table:'▦',board:'▥',gallery:'▩'};
+function migraVistas(b){
+  if(b.views&&b.views.length)return b;
+  const tipo=['table','board','gallery'].indexOf(b.t)>=0?b.t:'board';
+  b.views=[{id:uid(),nome:VNOME[tipo],tipo,gs:b.gs||'m'}];
+  b.av=0;delete b.gs;
+  return b;
+}
+function vAtiva(b){migraVistas(b);b.av=Math.min(b.av||0,b.views.length-1);return b.views[b.av]}
+
 function dbHTML(p,b){
   const subs=kids(p.id);
-  const mode=['table','board','gallery'].indexOf(b.t)>=0?b.t:'board';
+  const va=vAtiva(b);
+  const mode=va.tipo;
   const keys=[...new Set(subs.reduce((a,s)=>a.concat(s.propOrder),[]))].slice(0,4);
   const tabs=`<div class="dbtabs">
-    <button class="${mode==='table'?'on':''}" data-dbv="table" data-id="${b.id}">▦ tabela</button>
-    <button class="${mode==='board'?'on':''}" data-dbv="board" data-id="${b.id}">▥ quadro</button>
-    <button class="${mode==='gallery'?'on':''}" data-dbv="gallery" data-id="${b.id}">▩ galeria</button>
+    ${b.views.map((x,i)=>`<button class="vtab ${i===b.av?'on':''}" data-vsel="${i}" data-id="${b.id}"
+      title="${i===b.av?'Opções desta vista':'Ver '+esc(x.nome)}">${VICO[x.tipo]} ${esc(x.nome)}</button>`).join('')}
+    <button class="vadd" data-vadd="${b.id}" title="Adicionar uma vista">+</button>
     <span style="flex:1"></span>
-    ${mode==='gallery'?`<button data-galsize="${b.id}" title="Tamanho dos cartões">${{p:'▪',m:'▫',g:'▭'}[b.gs||'m']}</button>`:''}
-    <button data-dbnew="${b.id}">+ nova</button></div>`;
-  if(!subs.length)return tabs+`<div class="nada">nenhuma subpágina ainda — clique em “+ nova”</div>`;
+    ${mode==='gallery'?`<button data-galsize="${b.id}" title="Tamanho dos cartões">${{p:'▪',m:'▫',g:'▭'}[va.gs||'m']}</button>`:''}
+    <button data-dbnew="${b.id}">+ nova página</button></div>`;
+  if(!subs.length)return tabs+`<div class="nada">nenhuma subpágina ainda — clique em “+ nova página”</div>`;
 
   if(mode==='gallery'){
-    const gs=b.gs||'m';
+    const gs=va.gs||'m';
     return tabs+`<div class="gal ${gs}">${subs.map(s=>{
       const capa=s.cover||GAL_FUNDO[Math.abs(galHash(s.id))%GAL_FUNDO.length];
       const props=s.propOrder.filter(k=>(s.props[k]||{}).v).slice(0,2);
@@ -2184,16 +2201,49 @@ document.addEventListener('click',e=>{
     }
     const gsz=t.closest('[data-galsize]');
     if(gsz){
-      const b=p.blocks.find(x=>x.id===gsz.dataset.galsize);
-      b.gs={p:'m',m:'g',g:'p'}[b.gs||'m'];
+      const b=p.blocks.find(x=>x.id===gsz.dataset.galsize),v=vAtiva(b);
+      v.gs={p:'m',m:'g',g:'p'}[v.gs||'m'];
       refresh(host,'blocks');save();return;
     }
-    const dbv=t.closest('[data-dbv]');
-    if(dbv){const b=p.blocks.find(x=>x.id===dbv.dataset.id);b.t=dbv.dataset.dbv;refresh(host,'blocks');save();return}
+    /* + ao lado das abas: nova vista */
+    const vad=t.closest('[data-vadd]');
+    if(vad){
+      const b=p.blocks.find(x=>x.id===vad.dataset.vadd);migraVistas(b);
+      const r=vad.getBoundingClientRect();
+      return openMenu(r.left,r.bottom+8,['table','board','gallery'].map(tp=>({
+        label:VNOME[tp],ic:VICO[tp],
+        sub:{table:'linhas e propriedades',board:'colunas por status',gallery:'cartões com capa'}[tp],
+        run:()=>{
+          b.views.push({id:uid(),nome:VNOME[tp],tipo:tp,gs:'m'});
+          b.av=b.views.length-1;b.t=tp;
+          refresh(host,'blocks');save();
+        }})),'Nova vista');
+    }
+    /* aba: troca de vista; se já ativa, abre as opções dela */
+    const vsel=t.closest('[data-vsel]');
+    if(vsel){
+      const b=p.blocks.find(x=>x.id===vsel.dataset.id);migraVistas(b);
+      const i=+vsel.dataset.vsel;
+      if(i!==b.av){b.av=i;b.t=b.views[i].tipo;refresh(host,'blocks');save();return}
+      const r=vsel.getBoundingClientRect();
+      return openMenu(r.left,r.bottom+8,[
+        {label:'renomear vista',ic:'✎',run:()=>{
+          const n=prompt('Nome da vista:',b.views[i].nome);
+          if(n&&n.trim()){b.views[i].nome=n.trim();refresh(host,'blocks');save()}}},
+        {label:'duplicar vista',ic:'⧉',run:()=>{
+          b.views.splice(i+1,0,Object.assign({},b.views[i],{id:uid(),nome:b.views[i].nome+' 2'}));
+          b.av=i+1;refresh(host,'blocks');save()}}
+      ].concat(['table','board','gallery'].filter(tp=>tp!==b.views[i].tipo).map(tp=>({
+        label:'virar '+VNOME[tp].toLowerCase(),ic:VICO[tp],
+        run:()=>{b.views[i].tipo=tp;b.views[i].nome=VNOME[tp];b.t=tp;refresh(host,'blocks');save()}})),
+      b.views.length>1?[{label:'excluir vista',ic:'✕',run:()=>{
+        b.views.splice(i,1);b.av=Math.max(0,i-1);b.t=b.views[b.av].tipo;
+        refresh(host,'blocks');save()}}]:[]),b.views[i].nome);
+    }
     const dbn=t.closest('[data-dbnew]');
     if(dbn){
       const bg=p.blocks.find(x=>x.id===dbn.dataset.dbnew);
-      const galeria=bg&&bg.t==='gallery';
+      const galeria=bg&&vAtiva(bg).tipo==='gallery';
       const id=mkPage('Sem título',p.id,'📄');
       S.pages[id].propOrder=['Status'];S.pages[id].props={Status:{type:'selecao',v:'ideia'}};
       if(galeria){
