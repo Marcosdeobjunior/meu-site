@@ -410,75 +410,33 @@ td.nm:hover{color:var(--accent1)}
 .peek .blk .gut{left:-30px}
 .peek-body{flex:1;display:flex;min-height:0;position:relative}
 .peek-body .peek-scroll{flex:1}
-.peek-body .pcfg{position:absolute;top:0;right:0;bottom:0;background:rgba(10,9,20,.98);z-index:3}
-
-/* ---------------- configuração da página ---------------- */
-.body{flex:1;display:flex;min-height:0;position:relative}
-.pcfg{
-  width:0;flex:0 0 auto;overflow:hidden;transition:width .26s cubic-bezier(.16,1,.3,1);
-  background:rgba(19,19,28,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+/* tela "Personalizar" dentro do menu ⋯ */
+.pmcust{padding:10px 12px 16px}
+.pmback{
+  display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;margin-bottom:6px;
+  border-radius:8px;color:var(--accent1);font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:2px;text-transform:uppercase;
 }
-.pcfg.open{width:294px;border-left:1px solid var(--border);overflow-y:auto}
-.pcfg-in{width:294px;padding:20px 20px 60px}
-.pcfg h5{
-  margin:0 0 10px;font-family:var(--font-mono);font-size:9px;letter-spacing:2.4px;
-  text-transform:uppercase;color:var(--accent1);opacity:.85;font-weight:400;
+.pmback:hover{background:rgba(200,169,110,.1)}
+.pmsec{
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent1);opacity:.75;margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--border);
 }
-.pcfg h5:not(.first){margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
-.pcfg .lbl{
-  font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;color:var(--muted);
-  margin:0 0 7px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+.pmcust .pmsec:first-of-type{margin-top:8px}
+.pmcust .lbl{
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 6px;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--muted);
 }
-.pcfg .lbl b{font-weight:400;color:var(--accent1);opacity:.9;text-transform:lowercase}
-
-/* cabeçalho de identidade */
-.cfgHead{display:flex;gap:12px;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:14px}
-.cfgHead .ic{
-  width:46px;height:46px;flex:0 0 46px;border-radius:13px;background:rgba(255,255,255,.03);
-  border:1px solid var(--border);display:grid;place-items:center;font-size:24px;cursor:pointer;transition:border-color .2s;
+.pmcust .lbl b{font-weight:400;color:var(--accent1);opacity:.9;text-transform:lowercase}
+.pmmeta{
+  font-family:var(--font-mono);font-size:9px;color:var(--muted);line-height:1.8;opacity:.6;
+  margin-top:16px;padding-top:12px;border-top:1px solid var(--border);
 }
-.cfgHead .ic:hover{border-color:rgba(200,169,110,.45)}
-.cfgHead .nm{min-width:0;flex:1}
-.cfgX{
-  width:28px;height:28px;flex:0 0 28px;border-radius:8px;border:1px solid var(--border);
-  color:var(--muted);display:grid;place-items:center;font-size:12px;align-self:flex-start;
-  transition:color .2s,border-color .2s;
-}
-.cfgX:hover{color:var(--accent1);border-color:rgba(200,169,110,.45)}
-.cfgHead b{
-  display:block;font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.cfgHead small{display:block;font-family:var(--font-mono);font-size:9.5px;color:var(--muted);margin-top:3px;letter-spacing:.4px}
-
-/* linha de ações em ícone */
-.qrow{display:flex;gap:5px;margin-bottom:6px}
-.qrow button{
-  flex:1;height:37px;border:1px solid var(--border);border-radius:10px;display:grid;place-items:center;
-  color:var(--muted);font-size:14px;transition:all .2s;
-}
-.qrow button:hover{color:var(--text);border-color:var(--border-2);background:rgba(255,255,255,.03)}
-.qrow button.on{color:var(--accent1);border-color:rgba(200,169,110,.45);background:rgba(200,169,110,.1)}
-.qrow button.danger:hover{color:var(--accent4);border-color:rgba(224,107,139,.45);background:rgba(224,107,139,.07)}
-
-/* ladrilhos de opção */
-.tiles{display:flex;gap:5px;margin-bottom:15px}
-.tiles button{
-  flex:1;min-width:0;height:40px;border:1px solid var(--border);border-radius:10px;
-  display:grid;place-items:center;color:var(--muted);transition:all .2s;
-}
-.tiles button:hover{color:var(--text);border-color:var(--border-2);background:rgba(255,255,255,.03)}
-.tiles button.on{color:var(--accent1);border-color:rgba(200,169,110,.5);background:rgba(200,169,110,.1)}
-.tiles button svg{display:block}
-.pcfg .meta{
-  font-family:var(--font-mono);font-size:9.5px;color:var(--muted);line-height:1.9;opacity:.6;
-  margin-top:20px;padding-top:14px;border-top:1px solid var(--border);
-}
-.pcfg .reset{
+.pmcust .reset{
   width:100%;margin-top:10px;padding:8px;border-radius:999px;border:1px solid var(--border);
-  font-family:var(--font-mono);font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);
 }
-.pcfg .reset:hover{color:var(--accent4);border-color:rgba(224,107,139,.4)}
+.pmcust .reset:hover{color:var(--accent4);border-color:rgba(224,107,139,.4)}
 
 /* ---------------- menus ---------------- */
 .menu{
@@ -600,8 +558,6 @@ body.zen .side,body.zen .crumb{display:none}
   .ptitle{font-size:31px}
   .pkey{width:118px;flex:0 0 118px}
   .peek.left,.peek.right{width:100vw;border-radius:0}
-  .pcfg.open{position:absolute;top:0;right:0;bottom:0;z-index:40;box-shadow:-20px 0 50px rgba(0,0,0,.5)}
-  .pcfg.open,.pcfg-in{width:min(294px,86vw)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -643,7 +599,6 @@ body.zen .side,body.zen .crumb{display:none}
     </header>
     <div class="body">
       <div class="scroll" id="scroll"></div>
-      <aside class="pcfg" id="cfgMain"></aside>
     </div>
   </main>
 </div>
@@ -1212,7 +1167,6 @@ function surfaceHTML(p){
       <div class="ptools">
         <button data-cover>${p.cover?'trocar capa':'capa'}</button>
         <button data-icon>ícone</button>
-        <button data-opencfg>configuração</button>
         <button>${pageWords(p)} palavras</button>
       </div>
       ${propsHTML(p)}
@@ -1271,30 +1225,13 @@ const VALOR={modo:p=>cfg(p,'modo')==='herdar'?'padrão · '+MODO_NOME[S.openMode
   largura:p=>cfg(p,'largura'),fonte:p=>cfg(p,'fonte'),tamanho:p=>TAM[cfg(p,'tamanho')],
   entrelinha:p=>LH[cfg(p,'entrelinha')],gap:p=>cfg(p,'gap'),recuo:p=>cfg(p,'recuo')};
 
-function cfgHTML(p){
+/* tela "Personalizar" dentro do menu ⋯ (antes era um painel lateral) */
+function pmCustomHTML(p){
   const d=new Date(p.updated||p.created);
-  const trava=cfg(p,'travada');
-  return `<div class="pcfg-in" data-cfgpid="${p.id}">
+  return `<div class="pmcust" data-cfgpid="${p.id}">
+    <button class="pmback" data-pmvoltar>‹ <span>Personalizar</span></button>
 
-    <div class="cfgHead">
-      <button class="ic" data-cfgicon title="Trocar o ícone">${p.icon}</button>
-      <span class="nm">
-        <b>${esc(p.title||'Sem título')}</b>
-        <small>${pageWords(p)} palavras · ${kids(p.id).length} filhas · ${backlinks(p).length} retrolinks</small>
-      </span>
-      <button class="cfgX" data-cfgfechar title="Fechar (Esc)">✕</button>
-    </div>
-
-    <div class="qrow">
-      <button data-cfg="travada" data-val="${trava?'false':'true'}" class="${trava?'on':''}"
-        title="${trava?'Destravar a página':'Travar a página contra edições'}">${ICO.trava}</button>
-      <button data-cfgcover class="${p.cover?'on':''}" title="${p.cover?'Trocar a capa':'Adicionar capa'}">${ICO.capa}</button>
-      <button data-cfgdup title="Duplicar a página">${ICO.dup}</button>
-      <button data-cfgexport title="Exportar em Markdown">${ICO.exp}</button>
-      <button data-cfgdel class="danger" title="Excluir a página e suas subpáginas">${ICO.del}</button>
-    </div>
-
-    <h5 class="first" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">Exibição</h5>
+    <div class="pmsec">Exibição</div>
     <div class="lbl"><span>como abre</span><b>${VALOR.modo(p)}</b></div>
     ${tiles(p,'modo',[['herdar',ICO.herdar,'Padrão do sistema'],['full',ICO.full,'Tela cheia'],
       ['left',ICO.left,'Painel à esquerda'],['right',ICO.right,'Painel à direita'],['popup',ICO.popup,'Janela']])}
@@ -1302,17 +1239,17 @@ function cfgHTML(p){
     ${tiles(p,'largura',[['estreito',ICO.estreito,'Estreito'],['normal',ICO.normal,'Normal'],
       ['largo',ICO.largo,'Largo'],['total',ICO.total,'Largura total']])}
 
-    <h5>Texto</h5>
+    <div class="pmsec">Texto</div>
     <div class="lbl"><span>fonte</span><b>${VALOR.fonte(p)}</b></div>
-    ${tiles(p,'fonte',[['editorial',letra('var(--font-editorial)',19),'Editorial — Cormorant'],
-      ['interface',letra('var(--font-ui)',14),'Interface — Syne'],
-      ['maquina',letra('var(--font-mono)',13),'Máquina — DM Mono']])}
+    ${tiles(p,'fonte',[['editorial',letra('var(--font-editorial)',19),'Editorial'],
+      ['interface',letra('var(--font-ui)',14),'Interface'],
+      ['maquina',letra('var(--font-mono)',13),'Máquina']])}
     <div class="lbl"><span>tamanho</span><b>${VALOR.tamanho(p)}</b></div>
     ${tiles(p,'tamanho',[['pequeno',letra('var(--font-editorial)',13),'Pequeno'],
       ['normal',letra('var(--font-editorial)',17),'Normal'],
       ['grande',letra('var(--font-editorial)',21),'Grande']])}
 
-    <h5>Ritmo</h5>
+    <div class="pmsec">Ritmo</div>
     <div class="lbl"><span>entrelinha</span><b>${VALOR.entrelinha(p)}</b></div>
     ${tiles(p,'entrelinha',[['compacto',ICO.compacto,'Compacto'],['normal',ICO.lhnormal,'Normal'],
       ['arejado',ICO.arejado,'Arejado']])}
@@ -1322,28 +1259,30 @@ function cfgHTML(p){
     ${tiles(p,'recuo',[['nenhum',ICO.recnenhum,'Sem recuo'],['medio',ICO.recmedio,'Recuo médio'],
       ['grande',ICO.recgrande,'Recuo grande']])}
 
-    <div class="meta">alterada em ${d.toLocaleDateString('pt-BR')} · ${p.blocks.length} blocos</div>
+    <div class="pmsec">Página</div>
+    <div class="qrow">
+      <button data-cfgicon title="Trocar o ícone" style="font-size:16px">${p.icon}</button>
+      <button data-cfgcover class="${p.cover?'on':''}" title="${p.cover?'Trocar a capa':'Adicionar capa'}">${ICO.capa}</button>
+      <button data-cfg="travada" data-val="${cfg(p,'travada')?'false':'true'}"
+        class="${cfg(p,'travada')?'on':''}" title="${cfg(p,'travada')?'Destravar':'Travar a página'}">${ICO.trava}</button>
+      <button data-cfgdup title="Duplicar">${ICO.dup}</button>
+      <button data-cfgexport title="Exportar Markdown">${ICO.exp}</button>
+    </div>
+
+    <div class="pmmeta">${pageWords(p)} palavras · ${p.blocks.length} blocos<br>
+      alterada em ${d.toLocaleDateString('pt-BR')}</div>
     <button class="reset" data-cfgreset>restaurar padrões</button>
   </div>`;
 }
-function renderCfg(){
-  const el=$('#cfgMain'),p=P();
-  const ok=p&&S.view==='page';
-  el.className='pcfg'+(S.cfgOpen&&ok?' open':'');
-  el.innerHTML=ok?cfgHTML(p):'';
-  $('#togSide').style.display=window.innerWidth<900?'block':'none';
-}
-
 function render(){
   renderTree();renderCrumb();renderPeek();updateTrashCount();
   const sc=$('#scroll');
   if(anim){cancelAnimationFrame(anim);anim=null}
-  if(S.view==='graph'){renderCfg();return renderGraph(sc)}
-  if(S.view==='trash'){renderCfg();return renderTrash(sc)}
+  if(S.view==='graph')return renderGraph(sc);
+  if(S.view==='trash')return renderTrash(sc);
   const p=P();
-  if(!p){sc.innerHTML='<div class="page"><div class="nada" style="padding-top:60px">nenhuma página aberta</div></div>';renderCfg();return}
+  if(!p){sc.innerHTML='<div class="page"><div class="nada" style="padding-top:60px">nenhuma página aberta</div></div>';return}
   sc.innerHTML=surfaceHTML(p);
-  renderCfg();
 }
 function updateTrashCount(){
   const el=$('#trashCount');if(!el)return;
@@ -1384,7 +1323,6 @@ function renderPeek(){
       </header>
       <div class="peek-body">
         <div class="peek-scroll">${surfaceHTML(p)}</div>
-        <aside class="pcfg ${S.cfgPeek?'open':''}">${S.cfgPeek?cfgHTML(p):''}</aside>
       </div>
     </section>`;
 }
@@ -1489,12 +1427,9 @@ document.addEventListener('keydown',e=>{
   if(mod&&e.key.toLowerCase()==='g'){e.preventDefault();S.view=S.view==='graph'?'page':'graph';save();return render()}
   if(mod&&e.key==='.'){e.preventDefault();return document.body.classList.toggle('zen')}
   if(mod&&e.key==='\\'){e.preventDefault();return toggleSideCollapse()}
-  if(e.key==='Escape'&&(S.cfgOpen||S.cfgPeek)&&!menuEl&&!document.querySelector('.overlay')){
-    e.preventDefault();fechaCfg();return;
-  }
   if(mod&&(e.key===';'||e.key===':')){e.preventDefault();
-    if(S.peekId){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
-    else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
+    const alvo=S.peekId?S.pages[S.peekId]:P();
+    if(alvo){pmView='custom';openPageMenu($('#btnMore'),alvo)}
     return;}
   if(e.key==='Escape'&&S.peekId&&!menuEl){S.peekId=null;save();renderPeek();renderTree();return}
   if(menuEl&&['ArrowDown','ArrowUp','Enter','Escape','Tab'].indexOf(e.key)>=0)return menuKeys(e);
@@ -1599,6 +1534,7 @@ function menuKeys(e){
 /* ---------------- menu de opções da página (botão ⋯) ---------------- */
 function closePMenu(){if(pmenuEl){pmenuEl.remove();pmenuEl=null}}
 function openPageMenu(anchorEl,p){
+  if(!pmenuEl)pmView='main';
   closePMenu();closeMenu();
   pmenuFresh=true;setTimeout(()=>{pmenuFresh=false},0);
   const r=anchorEl.getBoundingClientRect();
@@ -1626,7 +1562,7 @@ function pmActions(p){
     {id:'trash',label:'Mover para a lixeira',ic:'🗑',danger:true,run:()=>pmTrash(p)},
     {id:'small',label:'Texto pequeno',ic:'A↓',toggle:cfg(p,'tamanho')==='pequeno',stay:true,run:()=>pmToggleCfg(p,'tamanho','pequeno','normal')},
     {id:'wide',label:'Largura completa',ic:'↔',toggle:cfg(p,'largura')==='total',stay:true,run:()=>pmToggleCfg(p,'largura','total','normal')},
-    {id:'custom',label:'Personalizar página',ic:'⚙',chevron:true,run:()=>pmOpenCustomize(p)},
+    {id:'custom',label:'Personalizar página',ic:'⚙',chevron:true,stay:true,run:()=>pmOpenCustomize(p)},
     {id:'lock',label:'Bloquear página',ic:'🔒',toggle:cfg(p,'travada'),stay:true,run:()=>pmToggleLock(p)},
     {id:'undo',label:'Desfazer',ic:'↺',kbd:'Ctrl Z',run:()=>undo()},
     {id:'import',label:'Importar',ic:'↥',run:()=>pmImport(p)},
@@ -1641,8 +1577,46 @@ function pmRow(a){
   return `<button class="pmenu-item ${a.danger?'danger':''}" data-pmact="${a.id}">
     <span class="ic">${a.ic}</span><span class="lbl">${esc(a.label)}</span>${right}</button>`;
 }
+let pmView='main';
 function renderPMBody(p,query){
   if(!pmenuEl)return;
+  if(pmView==='custom'){
+    const body=pmenuEl.querySelector('#pmBody'),foot=pmenuEl.querySelector('#pmFoot');
+    pmenuEl.querySelector('.pmenu-search').style.display='none';
+    foot.style.display='none';
+    body.innerHTML=pmCustomHTML(p);
+    body.querySelector('[data-pmvoltar]').onclick=()=>{
+      pmView='main';
+      pmenuEl.querySelector('.pmenu-search').style.display='';
+      renderPMBody(p,'');
+    };
+    /* o menu interrompe a propagação, então os controles são ligados aqui */
+    const redesenha=()=>{save();render();if(pmenuEl&&pmView==='custom')renderPMBody(p,'')};
+    body.querySelectorAll('[data-cfg]').forEach(b=>b.onclick=()=>{
+      const v=b.dataset.val;
+      setCfg(p,b.dataset.cfg,v==='true'?true:(v==='false'?false:v));
+      redesenha();
+    });
+    const cov=body.querySelector('[data-cfgcover]');
+    if(cov)cov.onclick=()=>{p.cover=p.cover?COVERS[(COVERS.indexOf(p.cover)+1)%COVERS.length]:COVERS[0];redesenha()};
+    const ico=body.querySelector('[data-cfgicon]');
+    if(ico)ico.onclick=()=>{
+      const r=ico.getBoundingClientRect();
+      openMenu(r.left,r.bottom+6,ICONS.map(x=>({label:x,ic:x,act:p.icon===x,
+        run:()=>{p.icon=x;redesenha()}})),'Ícone da página');
+    };
+    const dup=body.querySelector('[data-cfgdup]');
+    if(dup)dup.onclick=()=>{closePMenu();pmDuplicate(p)};
+    const exp=body.querySelector('[data-cfgexport]');
+    if(exp)exp.onclick=()=>{download((p.title||'pagina')+'.md',toMD(p),'text/markdown');toast('página exportada')};
+    const rst=body.querySelector('[data-cfgreset]');
+    if(rst)rst.onclick=()=>{
+      if(!confirm('Restaurar todos os padrões desta página?'))return;
+      delete p.cfg;redesenha();
+    };
+    return;
+  }
+  pmenuEl.querySelector('.pmenu-search').style.display='';
   const body=pmenuEl.querySelector('#pmBody'),foot=pmenuEl.querySelector('#pmFoot');
   const s=slug(query||'');
   const acts=pmActions(p);
@@ -1734,20 +1708,7 @@ function pmToggleLock(p){
   setCfg(p,'travada',!cfg(p,'travada'));
   save();render();
 }
-let cfgFresh=false;
-function marcaCfgFresh(){cfgFresh=true;setTimeout(()=>{cfgFresh=false},0)}
-function fechaCfg(){
-  let mudou=false;
-  if(S.cfgOpen){S.cfgOpen=false;mudou=true;renderCfg()}
-  if(S.cfgPeek){S.cfgPeek=false;mudou=true;renderPeek()}
-  if(mudou)save();
-  return mudou;
-}
-function pmOpenCustomize(p){
-  marcaCfgFresh();
-  if(S.peekId===p.id){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
-  else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
-}
+function pmOpenCustomize(p){pmView='custom';renderPMBody(p,'')}
 function pmImport(p){
   const i=document.createElement('input');i.type='file';i.accept='.md,.txt';
   i.onchange=()=>{
@@ -1918,21 +1879,6 @@ document.addEventListener('click',e=>{
     if(p)openPageMenu(t.closest('[data-peekmore]'),p);
     return;
   }
-  if(t.closest('[data-cfgfechar]')){fechaCfg();return}
-  /* clique fora do painel fecha — ignorando o clique que acabou de abri-lo,
-     menus flutuantes e os controles que comandam o próprio painel */
-  if((S.cfgOpen||S.cfgPeek)&&!cfgFresh
-     &&!t.closest('.pcfg')&&!t.closest('.menu')&&!t.closest('.pmenu')
-     &&!t.closest('[data-opencfg]')&&!t.closest('#btnMore')){
-    fechaCfg();
-  }
-  if(t.closest('[data-opencfg]')){
-    marcaCfgFresh();
-    const h=hostOf(t);
-    if(h&&S.peekId===h.dataset.pid){S.cfgPeek=!S.cfgPeek;save();renderPeek()}
-    else{S.cfgOpen=!S.cfgOpen;save();renderCfg()}
-    return;
-  }
 
   const holder=t.closest('[data-cfgpid]');
   if(holder){
@@ -1941,15 +1887,17 @@ document.addEventListener('click',e=>{
     if(cb){
       const v=cb.dataset.val;
       setCfg(pc,cb.dataset.cfg,v==='true'?true:(v==='false'?false:v));
-      save();render();return;
+      save();render();
+      if(pmenuEl&&pmView==='custom')renderPMBody(pc,'');
+      return;
     }
     if(t.closest('[data-cfgreset]')){
       if(!confirm('Restaurar todos os padrões desta página?'))return;
-      delete pc.cfg;save();render();return;
+      delete pc.cfg;save();render();if(pmenuEl&&pmView==='custom')renderPMBody(pc,'');return;
     }
     if(t.closest('[data-cfgcover]')){
       pc.cover=pc.cover?COVERS[(COVERS.indexOf(pc.cover)+1)%COVERS.length]:COVERS[0];
-      save();render();return;
+      save();render();if(pmenuEl&&pmView==='custom')renderPMBody(pc,'');return;
     }
     if(t.closest('[data-cfgdup]')){
       const id=mkPage(pc.title+' (cópia)',pc.parentId,pc.icon);
@@ -2347,7 +2295,7 @@ $('#btnAllToggle').onclick=e=>{
   e.currentTarget.textContent=any?'⌄':'⌃';
   e.currentTarget.title=any?'Expandir tudo':'Recolher tudo';
 };
-window.addEventListener('resize',()=>{if(S)renderCfg()});
+window.addEventListener('resize',()=>{if(S)$('#togSide').style.display=window.innerWidth<900?'block':'none'});
 $('#btnSync').onclick=async e=>{
   const r=e.currentTarget.getBoundingClientRect();
   const f=fb();
