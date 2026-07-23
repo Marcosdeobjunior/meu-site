@@ -294,6 +294,50 @@ td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--muted)}
 tr:hover td{background:rgba(255,255,255,.02)}
 td.nm{color:var(--text);cursor:pointer;font-size:14px}
 td.nm:hover{color:var(--accent1)}
+/* galeria */
+.gal{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.gal.p{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px}
+.gal.g{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.gcard{
+  border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card);
+  cursor:pointer;display:flex;flex-direction:column;
+  transition:border-color .22s,transform .22s,box-shadow .22s;
+}
+.gcard:hover{
+  border-color:rgba(200,169,110,.42);transform:translateY(-3px);
+  box-shadow:0 14px 34px rgba(0,0,0,.45);
+}
+.gcap{height:88px;position:relative;flex:0 0 88px}
+.gal.p .gcap{height:62px;flex-basis:62px}
+.gal.g .gcap{height:116px;flex-basis:116px}
+.gcap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(13,13,18,.5))}
+.gico{
+  position:absolute;left:12px;bottom:-15px;z-index:2;width:34px;height:34px;border-radius:10px;
+  background:rgba(19,19,28,.94);border:1px solid var(--border-2);display:grid;place-items:center;font-size:17px;
+}
+.gbody{padding:22px 13px 13px;display:flex;flex-direction:column;gap:6px;flex:1}
+.gcard b{
+  font-family:var(--font-display);font-size:14.5px;font-weight:700;line-height:1.25;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.gal.g .gcard b{font-size:17px}
+.gcard p{
+  margin:0;font-family:var(--font-editorial);font-size:14px;line-height:1.5;color:var(--muted);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.gmeta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:auto;padding-top:8px}
+.gmeta .pill{font-size:9px;padding:2px 8px}
+.gw{font-family:var(--font-mono);font-size:9px;color:var(--muted);opacity:.55;letter-spacing:.5px}
+.gcard.gnew{
+  border-style:dashed;background:none;align-items:center;justify-content:center;gap:7px;
+  min-height:150px;color:var(--muted);font-family:var(--font-mono);font-size:10px;
+  letter-spacing:1.4px;text-transform:uppercase;
+}
+.gal.p .gcard.gnew{min-height:112px}
+.gcard.gnew span{font-size:21px;line-height:1}
+.gcard.gnew:hover{color:var(--accent1);border-color:rgba(200,169,110,.45);transform:none;box-shadow:none}
+.gcard.dragging{opacity:.4}
+
 .board{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px}
 .col{flex:0 0 236px}
 .col h5{
@@ -625,7 +669,8 @@ const BLOCK_TYPES=[
   ['divider','Divisor','—','fio dourado'],
   ['page','Subpágina','▤','cria uma página dentro desta'],
   ['table','Vista de tabela','▦','subpáginas em tabela'],
-  ['board','Vista de quadro','▥','subpáginas em colunas']
+  ['board','Vista de quadro','▥','subpáginas em colunas'],
+  ['gallery','Galeria','▩','subpáginas como cartões com capa']
 ];
 const PROP_TYPES={texto:'≡',selecao:'⌄',numero:'#',data:'⌛'};
 const PILL={ideia:'var(--muted)',rascunho:'var(--accent1)',revisar:'var(--accent5)',pronto:'var(--accent3)',
@@ -876,7 +921,7 @@ function blockHTML(p,b,i,list){
     return `<div class="blk" data-t="page" data-id="${b.id}">${gut(b.id)}
       <span class="pagelink" data-page="${b.text}">${sub?sub.icon:'📄'} ${sub?esc(sub.title||'Sem título'):'página removida'}${sub&&sub.trashed?' <small style="opacity:.6">(na lixeira)</small>':''}</span></div>`;
   }
-  if(b.t==='table'||b.t==='board')
+  if(b.t==='table'||b.t==='board'||b.t==='gallery')
     return `<div class="blk" data-t="${b.t}" data-id="${b.id}">${gut(b.id)}<div class="dbwrap">${dbHTML(p,b)}</div></div>`;
 
   const ph=b.t==='p'?"digite / para blocos, [[ para ligar, + para criar página":
@@ -893,16 +938,58 @@ function blockHTML(p,b,i,list){
 }
 function blocksHTML(p){return `<div class="blocks" data-blocks>${p.blocks.map((b,i)=>blockHTML(p,b,i,p.blocks)).join('')}</div>`}
 
+const GAL_FUNDO=[
+  'linear-gradient(135deg,#1e1a2e,#332a4a)',
+  'linear-gradient(135deg,#1c1a16,#3d3221)',
+  'linear-gradient(135deg,#15201f,#1f3b36)',
+  'linear-gradient(135deg,#231821,#472634)',
+  'linear-gradient(135deg,#141c26,#1e3550)'
+];
+function galHash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return h}
+/* prévia do corpo da página, para o cartão da galeria */
+function resumo(p,n){
+  const t=p.blocks.filter(b=>['p','quote','callout','h2','h3'].indexOf(b.t)>=0)
+    .map(b=>b.text).filter(x=>x&&x.trim()).join(' ')
+    .replace(/\[\[([^\[\]]+)\]\]/g,'$1').replace(/[*`~_#]/g,'').trim();
+  return t.length>n?t.slice(0,n).replace(/\s+\S*$/,'')+'…':t;
+}
 function dbHTML(p,b){
   const subs=kids(p.id);
-  const mode=b.t==='table'?'table':'board';
+  const mode=['table','board','gallery'].indexOf(b.t)>=0?b.t:'board';
   const keys=[...new Set(subs.reduce((a,s)=>a.concat(s.propOrder),[]))].slice(0,4);
   const tabs=`<div class="dbtabs">
     <button class="${mode==='table'?'on':''}" data-dbv="table" data-id="${b.id}">▦ tabela</button>
     <button class="${mode==='board'?'on':''}" data-dbv="board" data-id="${b.id}">▥ quadro</button>
+    <button class="${mode==='gallery'?'on':''}" data-dbv="gallery" data-id="${b.id}">▩ galeria</button>
     <span style="flex:1"></span>
+    ${mode==='gallery'?`<button data-galsize="${b.id}" title="Tamanho dos cartões">${{p:'▪',m:'▫',g:'▭'}[b.gs||'m']}</button>`:''}
     <button data-dbnew="${b.id}">+ nova</button></div>`;
   if(!subs.length)return tabs+`<div class="nada">nenhuma subpágina ainda — clique em “+ nova”</div>`;
+
+  if(mode==='gallery'){
+    const gs=b.gs||'m';
+    return tabs+`<div class="gal ${gs}">${subs.map(s=>{
+      const capa=s.cover||GAL_FUNDO[Math.abs(galHash(s.id))%GAL_FUNDO.length];
+      const props=s.propOrder.filter(k=>(s.props[k]||{}).v).slice(0,2);
+      const txt=resumo(s,gs==='p'?0:gs==='m'?90:190);
+      return `<article class="gcard" data-card="${s.id}" data-page="${s.id}" draggable="true">
+        <div class="gcap" style="background:${capa}"><span class="gico">${s.icon}</span></div>
+        <div class="gbody">
+          <b>${esc(s.title||'Sem título')}</b>
+          ${txt?`<p>${esc(txt)}</p>`:''}
+          <div class="gmeta">
+            ${props.map(k=>{const val=s.props[k].v,c=PILL[slug(val)];
+              return `<span class="pill" style="color:${c||'var(--muted)'}">${esc(val)}</span>`}).join('')}
+            <span class="gw">${pageWords(s)}p</span>
+            ${kids(s.id).length?`<span class="gw">▤ ${kids(s.id).length}</span>`:''}
+          </div>
+        </div>
+      </article>`;
+    }).join('')}
+      <button class="gcard gnew" data-dbnew="${b.id}"><span>＋</span>nova página</button>
+    </div>`;
+  }
+
   if(mode==='table'){
     return tabs+`<table><thead><tr><th>Nome</th>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}<th>Palavras</th></tr></thead>
       <tbody>${subs.map(s=>`<tr>
@@ -1262,7 +1349,7 @@ document.addEventListener('keydown',e=>{
     if(i>0){
       e.preventDefault();
       const prev=p.blocks[i-1];
-      if(['divider','page','table','board'].indexOf(prev.t)>=0){
+      if(['divider','page','table','board','gallery'].indexOf(prev.t)>=0){
         p.blocks.splice(i-1,1);refresh(host,'blocks');focusBlock(host,b.id,0);save();return;
       }
       const pos=prev.text.length;
@@ -1295,7 +1382,7 @@ function setType(host,id,t){
     p.expanded=true;b.t='page';b.text=sub;refresh(host,'blocks');renderTree();save();return;
   }
   b.t=t;refresh(host,'blocks');save();
-  if(['table','board','divider','page'].indexOf(t)<0)focusBlock(host,id,0);
+  if(['table','board','gallery','divider','page'].indexOf(t)<0)focusBlock(host,id,0);
 }
 
 /* ---------------- menus ---------------- */
@@ -1728,7 +1815,7 @@ document.addEventListener('click',e=>{
     if(drag){
       const id=drag.dataset.drag,r=drag.getBoundingClientRect();
       return openMenu(r.left,r.bottom+8,
-        BLOCK_TYPES.filter(x=>['page','table','board'].indexOf(x[0])<0)
+        BLOCK_TYPES.filter(x=>['page','table','board','gallery'].indexOf(x[0])<0)
           .map(x=>({label:'virar '+x[1].toLowerCase(),ic:x[2],run:()=>setType(host,id,x[0])}))
         .concat([
           {label:'duplicar',ic:'⧉',run:()=>{const i=p.blocks.findIndex(b=>b.id===id);
@@ -1737,12 +1824,24 @@ document.addEventListener('click',e=>{
             if(!p.blocks.length)p.blocks=[mkBlock()];refresh(host,'blocks');save()}}
         ]),'Bloco');
     }
+    const gsz=t.closest('[data-galsize]');
+    if(gsz){
+      const b=p.blocks.find(x=>x.id===gsz.dataset.galsize);
+      b.gs={p:'m',m:'g',g:'p'}[b.gs||'m'];
+      refresh(host,'blocks');save();return;
+    }
     const dbv=t.closest('[data-dbv]');
     if(dbv){const b=p.blocks.find(x=>x.id===dbv.dataset.id);b.t=dbv.dataset.dbv;refresh(host,'blocks');save();return}
     const dbn=t.closest('[data-dbnew]');
     if(dbn){
+      const bg=p.blocks.find(x=>x.id===dbn.dataset.dbnew);
+      const galeria=bg&&bg.t==='gallery';
       const id=mkPage('Sem título',p.id,'📄');
       S.pages[id].propOrder=['Status'];S.pages[id].props={Status:{type:'selecao',v:'ideia'}};
+      if(galeria){
+        S.pages[id].cfg={modo:'popup'};
+        S.pages[id].cover=GAL_FUNDO[Math.abs(galHash(id))%GAL_FUNDO.length];
+      }
       p.expanded=true;save();return openPage(id,true);
     }
     if(t.closest('[data-pico]')||t.closest('[data-icon]')){
@@ -2018,7 +2117,7 @@ function toMD(p,depth){
     const map={p:b.text,h1:'# '+b.text,h2:'## '+b.text,h3:'### '+b.text,
       bullet:'- '+b.text,num:n+'. '+b.text,todo:'- ['+(b.checked?'x':' ')+'] '+b.text,
       quote:'> '+b.text,code:'```\n'+b.text+'\n```',callout:'> '+(b.icon||'✦')+' '+b.text,
-      divider:'---',page:'',table:'',board:''};
+      divider:'---',page:'',table:'',board:'',gallery:''};
     const line=map[b.t]!==undefined?map[b.t]:b.text;
     if(line!=='')out+=line+'\n\n';
   });
