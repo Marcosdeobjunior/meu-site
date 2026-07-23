@@ -623,6 +623,7 @@ body.zen .side,body.zen .crumb{display:none}
       <button class="sbtn" id="btnTrash"><span class="ic">🗑</span>Lixeira<span class="kbd" id="trashCount"></span></button>
       <button class="sbtn" id="btnExport"><span class="ic">↧</span>Exportar Markdown</button>
       <button class="sbtn" id="btnBackup"><span class="ic">⧉</span>Backup / restaurar</button>
+      <button class="sbtn" id="btnSync"><span class="ic">☁</span>Sincronização</button>
     </div>
   </aside>
 
@@ -856,6 +857,7 @@ async function nuvemCarregar(){
 let gravando=false,pendente=false;
 async function nuvemGravar(){
   if(gravando){pendente=true;return}
+  if(S&&S.semente)return;          /* só exemplo: não ocupa a conta */
   const f=fb();if(!f)return;
   gravando=true;
   try{
@@ -953,12 +955,17 @@ function undo(){
 
 function mkBlock(t,text){return{id:uid(),t:t||'p',text:text||'',checked:false,icon:'✦'}}
 function mkPage(title,parentId,icon){
+  marcaReal();
   const id=uid();
   S.pages[id]={id,icon:icon||'📄',title:title||'',parentId:parentId||null,blocks:[mkBlock()],
     props:{},propOrder:[],expanded:false,cover:null,created:Date.now(),updated:Date.now()};
   return id;
 }
 
+let iniciado=false;
+/* conteúdo de exemplo não sobe para a nuvem: se subisse, abrir o app num
+   aparelho emprestado sujaria a conta e mascararia o trabalho de casa */
+function marcaReal(){if(iniciado&&S&&S.semente){delete S.semente;save()}}
 function seed(){
   S={pages:{},activeId:null,peekId:null,openMode:'right',view:'page',graphLinks:true,graphHier:true};
   const root=mkPage('O primeiro inverno',null,'📖');
@@ -1006,6 +1013,7 @@ function seed(){
     S.pages[c].props={Status:{type:'selecao',v:['ideia','rascunho','revisar'][i]},POV:{type:'texto',v:i===1?'Marcos':'Yuri'}};
   });
   S.activeId=root;
+  S.semente=true;
 }
 
 /* ---------------- markdown ---------------- */
@@ -1439,6 +1447,7 @@ const MD=[[/^# $/,'h1'],[/^## $/,'h2'],[/^### $/,'h3'],[/^[-*+] $/,'bullet'],[/^
   [/^\[ ?\] $/,'todo'],[/^> $/,'quote'],[/^```$/,'code'],[/^---$/,'divider'],[/^\| $/,'callout']];
 
 document.addEventListener('input',e=>{
+  marcaReal();
   const ct=e.target.closest&&e.target.closest('.ct');
   if(ct){
     const host=hostOf(ct),p=pageOf(ct);
@@ -2310,6 +2319,50 @@ $('#btnAllToggle').onclick=e=>{
   e.currentTarget.title=any?'Expandir tudo':'Recolher tudo';
 };
 window.addEventListener('resize',()=>{if(S)renderCfg()});
+$('#btnSync').onclick=async e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  const f=fb();
+  let quem='não conectado';
+  if(temShell()&&window.SoterStorage.getFirebaseAuthStatus){
+    try{const st=await window.SoterStorage.getFirebaseAuthStatus();
+      quem=st&&st.signedIn?(st.email||st.uid||'conectado'):'sem sessão'}catch(err){}
+  }
+  const pgs=Object.keys(S.pages).length;
+  openMenu(r.left,r.top-190,[
+    {label:quem,ic:f?'✔':'○',sub:f?(nuvemErro?'erro na última sincronização':'sincronizando '+pgs+' páginas')
+      :'trabalhando só neste aparelho'},
+    {label:'enviar este aparelho para a nuvem',ic:'↑',
+      sub:'sobrescreve o que está na conta',
+      run:async()=>{
+        if(!fb())return toast('entre na sua conta primeiro');
+        if(!confirm('Enviar as '+pgs+' páginas deste aparelho para a sua conta?\n\nO que estiver na nuvem será substituído.'))return;
+        delete S.semente;
+        const g=fb();
+        try{
+          const snap=await g.raiz.get();
+          const lote=g.db.batch();
+          snap.forEach(d=>{if(d.id!=='__meta'&&!S.pages[d.id])lote.delete(g.raiz.doc(d.id))});
+          await lote.commit();
+        }catch(err){}
+        sincronizado=new Map();
+        await nuvemGravar();
+        toast(nuvemErro?'não consegui enviar':'enviado para a sua conta');
+      }},
+    {label:'trazer da nuvem',ic:'↓',
+      sub:'descarta o que está neste aparelho',
+      run:async()=>{
+        if(!fb())return toast('entre na sua conta primeiro');
+        sincronizado=new Map();
+        const d=await nuvemCarregar();
+        if(!d||d.vazio||!d.pages||!Object.keys(d.pages).length)return toast('não há nada na sua conta ainda');
+        if(!confirm('Substituir as '+pgs+' páginas deste aparelho pelas '+Object.keys(d.pages).length+' da nuvem?'))return;
+        S=d;delete S.semente;
+        if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
+        S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
+        render();save();toast('trazido da sua conta');
+      }}
+  ],'Sincronização');
+};
 $('#btnBackup').onclick=e=>{
   const r=e.currentTarget.getBoundingClientRect();
   openMenu(r.left,r.top-100,[
@@ -2400,6 +2453,7 @@ if(window.innerWidth<900)$('#togSide').style.display='block';
   S.peekId=null;
   applySideCollapsed();
   render();save();
+  iniciado=true;
   const boot=document.getElementById('boot');
   if(boot){boot.style.transition='opacity .3s';boot.style.opacity='0';setTimeout(()=>boot.remove(),320)}
 })();
