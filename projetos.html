@@ -438,6 +438,72 @@ td.nm:hover{color:var(--accent1)}
 }
 .pmcust .reset:hover{color:var(--accent4);border-color:rgba(224,107,139,.4)}
 
+/* ícone como imagem ou cor */
+.icoimg{display:inline-block;background-size:cover;background-position:center;border-radius:5px;vertical-align:-.16em}
+.icocol{display:inline-block;border-radius:5px;vertical-align:-.16em}
+.pico .icoimg,.pico .icocol{border-radius:16px}
+
+/* seletor de ícone e capa */
+.picker{
+  width:min(430px,94vw);background:rgba(10,9,20,.98);border:1px solid var(--border-2);
+  border-radius:var(--radius);box-shadow:0 30px 80px rgba(0,0,0,.7);overflow:hidden;
+}
+.pkabas{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--border)}
+.pkabas button{
+  padding:8px 14px;border-radius:8px 8px 0 0;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);
+}
+.pkabas button:hover{color:var(--text)}
+.pkabas button.on{color:var(--accent1);box-shadow:inset 0 -2px 0 var(--accent1)}
+.pkcorpo{padding:14px 16px 6px;max-height:58vh;overflow-y:auto}
+.pklbl{
+  display:block;font-family:var(--font-mono);font-size:8.5px;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--muted);margin:14px 0 7px;
+}
+.pklbl:first-child{margin-top:0}
+.pkgrade{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.pkgrade button{
+  aspect-ratio:1;border:1px solid var(--border);border-radius:9px;font-size:19px;
+  display:grid;place-items:center;transition:all .18s;
+}
+.pkgrade button:hover{border-color:rgba(200,169,110,.5);background:rgba(200,169,110,.08)}
+.pkgrade button.on{border-color:var(--accent1);background:rgba(200,169,110,.14)}
+.pkgrade.cores{grid-template-columns:repeat(8,1fr)}
+.pkgrade.cores button,.pkgrade.capas button{border-color:var(--border-2)}
+.pkgrade.capas{grid-template-columns:repeat(5,1fr)}
+.pkgrade.capas button{aspect-ratio:16/10}
+.pkprev{height:62px;border-radius:11px;border:1px solid var(--border-2);margin-bottom:9px}
+.pklinha{display:flex;gap:7px;align-items:center}
+.pkin{
+  flex:1;min-width:0;background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:9px;padding:9px 11px;font-size:13px;color:var(--text);
+}
+.pkin:focus{outline:none;border-color:rgba(200,169,110,.5)}
+.pklinha input[type=color]{
+  width:42px;height:38px;flex:0 0 42px;padding:2px;border:1px solid var(--border);
+  border-radius:9px;background:none;cursor:pointer;
+}
+.pklinha input[type=range]{flex:1;accent-color:var(--accent1)}
+.pkok{
+  padding:9px 15px;border:1px solid rgba(200,169,110,.4);border-radius:9px;color:var(--accent1);
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1.6px;text-transform:uppercase;
+}
+.pkok:hover{background:rgba(200,169,110,.12)}
+.pkarq{
+  width:100%;padding:13px;border:1px dashed var(--border-2);border-radius:11px;color:var(--muted);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;
+}
+.pkarq:hover{color:var(--accent1);border-color:rgba(200,169,110,.5);background:rgba(200,169,110,.05)}
+.pknota{font-family:var(--font-mono);font-size:9px;color:var(--muted);opacity:.6;line-height:1.7;margin-top:9px}
+.pkpe{display:flex;gap:8px;padding:11px 16px;border-top:1px solid var(--border)}
+.pkpe button{
+  flex:1;padding:9px;border:1px solid var(--border);border-radius:999px;color:var(--muted);
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1.6px;text-transform:uppercase;
+}
+.pkpe .pkrem:hover{color:var(--accent4);border-color:rgba(224,107,139,.4)}
+.pkpe .pkfechar:hover{color:var(--accent1);border-color:rgba(200,169,110,.4)}
+.pickov{place-items:center;padding-top:0}
+
 /* ---------------- menus ---------------- */
 .menu{
   position:fixed;z-index:90;background:rgba(8,7,20,.97);backdrop-filter:blur(20px);
@@ -914,6 +980,17 @@ function undo(){
   toast('desfeito');
 }
 
+/* ícone da página: emoji puro, "img:<url>" ou "col:<css>" */
+function ico(v,tam){
+  v=v==null?'📄':String(v);
+  const t=tam||'1em';
+  if(v.indexOf('img:')===0)
+    return '<span class="icoimg" style="width:'+t+';height:'+t+
+      ';background-image:url(&quot;'+esc(v.slice(4))+'&quot;)"></span>';
+  if(v.indexOf('col:')===0)
+    return '<span class="icocol" style="width:'+t+';height:'+t+';background:'+esc(v.slice(4))+'"></span>';
+  return esc(v);
+}
 function mkBlock(t,text){return{id:uid(),t:t||'p',text:text||'',checked:false,icon:'✦'}}
 function mkPage(title,parentId,icon){
   marcaReal();
@@ -1008,7 +1085,7 @@ function treeHTML(parentId,depth){
     return `<div>
       <div class="row ${on?'on':''}" data-page="${p.id}" data-nav="1" style="padding-left:${8+depth*15}px">
         <span class="tw ${ch.length?(p.expanded?'open':''):'leaf'}" data-tw="${p.id}">${ch.length?'▶':'·'}</span>
-        <span class="em">${p.icon}</span>
+        <span class="em">${ico(p.icon,'15px')}</span>
         <span class="nm">${esc(p.title||'Sem título')}</span>
         ${ch.length&&!p.expanded?`<span class="cnt">${ch.length}</span>`:''}
         <button class="add" data-addsub="${p.id}" title="Nova subpágina">+</button>
@@ -1023,7 +1100,7 @@ function renderCrumb(){
   const path=[];let p=P();
   while(p){path.unshift(p);p=p.parentId?S.pages[p.parentId]:null}
   $('#crumb').innerHTML=path.map((q,i)=>
-    `${i?'<i>/</i>':''}<button data-page="${q.id}" data-nav="1">${q.icon} ${esc(q.title||'Sem título')}</button>`).join('')
+    `${i?'<i>/</i>':''}<button data-page="${q.id}" data-nav="1">${ico(q.icon,'14px')} ${esc(q.title||'Sem título')}</button>`).join('')
     +(S.view==='graph'?'<i>/</i><button>✦ Grafo</button>':'')
     +(S.view==='trash'?'<i>/</i><button>🗑 Lixeira</button>':'');
 }
@@ -1101,7 +1178,7 @@ function dbHTML(p,b){
       const props=s.propOrder.filter(k=>(s.props[k]||{}).v).slice(0,2);
       const txt=resumo(s,gs==='p'?0:gs==='m'?90:190);
       return `<article class="gcard" data-card="${s.id}" data-page="${s.id}" draggable="true">
-        <div class="gcap" style="background:${capa}"><span class="gico">${s.icon}</span></div>
+        <div class="gcap" style="background:${capa}"><span class="gico">${ico(s.icon,'18px')}</span></div>
         <div class="gbody">
           <b>${esc(s.title||'Sem título')}</b>
           ${txt?`<p>${esc(txt)}</p>`:''}
@@ -1121,7 +1198,7 @@ function dbHTML(p,b){
   if(mode==='table'){
     return tabs+`<table><thead><tr><th>Nome</th>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}<th>Palavras</th></tr></thead>
       <tbody>${subs.map(s=>`<tr>
-        <td class="nm" data-page="${s.id}">${s.icon} ${esc(s.title||'Sem título')}</td>
+        <td class="nm" data-page="${s.id}">${ico(s.icon,'15px')} ${esc(s.title||'Sem título')}</td>
         ${keys.map(k=>{const v=(s.props[k]||{}).v||'';const c=PILL[slug(v)];
           return `<td>${v?(c?`<span class="pill" style="color:${c}">${esc(v)}</span>`:esc(v)):'—'}</td>`}).join('')}
         <td>${pageWords(s)}</td></tr>`).join('')}</tbody></table>`;
@@ -1133,7 +1210,7 @@ function dbHTML(p,b){
     return `<div class="col"><h5>${esc(v)}<span style="opacity:.5">${items.length}</span></h5>
       <div class="drop" data-drop="${esc(v)}" data-key="${esc(key)}">
       ${items.map(s=>`<div class="card" draggable="true" data-card="${s.id}" data-page="${s.id}">
-        <b>${s.icon} ${esc(s.title||'Sem título')}</b>
+        <b>${ico(s.icon,'15px')} ${esc(s.title||'Sem título')}</b>
         <small>${pageWords(s)} palavras${(s.props.POV||{}).v?' · '+esc(s.props.POV.v):''}</small></div>`).join('')}
       </div></div>`;
   }).join('')}</div>`;
@@ -1147,7 +1224,7 @@ function backHTML(p){
     ${bl.map(q=>{
       const line=q.blocks.map(b=>b.text).filter(t=>t&&rx.test(t))[0]||'';
       const hl=esc(line).replace(rx,'<mark>'+esc(p.title)+'</mark>');
-      return `<div class="blitem" data-page="${q.id}"><b>${q.icon} ${esc(q.title||'Sem título')}</b><span>${hl}</span></div>`;
+      return `<div class="blitem" data-page="${q.id}"><b>${ico(q.icon,'15px')} ${esc(q.title||'Sem título')}</b><span>${hl}</span></div>`;
     }).join('')||'<div class="nada">nenhuma página aponta para esta ainda</div>'}
     <h4 style="margin-top:24px">↪ Ligações desta página · ${out.length}</h4>
     ${out.map(l=>{const t=findPage(l);
@@ -1161,7 +1238,7 @@ function surfaceHTML(p){
   return `<div class="surface ${trava?'locked':''}" data-pid="${p.id}" style="${styleOf(p)}">
     ${p.cover?`<div class="cover" style="background:${p.cover}"><button class="swap" data-cover>trocar capa</button></div>`:''}
     <div class="page ${p.cover?'has-cover':''} ${wide?'wide':''}">
-      <div class="pico" data-pico>${p.icon}</div>
+      <div class="pico" data-pico>${ico(p.icon,'56px')}</div>
       ${trava?'<div class="lockbadge">⚿ página travada</div>':''}
       <div class="ptitle" ${trava?'':'contenteditable'} data-title data-ph="Sem título">${esc(p.title)}</div>
       <div class="ptools">
@@ -1261,7 +1338,7 @@ function pmCustomHTML(p){
 
     <div class="pmsec">Página</div>
     <div class="qrow">
-      <button data-cfgicon title="Trocar o ícone" style="font-size:16px">${p.icon}</button>
+      <button data-cfgicon title="Trocar o ícone" style="font-size:16px">${ico(p.icon,'18px')}</button>
       <button data-cfgcover class="${p.cover?'on':''}" title="${p.cover?'Trocar a capa':'Adicionar capa'}">${ICO.capa}</button>
       <button data-cfg="travada" data-val="${cfg(p,'travada')?'false':'true'}"
         class="${cfg(p,'travada')?'on':''}" title="${cfg(p,'travada')?'Destravar':'Travar a página'}">${ICO.trava}</button>
@@ -1299,7 +1376,7 @@ function renderTrash(sc){
     ${list.length?list.map(p=>`
       <div class="blitem" style="display:flex;align-items:center;gap:10px;cursor:default">
         <span style="flex:1;min-width:0">
-          <b>${p.icon} ${esc(p.title||'Sem título')}</b>
+          <b>${ico(p.icon,'15px')} ${esc(p.title||'Sem título')}</b>
           <span style="display:block;font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:3px">excluída em ${new Date(p.trashedAt||0).toLocaleString('pt-BR')}</span>
         </span>
         <button class="tbtn" data-restore="${p.id}" style="font-size:10px;white-space:nowrap">restaurar</button>
@@ -1316,7 +1393,7 @@ function renderPeek(){
   layer.innerHTML=`${mode==='popup'?'<div class="peek-bd" data-closepeek></div>':''}
     <section class="peek ${mode}">
       <header class="peek-top">
-        <span class="t">${p.icon} ${esc(p.title||'Sem título')}</span>
+        <span class="t">${ico(p.icon,'14px')} ${esc(p.title||'Sem título')}</span>
         <button class="tbtn icon" data-peekmore title="Página">⋯</button>
         <button class="tbtn icon" data-peekfull title="Abrir em tela cheia">⤢</button>
         <button class="tbtn icon" data-closepeek title="Fechar">✕</button>
@@ -1498,6 +1575,146 @@ function setType(host,id,t){
   if(['table','board','gallery','divider','page'].indexOf(t)<0)focusBlock(host,id,0);
 }
 
+/* ============================================================
+   Seletor de ícone e de capa
+   fontes: emoji · cor sólida · degradê montado à mão · imagem
+   (endereço da web ou arquivo do computador, redimensionado)
+   ============================================================ */
+const LIMITE_IMG=700000;   /* margem sob o teto de 1 MB do Firestore */
+
+function reduzImagem(file,maxL,qual){
+  return new Promise((ok,erro)=>{
+    if(!/^image\//.test(file.type))return erro(new Error('o arquivo não é uma imagem'));
+    const fr=new FileReader();
+    fr.onerror=()=>erro(new Error('não consegui ler o arquivo'));
+    fr.onload=()=>{
+      const im=new Image();
+      im.onerror=()=>erro(new Error('imagem inválida'));
+      im.onload=()=>{
+        let w=im.width,h=im.height;
+        const f=Math.min(1,maxL/Math.max(w,h));
+        w=Math.max(1,Math.round(w*f));h=Math.max(1,Math.round(h*f));
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        const cx=cv.getContext('2d');
+        cx.fillStyle='#14121c';cx.fillRect(0,0,w,h);
+        cx.drawImage(im,0,0,w,h);
+        let q=qual||.82,url=cv.toDataURL('image/jpeg',q);
+        while(url.length>LIMITE_IMG&&q>.35){q-=.12;url=cv.toDataURL('image/jpeg',q)}
+        ok(url);
+      };
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+const cssUrl=u=>"url('"+String(u).replace(/'/g,"\\'")+"') center/cover no-repeat";
+const ehUrl=u=>/^(https?:)?\/\//i.test(String(u).trim())||/^data:image\//i.test(String(u).trim());
+
+function abrePicker(tipo,valorAtual,aplicar){
+  const capa=tipo==='capa';
+  let aba=capa?'degrade':'emoji';
+  let c1='#7c6fcd',c2='#c8a96e',ang=135,solida='#c8a96e',endereco='';
+
+  const ov=document.createElement('div');
+  ov.className='overlay pickov';
+  ov.innerHTML='<div class="picker"><div class="pkabas"></div><div class="pkcorpo"></div>'+
+    '<div class="pkpe"><button class="pkrem">remover</button><button class="pkfechar">fechar</button></div></div>';
+  document.body.appendChild(ov);
+  const abas=ov.querySelector('.pkabas'),corpo=ov.querySelector('.pkcorpo');
+  const fechar=()=>ov.remove();
+  ov.onclick=e=>{if(e.target===ov)fechar()};
+  ov.querySelector('.pkfechar').onclick=fechar;
+  ov.querySelector('.pkrem').onclick=()=>{aplicar(null);fechar()};
+
+  const lista=capa?[['degrade','Degradê'],['cor','Cor'],['imagem','Imagem']]
+                  :[['emoji','Emoji'],['cor','Cor'],['imagem','Imagem']];
+  const escolhe=v=>{aplicar(v);desenha()};
+
+  function desenha(){
+    abas.innerHTML=lista.map(a=>'<button data-aba="'+a[0]+'" class="'+(aba===a[0]?'on':'')+'">'+a[1]+'</button>').join('');
+    abas.querySelectorAll('[data-aba]').forEach(b=>b.onclick=()=>{aba=b.dataset.aba;desenha()});
+
+    if(aba==='emoji'){
+      corpo.innerHTML='<div class="pkgrade">'+ICONS.map(e=>
+        '<button data-emoji="'+e+'" class="'+(valorAtual===e?'on':'')+'">'+e+'</button>').join('')+'</div>'+
+        '<label class="pklbl">ou cole qualquer emoji</label>'+
+        '<div class="pklinha"><input class="pkin" id="pkEmoji" maxlength="8" placeholder="✦"><button class="pkok" id="pkEmojiOk">usar</button></div>';
+      corpo.querySelectorAll('[data-emoji]').forEach(b=>b.onclick=()=>escolhe(b.dataset.emoji));
+      corpo.querySelector('#pkEmojiOk').onclick=()=>{
+        const v=corpo.querySelector('#pkEmoji').value.trim();
+        if(v)escolhe(v);
+      };
+    }
+
+    if(aba==='cor'){
+      const paleta=['#c8a96e','#7c6fcd','#5ec4a8','#e06b8b','#e8864a','#4ab0e8','#e8e4f0','#3a3550'];
+      corpo.innerHTML='<label class="pklbl">cores da casa</label>'+
+        '<div class="pkgrade cores">'+paleta.map(c=>
+          '<button data-cor="'+c+'" style="background:'+c+'"></button>').join('')+'</div>'+
+        '<label class="pklbl">cor livre</label>'+
+        '<div class="pklinha"><input type="color" id="pkCor" value="'+solida+'"><button class="pkok" id="pkCorOk">usar</button></div>';
+      corpo.querySelectorAll('[data-cor]').forEach(b=>b.onclick=()=>
+        escolhe(capa?b.dataset.cor:'col:'+b.dataset.cor));
+      const inp=corpo.querySelector('#pkCor');
+      inp.oninput=()=>{solida=inp.value};
+      corpo.querySelector('#pkCorOk').onclick=()=>escolhe(capa?solida:'col:'+solida);
+    }
+
+    if(aba==='degrade'){
+      const g=()=>'linear-gradient('+ang+'deg,'+c1+','+c2+')';
+      corpo.innerHTML='<label class="pklbl">prontos</label>'+
+        '<div class="pkgrade capas">'+COVERS.map((c,i)=>
+          '<button data-capa="'+i+'" style="background:'+c+'"></button>').join('')+'</div>'+
+        '<label class="pklbl">montar o seu</label>'+
+        '<div class="pkprev" id="pkPrev" style="background:'+g()+'"></div>'+
+        '<div class="pklinha">'+
+          '<input type="color" id="pkC1" value="'+c1+'">'+
+          '<input type="color" id="pkC2" value="'+c2+'">'+
+          '<input type="range" id="pkAng" min="0" max="360" value="'+ang+'">'+
+          '<button class="pkok" id="pkGrOk">usar</button></div>';
+      corpo.querySelectorAll('[data-capa]').forEach(b=>b.onclick=()=>escolhe(COVERS[+b.dataset.capa]));
+      const prev=corpo.querySelector('#pkPrev');
+      const att=()=>{prev.style.background=g()};
+      corpo.querySelector('#pkC1').oninput=e=>{c1=e.target.value;att()};
+      corpo.querySelector('#pkC2').oninput=e=>{c2=e.target.value;att()};
+      corpo.querySelector('#pkAng').oninput=e=>{ang=+e.target.value;att()};
+      corpo.querySelector('#pkGrOk').onclick=()=>escolhe(g());
+    }
+
+    if(aba==='imagem'){
+      corpo.innerHTML='<label class="pklbl">endereço na web</label>'+
+        '<div class="pklinha"><input class="pkin" id="pkUrl" placeholder="https://…" value="'+esc(endereco)+'">'+
+          '<button class="pkok" id="pkUrlOk">usar</button></div>'+
+        '<label class="pklbl">arquivo do computador</label>'+
+        '<button class="pkarq" id="pkArq">escolher imagem…</button>'+
+        '<div class="pknota">imagens do computador são reduzidas antes de subir, para caber no limite de 1 MB por página</div>';
+      const iu=corpo.querySelector('#pkUrl');
+      iu.oninput=()=>{endereco=iu.value};
+      corpo.querySelector('#pkUrlOk').onclick=()=>{
+        const v=iu.value.trim();
+        if(!ehUrl(v))return toast('endereço inválido — precisa começar com https://');
+        escolhe(capa?cssUrl(v):'img:'+v);
+      };
+      corpo.querySelector('#pkArq').onclick=()=>{
+        const f=document.createElement('input');
+        f.type='file';f.accept='image/*';
+        f.onchange=async()=>{
+          const arq=f.files[0];if(!arq)return;
+          toast('preparando a imagem…');
+          try{
+            const url=await reduzImagem(arq,capa?1600:256,capa?.82:.9);
+            if(url.length>LIMITE_IMG)return toast('a imagem ficou grande demais mesmo reduzida');
+            escolhe(capa?cssUrl(url):'img:'+url);
+            toast('imagem aplicada');
+          }catch(err){toast(err.message||'não consegui usar essa imagem')}
+        };
+        f.click();
+      };
+    }
+  }
+  desenha();
+}
+
 /* ---------------- menus ---------------- */
 function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}}
 let menuItems=[],menuSel=0,menuTitle='',menuFresh=false;
@@ -1598,13 +1815,9 @@ function renderPMBody(p,query){
       redesenha();
     });
     const cov=body.querySelector('[data-cfgcover]');
-    if(cov)cov.onclick=()=>{p.cover=p.cover?COVERS[(COVERS.indexOf(p.cover)+1)%COVERS.length]:COVERS[0];redesenha()};
-    const ico=body.querySelector('[data-cfgicon]');
-    if(ico)ico.onclick=()=>{
-      const r=ico.getBoundingClientRect();
-      openMenu(r.left,r.bottom+6,ICONS.map(x=>({label:x,ic:x,act:p.icon===x,
-        run:()=>{p.icon=x;redesenha()}})),'Ícone da página');
-    };
+    if(cov)cov.onclick=()=>abrePicker('capa',p.cover,v=>{p.cover=v||null;redesenha()});
+    const bico=body.querySelector('[data-cfgicon]');
+    if(bico)bico.onclick=()=>abrePicker('icone',p.icon,v=>{p.icon=v||'📄';redesenha()});
     const dup=body.querySelector('[data-cfgdup]');
     if(dup)dup.onclick=()=>{closePMenu();pmDuplicate(p)};
     const exp=body.querySelector('[data-cfgexport]');
@@ -1676,7 +1889,7 @@ function pmOpenMoveMenu(anchorEl,p){
   const items=[{label:'Nível superior (sem página-mãe)',ic:'▤',act:!p.parentId,run:()=>pmMoveTo(p,null)}]
     .concat(Object.values(S.pages).filter(pp=>!excl.has(pp.id)&&!pp.trashed)
       .sort((a,b)=>(a.title||'').localeCompare(b.title||''))
-      .map(pp=>({label:pp.title||'Sem título',ic:pp.icon,act:p.parentId===pp.id,run:()=>pmMoveTo(p,pp.id)})));
+      .map(pp=>({label:pp.title||'Sem título',ic:ico(pp.icon,'15px'),act:p.parentId===pp.id,run:()=>pmMoveTo(p,pp.id)})));
   openMenu(r.left,r.bottom+6,items,'Mover para');
 }
 function pmMoveTo(p,newParentId){
@@ -1762,7 +1975,7 @@ function suggest(ct){
   if(link){
     const q=slug(link[1]);
     const items=Object.values(S.pages).filter(pp=>pp.id!==p.id&&slug(pp.title).indexOf(q)>=0).slice(0,6)
-      .map(pp=>({label:pp.title||'Sem título',ic:pp.icon,sub:'ligar',run:()=>completeLink(host,ct,b,link[1],pp.title)}));
+      .map(pp=>({label:pp.title||'Sem título',ic:ico(pp.icon,'15px'),sub:'ligar',run:()=>completeLink(host,ct,b,link[1],pp.title)}));
     if(link[1].trim())items.push({label:'Criar “'+link[1].trim()+'”',ic:'＋',sub:'nova página já ligada',
       run:()=>completeLink(host,ct,b,link[1],link[1].trim(),true)});
     if(!items.length)return closeMenu();
@@ -1990,13 +2203,10 @@ document.addEventListener('click',e=>{
       p.expanded=true;save();return openPage(id,true);
     }
     if(t.closest('[data-pico]')||t.closest('[data-icon]')){
-      const r=(t.closest('[data-pico]')||t.closest('[data-icon]')).getBoundingClientRect();
-      return openMenu(r.left,r.bottom+8,ICONS.map(ic=>({label:ic,ic,act:p.icon===ic,
-        run:()=>{p.icon=ic;save();render()}})),'Ícone da página');
+      return abrePicker('icone',p.icon,v=>{p.icon=v||'📄';save();render()});
     }
     if(t.closest('[data-cover]')){
-      p.cover=p.cover?COVERS[(COVERS.indexOf(p.cover)+1)%COVERS.length]:COVERS[0];
-      save();return render();
+      return abrePicker('capa',p.cover,v=>{p.cover=v||null;save();render()});
     }
     if(t.closest('[data-addprop]')){
       const r=t.closest('[data-addprop]').getBoundingClientRect();
