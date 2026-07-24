@@ -399,6 +399,23 @@ td.nm:hover{color:var(--accent1)}
 .card b{display:block;font-size:14px;font-weight:600;margin-bottom:5px}
 .card small{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
 
+/* olho de visibilidade nas propriedades */
+.prow{position:relative}
+.polho{
+  opacity:0;width:26px;height:26px;flex:0 0 26px;border-radius:6px;color:var(--muted);
+  display:grid;place-items:center;font-size:12px;align-self:center;transition:opacity .15s,color .15s;
+}
+.prow:hover .polho{opacity:.65}
+.polho:hover{opacity:1!important;color:var(--accent1);background:rgba(255,255,255,.05)}
+.prow.esc .pkey,.prow.esc .pval{opacity:.45}
+.prow.esc .polho{opacity:.65;color:var(--accent1)}
+.propocultas{
+  display:block;width:100%;text-align:left;padding:6px 8px;border-radius:6px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--muted);opacity:.7;
+}
+.propocultas:hover{opacity:1;color:var(--accent1)}
+
 /* ---- colunas ---- */
 .cols{display:flex;align-items:flex-start;gap:0;width:100%;margin:6px 0}
 .colitem{min-width:0;padding:0 2px}
@@ -1295,16 +1312,26 @@ function renderCrumb(){
 }
 
 /* ---------------- superfícies ---------------- */
+const oculta=(p,k)=>(p.propOcultas||[]).indexOf(k)>=0;
 function propsHTML(p){
-  return `<div class="props" data-props>${p.propOrder.map(k=>{
+  const escondidas=p.propOrder.filter(k=>oculta(p,k));
+  const mostrar=p.mostrarOcultas;
+  const linha=k=>{
     const pr=p.props[k]||{type:'texto',v:''};
     const c=PILL[slug(pr.v)];
     const val=pr.v?(pr.type==='selecao'&&c?`<span class="pill" style="color:${c}">${esc(pr.v)}</span>`:esc(pr.v)):'';
-    return `<div class="prow">
+    return `<div class="prow ${oculta(p,k)?'esc':''}">
       <div class="pkey" data-propkey="${esc(k)}"><span class="ic">${PROP_TYPES[pr.type]||'≡'}</span>${esc(k)}</div>
       <div class="pval" ${cfg(p,'travada')?'':'contenteditable'} data-prop="${esc(k)}">${val}</div>
+      <button class="polho" data-polho="${esc(k)}"
+        title="${oculta(p,k)?'Mostrar sempre':'Ocultar quando vazia ou não usada'}">${oculta(p,k)?'◠':'◉'}</button>
     </div>`;
-  }).join('')}<button class="addprop" data-addprop><span>+</span>propriedade</button></div>`;
+  };
+  const visiveis=p.propOrder.filter(k=>!oculta(p,k)||mostrar);
+  return `<div class="props" data-props>${visiveis.map(linha).join('')}
+    ${escondidas.length?`<button class="propocultas" data-propocultas>
+      ${mostrar?'▾':'▸'} ${escondidas.length} propriedade${escondidas.length>1?'s':''} oculta${escondidas.length>1?'s':''}</button>`:''}
+    <button class="addprop" data-addprop><span>+</span>propriedade</button></div>`;
 }
 const gut=id=>`<div class="gut"><button data-plus="${id}" title="Inserir abaixo">+</button><button class="drag" draggable="true" data-drag="${id}" title="Arraste, ou clique para opções">⠿</button></div>`;
 
@@ -1477,19 +1504,52 @@ function migraVistas(b){
   b.av=0;delete b.gs;
   return b;
 }
+/* chaves de propriedade que existem entre as subpáginas */
+function chavesDe(subs){
+  const vistas=[];
+  subs.forEach(x=>x.propOrder.forEach(k=>{if(vistas.indexOf(k)<0)vistas.push(k)}));
+  return vistas;
+}
+/* quais aparecem nesta vista (sem escolha = todas) */
+function propsDaVista(v,subs){
+  const todas=chavesDe(subs);
+  if(!v.props)return todas;
+  return todas.filter(k=>v.props.indexOf(k)>=0);
+}
+function ordenaSubs(v,subs){
+  const o=v.ord;
+  if(!o||!o.campo)return subs;
+  const val=x=>{
+    if(o.campo==='__nome')return slug(x.title||'');
+    if(o.campo==='__palavras')return pageWords(x);
+    if(o.campo==='__data')return x.updated||0;
+    return slug((x.props[o.campo]||{}).v||'');
+  };
+  return subs.slice().sort((a,b)=>{
+    const A=val(a),B=val(b);
+    const r=typeof A==='number'?A-B:String(A).localeCompare(String(B),'pt-BR');
+    return (o.dir==='desc'?-1:1)*r;
+  });
+}
+function filtraSubs(v,subs){
+  if(!v.filtro||!v.filtro.campo||!v.filtro.valor)return subs;
+  return subs.filter(x=>slug((x.props[v.filtro.campo]||{}).v||'')===slug(v.filtro.valor));
+}
 function vAtiva(b){migraVistas(b);b.av=Math.min(b.av||0,b.views.length-1);return b.views[b.av]}
 
 function dbHTML(p,b){
-  const subs=kids(p.id);
   const va=vAtiva(b);
   const mode=va.tipo;
-  const keys=[...new Set(subs.reduce((a,s)=>a.concat(s.propOrder),[]))].slice(0,4);
+  const todos=kids(p.id);
+  const subs=ordenaSubs(va,filtraSubs(va,todos));
+  const keys=propsDaVista(va,todos).slice(0,6);
   const tabs=`<div class="dbtabs">
     ${b.views.map((x,i)=>`<button class="vtab ${i===b.av?'on':''}" data-vsel="${i}" data-id="${b.id}"
       title="${i===b.av?'Opções desta vista':'Ver '+esc(x.nome)}">${VICO[x.tipo]} ${esc(x.nome)}</button>`).join('')}
     <button class="vadd" data-vadd="${b.id}" title="Adicionar uma vista">+</button>
     <span style="flex:1"></span>
     ${mode==='gallery'?`<button data-galsize="${b.id}" title="Tamanho dos cartões">${{p:'▪',m:'▫',g:'▭'}[va.gs||'m']}</button>`:''}
+    <button data-vcfg="${b.id}" title="Configurações da visualização">⋯</button>
     <button data-dbnew="${b.id}">+ nova página</button></div>`;
   if(!subs.length)return tabs+`<div class="nada">nenhuma subpágina ainda — clique em “+ nova página”</div>`;
 
@@ -1497,7 +1557,7 @@ function dbHTML(p,b){
     const gs=va.gs||'m';
     return tabs+`<div class="gal ${gs}">${subs.map(s=>{
       const capa=s.cover||GAL_FUNDO[Math.abs(galHash(s.id))%GAL_FUNDO.length];
-      const props=s.propOrder.filter(k=>(s.props[k]||{}).v).slice(0,2);
+      const props=keys.filter(k=>(s.props[k]||{}).v).slice(0,gs==='p'?1:3);
       const txt=resumo(s,gs==='p'?0:gs==='m'?90:190);
       return `<article class="gcard" data-card="${s.id}" data-page="${s.id}" draggable="true">
         <div class="gcap" style="background:${capa}"><span class="gico">${ico(s.icon,'18px')}</span></div>
@@ -1522,7 +1582,8 @@ function dbHTML(p,b){
       <button class="vlin" data-page="${x.id}">
         <span class="vi">${ico(x.icon,'15px')}</span>
         <span class="vt">${esc(x.title||'Sem título')}</span>
-        <span class="vp">${(x.props.Status||{}).v?`<span class="pill" style="color:${PILL[slug(x.props.Status.v)]||'var(--muted)'}">${esc(x.props.Status.v)}</span>`:''}</span>
+        <span class="vp">${keys.map(k=>{const vv=(x.props[k]||{}).v;
+          return vv?`<span class="pill" style="color:${PILL[slug(vv)]||'var(--muted)'}">${esc(vv)}</span>`:''}).join('')}</span>
         <span class="vw">${pageWords(x)}p</span>
       </button>`).join('')}</div>`;
   }
@@ -1534,7 +1595,7 @@ function dbHTML(p,b){
           return `<td>${v?(c?`<span class="pill" style="color:${c}">${esc(v)}</span>`:esc(v)):'—'}</td>`}).join('')}
         <td>${pageWords(s)}</td></tr>`).join('')}</tbody></table>`;
   }
-  const key=keys.indexOf('Status')>=0?'Status':(keys[0]||'Status');
+  const key=va.grp||(keys.indexOf('Status')>=0?'Status':(keys[0]||'Status'));
   const vals=[...new Set(['ideia','rascunho','revisar','pronto'].concat(subs.map(s=>(s.props[key]||{}).v).filter(Boolean)))];
   return tabs+`<div class="board">${vals.map(v=>{
     const items=subs.filter(s=>slug((s.props[key]||{}).v||'')===slug(v));
@@ -2451,6 +2512,82 @@ function completeLink(host,ct,b,typed,title,create){
   rerenderBlock(host,b.id,pos);refresh(host,'back');save();
 }
 
+
+/* ---------------- configurações da visualização ---------------- */
+function menuVista(anchor,host,p,b){
+  const v=vAtiva(b);
+  const subs=kids(p.id);
+  const chaves=chavesDe(subs);
+  const visiveis=propsDaVista(v,subs);
+  const r=anchor.getBoundingClientRect();
+  const redes=()=>{refresh(host,'blocks');save()};
+  const nomeOrd=()=>{
+    if(!v.ord||!v.ord.campo)return 'manual';
+    const n={__nome:'nome',__palavras:'palavras',__data:'alteração'}[v.ord.campo]||v.ord.campo;
+    return n+(v.ord.dir==='desc'?' ↓':' ↑');
+  };
+  openMenu(r.left-230,r.bottom+8,[
+    {label:'Layout',ic:VICO[v.tipo],sub:VNOME[v.tipo],run:()=>{
+      openMenu(r.left-230,r.bottom+8,['table','board','gallery','list'].map(tp=>({
+        label:VNOME[tp],ic:VICO[tp],act:v.tipo===tp,
+        run:()=>{v.tipo=tp;b.t=tp;v.nome=v.nome||VNOME[tp];redes()}})),'Layout');
+    }},
+    {label:'Visibilidade da propriedade',ic:'◉',sub:visiveis.length+' de '+chaves.length,run:()=>{
+      if(!chaves.length)return toast('as subpáginas ainda não têm propriedades');
+      openMenu(r.left-230,r.bottom+8,chaves.map(k=>({
+        label:k,ic:visiveis.indexOf(k)>=0?'◉':'◠',act:visiveis.indexOf(k)>=0,
+        run:()=>{
+          const at=propsDaVista(v,subs).slice();
+          const i=at.indexOf(k);
+          if(i>=0)at.splice(i,1);else at.push(k);
+          v.props=at;redes();
+        }})),'Mostrar na visualização');
+    }},
+    {label:'Filtrar',ic:'⚟',sub:v.filtro&&v.filtro.campo?v.filtro.campo+' = '+v.filtro.valor:'nenhum',run:()=>{
+      const ops=[{label:'sem filtro',ic:'✕',run:()=>{delete v.filtro;redes()}}];
+      chaves.forEach(k=>{
+        const vals=[...new Set(subs.map(x=>(x.props[k]||{}).v).filter(Boolean))];
+        vals.forEach(val=>ops.push({label:k+' = '+val,ic:'⚟',grupo:k,
+          act:v.filtro&&v.filtro.campo===k&&v.filtro.valor===val,
+          run:()=>{v.filtro={campo:k,valor:val};redes()}}));
+      });
+      openMenu(r.left-230,r.bottom+8,ops,'Filtrar');
+    }},
+    {label:'Ordenar',ic:'⇅',sub:nomeOrd(),run:()=>{
+      const campos=[['__nome','nome'],['__palavras','palavras'],['__data','alteração']]
+        .concat(chaves.map(k=>[k,k]));
+      const ops=[{label:'sem ordenação',ic:'✕',run:()=>{delete v.ord;redes()}}];
+      campos.forEach(c=>{
+        ops.push({label:c[1]+' ↑',ic:'↑',act:v.ord&&v.ord.campo===c[0]&&v.ord.dir!=='desc',
+          run:()=>{v.ord={campo:c[0],dir:'asc'};redes()}});
+        ops.push({label:c[1]+' ↓',ic:'↓',act:v.ord&&v.ord.campo===c[0]&&v.ord.dir==='desc',
+          run:()=>{v.ord={campo:c[0],dir:'desc'};redes()}});
+      });
+      openMenu(r.left-230,r.bottom+8,ops,'Ordenar');
+    }},
+    {label:'Agrupar',ic:'▥',sub:v.tipo==='board'?(v.grp||'Status'):'só no quadro',run:()=>{
+      if(v.tipo!=='board')return toast('o agrupamento vale para a visualização em quadro');
+      openMenu(r.left-230,r.bottom+8,chaves.map(k=>({
+        label:k,ic:'▥',act:(v.grp||'Status')===k,
+        run:()=>{v.grp=k;redes()}})),'Agrupar por');
+    }},
+    {label:'Renomear visualização',ic:'✎',run:()=>{
+      const n=prompt('Nome da visualização:',v.nome);
+      if(n&&n.trim()){v.nome=n.trim();redes()}}},
+    {label:'Duplicar visualização',ic:'⧉',run:()=>{
+      const i=b.views.indexOf(v);
+      b.views.splice(i+1,0,Object.assign({},v,{id:uid(),nome:v.nome+' 2'}));
+      b.av=i+1;redes();}},
+    {label:'Copiar link para a visualização',ic:'🔗',run:()=>{
+      const u=location.href.split('#')[0]+'#p='+p.id;
+      if(navigator.clipboard)navigator.clipboard.writeText(u);
+      toast('link copiado');}}
+  ].concat(b.views.length>1?[{label:'Excluir visualização',ic:'✕',run:()=>{
+      const i=b.views.indexOf(v);b.views.splice(i,1);
+      b.av=Math.max(0,i-1);b.t=b.views[b.av].tipo;redes();
+    }}]:[]),'Ver configurações');
+}
+
 /* ---------------- navegação e exibição ---------------- */
 function go(id){
   if(!S.pages[id])return;
@@ -2640,6 +2777,12 @@ document.addEventListener('click',e=>{
       }});
       return openMenu(r.left,r.bottom+8,itensBloco,'Bloco');
     }
+    const vc=t.closest('[data-vcfg]');
+    if(vc){
+      const bb=p.blocks.find(x=>x.id===vc.dataset.vcfg);
+      if(bb)menuVista(vc,host,p,bb);
+      return;
+    }
     const gsz=t.closest('[data-galsize]');
     if(gsz){
       const b=p.blocks.find(x=>x.id===gsz.dataset.galsize),v=vAtiva(b);
@@ -2707,6 +2850,15 @@ document.addEventListener('click',e=>{
           p.propOrder.push(name);p.props[name]={type:tp,v:''};save();refresh(host,'props');
         }})),'Tipo de propriedade');
     }
+    const po=t.closest('[data-polho]');
+    if(po){
+      const k=po.dataset.polho;
+      p.propOcultas=p.propOcultas||[];
+      const i=p.propOcultas.indexOf(k);
+      if(i>=0)p.propOcultas.splice(i,1);else p.propOcultas.push(k);
+      save();refresh(host,'props');return;
+    }
+    if(t.closest('[data-propocultas]')){p.mostrarOcultas=!p.mostrarOcultas;refresh(host,'props');return}
     const pk=t.closest('[data-propkey]');
     if(pk){
       const k=pk.dataset.propkey,r=pk.getBoundingClientRect();
