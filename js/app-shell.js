@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   "use strict";
 
   var DEFAULT_STATE = {
@@ -4473,7 +4473,6 @@
       '  <a class="header-brand" href="index.html"><em>S\u00f3l</em> de S\u00f3ter</a>',
       '  <nav class="header-nav" id="header-nav">',
       '    <div style="flex:1"></div>',
-      '    <a class="hn-link" data-page="home" href="index.html">Home</a>',
       '    <div class="hn-dropdown" id="dd-pessoal">',
       '      <button class="hn-dropdown-trigger" type="button" tabindex="0" aria-expanded="false">Pessoal <span class="hn-chevron">\u25be</span></button>',
       '      <div class="hn-menu">',
@@ -4573,7 +4572,6 @@
       '    <button class="header-mobile-close" id="header-mobile-close" type="button" aria-label="Fechar menu">\u00d7</button>',
       '  </div>',
       '  <nav class="header-mobile-nav">',
-      '    <a class="header-mobile-link" href="index.html">Home</a>',
       '    <div class="header-mobile-group-label">Pessoal</div>',
       '    <a class="header-mobile-link" href="sonhos.html">Sonhos</a>',
       '    <a class="header-mobile-link" href="viagens.html">Viagens</a>',
@@ -4874,7 +4872,6 @@
       '    <div class="footer-tagline">Espa\u00e7o pessoal \u00b7 tudo em um s\u00f3 lugar</div>',
       "  </div>",
       '  <div class="footer-links">',
-      '    <a class="footer-link" href="index.html">Home</a>',
       '    <a class="footer-link" href="livros.html">Livraria</a>',
       '    <a class="footer-link" href="cinema.html">Cinema</a>',
       '    <a class="footer-link" href="sonhos.html">Sonhos</a>',
@@ -5354,9 +5351,3 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
-
-
-
-
-
-
