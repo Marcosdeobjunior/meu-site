@@ -60,7 +60,10 @@ button{background:none;border:none;padding:0;cursor:pointer;color:inherit}
 #app{position:relative;z-index:1;display:flex;height:calc(100vh - 58px);margin-top:58px}
 
 /* ---------------- área de trabalho ---------------- */
+/* a janela rola apenas o suficiente para revelar o rodapé; a lateral fica
+   presa no lugar e encolhe para encostar no topo dele (ver ajustaLateral) */
 .side{
+  position:sticky;top:58px;align-self:flex-start;height:calc(100vh - 58px);
   width:var(--side-w);flex:0 0 var(--side-w);overflow:hidden;
   background:rgba(19,19,28,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
   border-right:1px solid var(--border);display:flex;flex-direction:column;user-select:none;
@@ -667,6 +670,7 @@ td.nm:hover{color:var(--accent1)}
   .pkey{width:118px;flex:0 0 118px}
   .peek.left,.peek.right{width:100vw;border-radius:0}
 }
+[data-app-footer] .site-footer{margin-top:0}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2715,7 +2719,20 @@ $('#btnAllToggle').onclick=e=>{
   e.currentTarget.textContent=any?'⌄':'⌃';
   e.currentTarget.title=any?'Expandir tudo':'Recolher tudo';
 };
-window.addEventListener('resize',()=>{if(S)$('#togSide').style.display=window.innerWidth<900?'block':'none'});
+/* enquanto o rodapé sobe, a lateral perde a mesma altura, de modo que a
+   base dela acompanhe o topo dele em vez de passar por baixo */
+function ajustaLateral(){
+  const side=document.querySelector('.side');
+  if(!side)return;
+  if(window.innerWidth<900){side.style.height='';return}
+  const y=Math.max(0,window.scrollY||window.pageYOffset||0);
+  side.style.height=Math.max(240,window.innerHeight-58-y)+'px';
+}
+window.addEventListener('scroll',ajustaLateral,{passive:true});
+window.addEventListener('resize',()=>{
+  if(S)$('#togSide').style.display=window.innerWidth<900?'block':'none';
+  ajustaLateral();
+});
 $('#btnSync').onclick=async e=>{
   const r=e.currentTarget.getBoundingClientRect();
   const f=fb();
@@ -2850,7 +2867,7 @@ if(window.innerWidth<900)$('#togSide').style.display='block';
   S.peekId=null;
   garanteAreas();
   applySideCollapsed();
-  render();save();
+  render();save();ajustaLateral();
   iniciado=true;
   const boot=document.getElementById('boot');
   if(boot){boot.style.transition='opacity .3s';boot.style.opacity='0';setTimeout(()=>boot.remove(),320)}
