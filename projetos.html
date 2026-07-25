@@ -419,7 +419,8 @@ td.nm:hover{color:var(--accent1)}
 /* ---- colunas ---- */
 .cols{display:flex;align-items:flex-start;gap:0;width:100%;margin:6px 0}
 .colitem{min-width:0;padding:0 2px}
-.colitem .blk .gut{left:-24px}
+.colitem .blk .gut{left:-20px}
+.colitem .blk .gut button[data-plus]{display:none}
 .colitem .blk[data-t="h1"] .ct,.colitem .blk[data-t="th1"] .ct{font-size:25px;padding-top:12px}
 .colitem .blk[data-t="h2"] .ct,.colitem .blk[data-t="th2"] .ct{font-size:21px;padding-top:10px}
 .colsep{
@@ -575,7 +576,8 @@ td.nm:hover{color:var(--accent1)}
 .peek .pico{width:62px;height:62px;font-size:42px}
 .peek .has-cover .pico{margin-top:-36px}
 .peek .pkey{width:130px;flex:0 0 130px}
-.peek .blk .gut{left:-30px}
+.peek .blk .gut{left:-25px}
+.peek .blk .gut button[data-plus]{display:none}
 .peek-body{flex:1;display:flex;min-height:0;position:relative}
 .peek-body .peek-scroll{flex:1}
 /* tela "Personalizar" dentro do menu ⋯ */
@@ -609,7 +611,7 @@ td.nm:hover{color:var(--accent1)}
 /* ícone como imagem ou cor */
 .icoimg{display:inline-block;background-size:cover;background-position:center;border-radius:5px;vertical-align:-.16em}
 .icocol{display:inline-block;border-radius:5px;vertical-align:-.16em}
-.pico .icoimg,.pico .icocol{border-radius:16px}
+.pico .icoimg,.pico .icocol{border-radius:16px;width:100%!important;height:100%!important}
 
 /* seletor de ícone e capa */
 .picker{
@@ -787,7 +789,8 @@ td.nm:hover{color:var(--accent1)}
   #btnCollapseSide{display:none}
   .page{padding-left:22px;padding-right:22px}
   .page.wide{padding-left:22px;padding-right:22px}
-  .blk .gut{left:-26px}
+  .blk .gut{left:-22px}
+  .blk .gut button[data-plus]{display:none}
   .ptitle{font-size:31px}
   .pkey{width:118px;flex:0 0 118px}
   .peek.left,.peek.right{width:100vw;border-radius:0}
@@ -1549,7 +1552,7 @@ function dbHTML(p,b){
     <button class="vadd" data-vadd="${b.id}" title="Adicionar uma vista">+</button>
     <span style="flex:1"></span>
     ${mode==='gallery'?`<button data-galsize="${b.id}" title="Tamanho dos cartões">${{p:'▪',m:'▫',g:'▭'}[va.gs||'m']}</button>`:''}
-    <button data-vcfg="${b.id}" title="Configurações da visualização">⋯</button>
+    <button data-vcfg="${b.id}" title="Configurações da database">⋯</button>
     <button data-dbnew="${b.id}">+ nova página</button></div>`;
   if(!subs.length)return tabs+`<div class="nada">nenhuma subpágina ainda — clique em “+ nova página”</div>`;
 
@@ -1933,11 +1936,11 @@ document.addEventListener('keydown',e=>{
       e.preventDefault();
       const prev=p.blocks[i-1];
       if(['divider','page','table','board','gallery'].indexOf(prev.t)>=0){
-        p.blocks.splice(i-1,1);refresh(host,'blocks');focusBlock(host,b.id,0);save();return;
+        p.blocks.splice(i-1,1);limpaColunas(p);refresh(host,'blocks');focusBlock(host,b.id,0);save();return;
       }
       const pos=prev.text.length;
       prev.text+=b.text;p.blocks.splice(i,1);
-      refresh(host,'blocks');focusBlock(host,prev.id,pos);save();return;
+      limpaColunas(p);refresh(host,'blocks');focusBlock(host,prev.id,pos);save();return;
     }
   }
   if(e.key==='ArrowUp'&&caret===0&&i>0){e.preventDefault();focusBlock(host,p.blocks[i-1].id,-1)}
@@ -2585,7 +2588,11 @@ function menuVista(anchor,host,p,b){
   ].concat(b.views.length>1?[{label:'Excluir visualização',ic:'✕',run:()=>{
       const i=b.views.indexOf(v);b.views.splice(i,1);
       b.av=Math.max(0,i-1);b.t=b.views[b.av].tipo;redes();
-    }}]:[]),'Ver configurações');
+    }}]:[]).concat([{label:'Excluir database',ic:'✕',run:()=>{
+      p.blocks=p.blocks.filter(x=>x.id!==b.id);
+      if(!p.blocks.length)p.blocks=[mkBlock()];
+      limpaColunas(p);refresh(host,'blocks');save();
+    }}]),'Ver configurações');
 }
 
 /* ---------------- navegação e exibição ---------------- */
@@ -2773,7 +2780,7 @@ document.addEventListener('click',e=>{
       }});
       itensBloco.push({label:'excluir',ic:'✕',run:()=>{
         p.blocks=p.blocks.filter(b=>b.id!==id);
-        if(!p.blocks.length)p.blocks=[mkBlock()];refresh(host,'blocks');save();
+        if(!p.blocks.length)p.blocks=[mkBlock()];limpaColunas(p);refresh(host,'blocks');save();
       }});
       return openMenu(r.left,r.bottom+8,itensBloco,'Bloco');
     }
