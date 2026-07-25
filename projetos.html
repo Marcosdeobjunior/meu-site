@@ -383,6 +383,47 @@ td.nm:hover{color:var(--accent1)}
 .gcard.gnew:hover{color:var(--accent1);border-color:rgba(200,169,110,.45);transform:none;box-shadow:none}
 .gcard.dragging{opacity:.4}
 
+/* mapa */
+.maptabs{display:flex;gap:4px;align-items:center;border-bottom:1px solid var(--border);margin-bottom:14px;padding-bottom:6px;flex-wrap:wrap}
+.maptabs button{
+  padding:5px 12px;border-radius:999px;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);white-space:nowrap;
+}
+.maptabs button:hover{color:var(--text)}
+.maptabs button.on{color:var(--accent1);background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.3)}
+.maptabs .mapnew{padding:4px 9px;font-size:13px;line-height:1;opacity:.55;letter-spacing:0}
+.maptabs .mapnew:hover{opacity:1;color:var(--accent1);background:rgba(200,169,110,.08)}
+.mapbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mapbar button{
+  padding:6px 13px;border-radius:8px;border:1px solid var(--border);font-family:var(--font-mono);
+  font-size:10px;letter-spacing:.8px;color:var(--muted);
+}
+.mapbar button:hover{color:var(--accent1);border-color:rgba(200,169,110,.4)}
+.mapbar button.danger:hover{color:var(--accent4);border-color:rgba(224,107,139,.4)}
+.mapdica{font-family:var(--font-mono);font-size:10px;color:var(--muted);opacity:.6;letter-spacing:.5px}
+.mapstage{position:relative;border-radius:var(--radius);overflow:hidden;background:var(--card);border:1px solid var(--border)}
+.mapstage.vazio-stage{border-style:dashed;background:none}
+.mapimg{display:block;width:100%;max-height:74vh;object-fit:contain;cursor:crosshair;user-select:none;background:#0a0912}
+.mapin{
+  position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;
+  gap:2px;cursor:grab;
+}
+.mapin-ic{
+  width:28px;height:28px;border-radius:50%;background:rgba(19,19,28,.94);border:1.5px solid var(--accent1);
+  display:grid;place-items:center;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.5);
+}
+.mapin-lb{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.4px;color:var(--text);
+  background:rgba(10,9,20,.85);padding:2px 7px;border-radius:999px;white-space:nowrap;
+  max-width:140px;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .15s;
+}
+.mapin:hover .mapin-lb{opacity:1}
+.mapin-x{
+  position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;
+  background:var(--accent4);color:#fff;font-size:9px;display:none;place-items:center;line-height:1;
+}
+.mapin:hover .mapin-x{display:grid}
+
 .board{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px}
 .col{flex:0 0 236px}
 .col h5{
@@ -819,6 +860,7 @@ td.nm:hover{color:var(--accent1)}
     <div style="padding:10px 0 4px">
       <button class="sbtn" id="btnSearch"><span class="ic">⌕</span>Buscar<span class="kbd">Ctrl K</span></button>
       <button class="sbtn" id="btnGraph"><span class="ic">✦</span>Grafo<span class="kbd">Ctrl G</span></button>
+      <button class="sbtn" id="btnMap"><span class="ic">🗺️</span>Mapa</button>
     </div>
     <div class="sec"><span>Área de trabalho</span><span class="sp"></span>
       <button id="btnAllToggle" title="Expandir ou recolher tudo">⌄</button>
@@ -958,6 +1000,21 @@ const pageWords=p=>wc(pageText(p));
 const AREA=()=>S.areaAtiva||'principal';
 const daArea=()=>Object.values(S.pages).filter(p=>(p.ws||'principal')===AREA());
 const areaAtual=()=>(S.areas||[]).filter(a=>a.id===AREA())[0]||{id:'principal',nome:'Rubrica',icone:'✦'};
+/* mapas seguem o mesmo isolamento por espaço que as páginas */
+const mapasDaArea=()=>Object.values(S.maps||{}).filter(m=>(m.ws||'principal')===AREA());
+function mapaAtual(){
+  if(!S.maps)S.maps={};
+  const lista=mapasDaArea();
+  if(S.mapaAtivo&&S.maps[S.mapaAtivo]&&(S.maps[S.mapaAtivo].ws||'principal')===AREA())return S.maps[S.mapaAtivo];
+  return lista[0]||null;
+}
+function novoMapa(nome){
+  if(!S.maps)S.maps={};
+  const id=uid();
+  S.maps[id]={id,ws:AREA(),nome:nome||'Mapa sem título',img:null,marcadores:[]};
+  S.mapaAtivo=id;
+  return S.maps[id];
+}
 const orfa=p=>p.parentId&&!S.pages[p.parentId];
 const kids=id=>daArea().filter(p=>!p.trashed&&(p.parentId===id||(id===null&&orfa(p)))).sort((a,b)=>a.created-b.created);
 const P=()=>S.pages[S.activeId];
@@ -1764,6 +1821,7 @@ function render(){
   if(S.view!=='graph'&&limpaGrafo){limpaGrafo();limpaGrafo=null}
   if(S.view==='graph')return renderGraph(sc);
   if(S.view==='trash')return renderTrash(sc);
+  if(S.view==='map')return renderMap(sc);
   const p=P();
   if(!p){sc.innerHTML='<div class="page"><div class="nada" style="padding-top:60px">nenhuma página aberta</div></div>';return}
   sc.innerHTML=surfaceHTML(p);
@@ -1789,6 +1847,44 @@ function renderTrash(sc){
         <button class="tbtn" data-restore="${p.id}" style="font-size:10px;white-space:nowrap">restaurar</button>
         <button class="tbtn" data-purge="${p.id}" style="font-size:10px;color:var(--accent4);white-space:nowrap">excluir definitivamente</button>
       </div>`).join(''):'<div class="nada">a lixeira está vazia</div>'}
+  </div>`;
+}
+function renderMap(sc){
+  const lista=mapasDaArea();
+  const m=mapaAtual();
+  const tabs=`<div class="maptabs">
+    ${lista.map(x=>`<button class="${m&&x.id===m.id?'on':''}" data-mapsel="${x.id}">${esc(x.nome||'Mapa sem título')}</button>`).join('')}
+    <button class="mapnew" data-mapnovo title="Novo mapa">+</button>
+  </div>`;
+  if(!m){
+    sc.innerHTML=`<div class="page">
+      <div class="ptitle" style="cursor:default;opacity:.92">🗺️ Mapa</div>
+      ${tabs}
+      <div class="nada">nenhum mapa ainda — clique em “+” para criar o primeiro</div>
+    </div>`;
+    return;
+  }
+  const marcs=(m.marcadores||[]).map(mk=>{
+    const pg=S.pages[mk.pageId];
+    return `<div class="mapin" style="left:${mk.x}%;top:${mk.y}%" data-mapmk="${mk.id}">
+      <button class="mapin-x" data-mapmkdel="${mk.id}" title="Remover marcador">✕</button>
+      <span class="mapin-ic">${pg?ico(pg.icon,'14px'):'📍'}</span>
+      <span class="mapin-lb">${esc(pg?pg.title||'Sem título':'página removida')}</span>
+    </div>`;
+  }).join('');
+  sc.innerHTML=`<div class="page wide">
+    <div class="ptitle" style="cursor:default;opacity:.92">🗺️ Mapa</div>
+    ${tabs}
+    <div class="mapbar">
+      <button data-mapimg="${m.id}">${m.img?'trocar imagem':'＋ imagem de fundo'}</button>
+      <button data-maprename="${m.id}">renomear</button>
+      <button data-mapdel="${m.id}" class="danger">excluir mapa</button>
+      <span class="mapdica">${m.img?'clique no mapa para adicionar um marcador · arraste um marcador para movê-lo':''}</span>
+    </div>
+    <div class="mapstage ${m.img?'':'vazio-stage'}">
+      ${m.img?`<img class="mapimg" src="${esc(m.img)}" draggable="false">${marcs}`
+        :`<div class="vazio" data-mapimg="${m.id}" style="margin:40px auto;max-width:320px;text-align:center">▣  escolher imagem de fundo</div>`}
+    </div>
   </div>`;
 }
 function renderPeek(){
@@ -2648,6 +2744,66 @@ document.addEventListener('click',e=>{
     list.forEach(p=>purgePage(p.id));save();render();toast('lixeira esvaziada');return;
   }
 
+  if(t.closest('[data-mapsel]')){S.mapaAtivo=t.closest('[data-mapsel]').dataset.mapsel;save();render();return}
+  if(t.closest('[data-mapnovo]')){
+    const nome=prompt('Nome do mapa:','Mapa sem título');
+    if(nome===null)return;
+    novoMapa(nome.trim());save();render();return;
+  }
+  if(t.closest('[data-maprename]')){
+    const id=t.closest('[data-maprename]').dataset.maprename,mp=S.maps[id];if(!mp)return;
+    const nome=prompt('Nome do mapa:',mp.nome);
+    if(nome===null)return;
+    mp.nome=nome.trim()||'Mapa sem título';save();render();return;
+  }
+  if(t.closest('[data-mapdel]')){
+    const id=t.closest('[data-mapdel]').dataset.mapdel,mp=S.maps[id];if(!mp)return;
+    if(!confirm('Excluir o mapa "'+(mp.nome||'Mapa sem título')+'"? Essa ação não pode ser desfeita.'))return;
+    delete S.maps[id];
+    if(S.mapaAtivo===id)S.mapaAtivo=null;
+    save();render();return;
+  }
+  if(t.closest('[data-mapimg]')){
+    const id=t.closest('[data-mapimg]').dataset.mapimg,mp=S.maps[id];if(!mp)return;
+    abrePicker('capa',null,v=>{
+      if(!v){mp.img=null;save();render();return}
+      const mm=String(v).match(/url\(['"]?([^'")]+)/);
+      if(!mm)return toast('escolha uma imagem, não uma cor');
+      mp.img=mm[1];save();render();
+    });
+    return;
+  }
+  if(t.closest('[data-mapmkdel]')){
+    const mkid=t.closest('[data-mapmkdel]').dataset.mapmkdel,mp=mapaAtual();if(!mp)return;
+    mp.marcadores=(mp.marcadores||[]).filter(x=>x.id!==mkid);
+    save();render();return;
+  }
+  if(t.closest('[data-mapmk]')){
+    if(mapArrastou){mapArrastou=false;return}
+    const mkid=t.closest('[data-mapmk]').dataset.mapmk,mp=mapaAtual();
+    const mk=mp&&(mp.marcadores||[]).find(x=>x.id===mkid);
+    if(mk&&S.pages[mk.pageId])openPage(mk.pageId,true);
+    return;
+  }
+  const mapimgEl=t.closest('.mapimg');
+  if(mapimgEl){
+    const mp=mapaAtual();if(!mp)return;
+    const r=mapimgEl.getBoundingClientRect();
+    const x=((e.clientX-r.left)/r.width)*100,y=((e.clientY-r.top)/r.height)*100;
+    const cands=daArea().filter(pg=>!pg.trashed);
+    const itens=[{label:'criar nova página aqui',ic:'＋',run:()=>{
+      const id=mkPage('Sem título',null,'📄');
+      mp.marcadores=mp.marcadores||[];
+      mp.marcadores.push({id:uid(),x:+x.toFixed(2),y:+y.toFixed(2),pageId:id});
+      save();render();
+    }}].concat(cands.slice(0,60).map(pg=>({label:pg.title||'Sem título',ic:ico(pg.icon,'14px'),
+      run:()=>{mp.marcadores=mp.marcadores||[];
+        mp.marcadores.push({id:uid(),x:+x.toFixed(2),y:+y.toFixed(2),pageId:pg.id});
+        save();render()}})));
+    openMenu(e.clientX,e.clientY,itens,'Marcar página aqui');
+    return;
+  }
+
   if(t.closest('[data-closepeek]')){S.peekId=null;save();renderPeek();renderTree();return}
   if(t.closest('[data-peekfull]')){const id=S.peekId;S.peekId=null;return go(id)}
   if(t.closest('[data-peekmore]')){
@@ -3017,6 +3173,33 @@ document.addEventListener('mouseup',()=>{
   midResize=null;
 });
 
+/* ---- arrastar marcadores do mapa ---- */
+let mapDrag=null,mapArrastou=false;
+document.addEventListener('mousedown',e=>{
+  const mk=e.target.closest&&e.target.closest('[data-mapmk]');
+  if(!mk||e.target.closest('[data-mapmkdel]'))return;
+  const img=mk.parentElement&&mk.parentElement.querySelector('.mapimg');
+  if(!img)return;
+  const mp=mapaAtual();
+  const item=mp&&(mp.marcadores||[]).find(x=>x.id===mk.dataset.mapmk);
+  if(!item)return;
+  mapDrag={item,img,el:mk};mapArrastou=false;
+});
+document.addEventListener('mousemove',e=>{
+  if(!mapDrag)return;
+  mapArrastou=true;
+  const r=mapDrag.img.getBoundingClientRect();
+  const x=Math.max(0,Math.min(100,((e.clientX-r.left)/r.width)*100));
+  const y=Math.max(0,Math.min(100,((e.clientY-r.top)/r.height)*100));
+  mapDrag.item.x=+x.toFixed(2);mapDrag.item.y=+y.toFixed(2);
+  mapDrag.el.style.left=x+'%';mapDrag.el.style.top=y+'%';
+});
+document.addEventListener('mouseup',()=>{
+  if(!mapDrag)return;
+  if(mapArrastou)save();
+  mapDrag=null;
+});
+
 /* arrastar */
 document.addEventListener('dragstart',e=>{
   const d=e.target.closest&&e.target.closest('[data-drag]');
@@ -3355,6 +3538,7 @@ function exportMD(){
 $('#btnArea').onclick=e=>menuAreas(e.currentTarget);
 $('#btnSearch').onclick=()=>spotlight();
 $('#btnGraph').onclick=()=>{S.view=S.view==='graph'?'page':'graph';save();render()};
+$('#btnMap').onclick=()=>{S.view=S.view==='map'?'page':'map';save();render()};
 $('#btnNewRoot').onclick=()=>go(mkPage('',null,'📄'));
 $('#btnExport').onclick=exportMD;
 $('#btnTrash').onclick=()=>{S.view='trash';save();render()};
