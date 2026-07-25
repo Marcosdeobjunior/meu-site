@@ -1204,7 +1204,8 @@ function mkPage(title,parentId,icon){
   const id=uid();
   const ws=AREA();
   S.pages[id]={id,ws,icon:icon||'📄',title:title||'',parentId:parentId||null,blocks:[mkBlock()],
-    props:{},propOrder:[],expanded:false,cover:null,created:Date.now(),updated:Date.now()};
+    props:{},propOrder:[],expanded:false,cover:GAL_FUNDO[Math.abs(galHash(id))%GAL_FUNDO.length],
+    created:Date.now(),updated:Date.now()};
   return id;
 }
 
@@ -2837,11 +2838,8 @@ document.addEventListener('click',e=>{
       const galeria=bg&&vAtiva(bg).tipo==='gallery';
       const id=mkPage('Sem título',p.id,'📄');
       S.pages[id].propOrder=['Status'];S.pages[id].props={Status:{type:'selecao',v:'ideia'}};
-      if(galeria){
-        S.pages[id].cfg={modo:'popup'};
-        S.pages[id].cover=GAL_FUNDO[Math.abs(galHash(id))%GAL_FUNDO.length];
-      }
-      p.expanded=true;save();return openPage(id,true);
+      if(galeria)S.pages[id].cfg={modo:'popup'};
+      p.expanded=true;refresh(host,'blocks');save();return openPage(id,true);
     }
     if(t.closest('[data-pico]')||t.closest('[data-icon]')){
       return abrePicker('icone',p.icon,v=>{p.icon=v||'📄';save();render()});
@@ -3064,9 +3062,10 @@ function renderGraph(sc){
     if(anim){cancelAnimationFrame(anim);anim=null}
   };
 
+  const RMIN=6,RMAX=18,RCAP=50;
   const list=daArea().filter(p=>!p.trashed);
   const N=list.map((p,i)=>({id:p.id,t:p.title||'Sem título',deg:0,
-    r:5+Math.min(11,Math.sqrt(pageWords(p))/2.5),
+    r:RMIN,
     x:wrap.clientWidth/2+Math.cos(i*2.4)*(110+i*5),
     y:wrap.clientHeight/2+Math.sin(i*2.4)*(110+i*5),vx:0,vy:0}));
   const ix={};N.forEach((n,i)=>ix[n.id]=i);
@@ -3079,6 +3078,7 @@ function renderGraph(sc){
       if(S.graphHier&&p.parentId&&ix[p.parentId]!=null){
         E.push([ix[p.parentId],ix[p.id],0]);N[ix[p.id]].deg++;N[ix[p.parentId]].deg++}
     });
+    N.forEach(n=>{n.r=RMIN+(RMAX-RMIN)*Math.min(1,n.deg/RCAP)});
   };
   rebuild();
   $('#gl').onchange=e=>{S.graphLinks=e.target.checked;save();rebuild()};
