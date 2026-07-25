@@ -492,6 +492,13 @@ td.nm:hover{color:var(--accent1)}
 }
 .mwrap.mresize:hover .mhandle{opacity:1}
 .mhandle:hover{background:var(--accent1)}
+.mdel{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;
+  background:rgba(10,9,20,.75);color:#fff;display:none;place-items:center;font-size:12px;
+  border:1px solid rgba(255,255,255,.15);z-index:1;
+}
+.mwrap.mresize:hover .mdel{display:grid}
+.mdel:hover{background:var(--accent4);border-color:var(--accent4)}
 .vazio{
   border:1px dashed var(--border-2);border-radius:11px;padding:16px 18px;cursor:pointer;
   font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.2px;color:var(--muted);
@@ -860,7 +867,7 @@ td.nm:hover{color:var(--accent1)}
     <div style="padding:10px 0 4px">
       <button class="sbtn" id="btnSearch"><span class="ic">⌕</span>Buscar<span class="kbd">Ctrl K</span></button>
       <button class="sbtn" id="btnGraph"><span class="ic">✦</span>Grafo<span class="kbd">Ctrl G</span></button>
-      <button class="sbtn" id="btnMap"><span class="ic">🗺️</span>Mapa</button>
+      <button class="sbtn" id="btnMap"><span class="ic"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-.14em"><path d="M9 4.5 3.5 6.3v13.2L9 17.7l6 2.1 5.5-1.8V4.8L15 6.6l-6-2.1z"/><path d="M9 4.5v13.2M15 6.6v13.2"/></svg></span>Mapa</button>
     </div>
     <div class="sec"><span>Área de trabalho</span><span class="sp"></span>
       <button id="btnAllToggle" title="Expandir ou recolher tudo">⌄</button>
@@ -958,6 +965,10 @@ const PROP_TYPES={texto:'≡',selecao:'⌄',numero:'#',data:'⌛'};
 const PILL={ideia:'var(--muted)',rascunho:'var(--accent1)',revisar:'var(--accent5)',pronto:'var(--accent3)',
   protagonista:'var(--accent2)',antagonista:'var(--accent4)',secundario:'var(--accent6)'};
 const ICONS=['✦','📖','✍️','🕯️','🗺️','🧭','👤','🌒','🏔️','🗝️','⚔️','🪶','🫀','🌫️','🔥','❄️','📄','🜁'];
+/* ícone minimalista da seção Mapa — traço fino, sem cor, escala com o font-size do contexto */
+const MAPA_ICO='<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" '+
+  'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-.14em">'+
+  '<path d="M9 4.5 3.5 6.3v13.2L9 17.7l6 2.1 5.5-1.8V4.8L15 6.6l-6-2.1z"/><path d="M9 4.5v13.2M15 6.6v13.2"/></svg>';
 const COVERS=[
   'linear-gradient(135deg,#1a1a27,#2a2140 55%,#3a2b4f)',
   'linear-gradient(135deg,#16161f,#2d2318 55%,#4a3a22)',
@@ -1473,7 +1484,7 @@ function blockHTML(p,b,i,list){
   if(b.t==='divider')return `<div class="blk" data-t="divider" data-id="${b.id}">${gut(b.id)}<hr></div>`;
   if(ehMidia(b.t)){
     const resizavel=(b.t==='image'||b.t==='video')&&b.text;
-    return `<div class="blk" data-t="${b.t}" data-id="${b.id}">${gut(b.id)}<div class="mwrap${resizavel?' mresize':''}"${resizavel?` style="width:${b.larg||100}%" data-mwrap="${b.id}"`:''}>${midiaHTML(p,b)}${resizavel?`<div class="mhandle" data-mresize="${b.id}" title="Arraste para redimensionar"></div>`:''}</div></div>`;
+    return `<div class="blk" data-t="${b.t}" data-id="${b.id}">${gut(b.id)}<div class="mwrap${resizavel?' mresize':''}"${resizavel?` style="width:${b.larg||100}%" data-mwrap="${b.id}"`:''}>${midiaHTML(p,b)}${resizavel?`<button class="mdel" data-mdel="${b.id}" title="Excluir">✕</button><div class="mhandle" data-mresize="${b.id}" title="Arraste para redimensionar"></div>`:''}</div></div>`;
   }
   if(b.t==='toc')
     return `<div class="blk" data-t="toc" data-id="${b.id}">${gut(b.id)}<div class="mwrap">${tocHTML(p)}</div></div>`;
@@ -1858,7 +1869,7 @@ function renderMap(sc){
   </div>`;
   if(!m){
     sc.innerHTML=`<div class="page">
-      <div class="ptitle" style="cursor:default;opacity:.92">🗺️ Mapa</div>
+      <div class="ptitle" style="cursor:default;opacity:.92">${MAPA_ICO} Mapa</div>
       ${tabs}
       <div class="nada">nenhum mapa ainda — clique em “+” para criar o primeiro</div>
     </div>`;
@@ -1873,7 +1884,7 @@ function renderMap(sc){
     </div>`;
   }).join('');
   sc.innerHTML=`<div class="page wide">
-    <div class="ptitle" style="cursor:default;opacity:.92">🗺️ Mapa</div>
+    <div class="ptitle" style="cursor:default;opacity:.92">${MAPA_ICO} Mapa</div>
     ${tabs}
     <div class="mapbar">
       <button data-mapimg="${m.id}">${m.img?'trocar imagem':'＋ imagem de fundo'}</button>
@@ -2907,6 +2918,13 @@ document.addEventListener('click',e=>{
       if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});return}
     const md=t.closest('[data-midia]');
     if(md)return pedeMidia(host,md.dataset.midia);
+    const mdel=t.closest('[data-mdel]');
+    if(mdel){
+      const id=mdel.dataset.mdel;
+      p.blocks=p.blocks.filter(x=>x.id!==id);
+      if(!p.blocks.length)p.blocks=[mkBlock()];
+      limpaColunas(p);refresh(host,'blocks');save();return;
+    }
     const ep=t.closest('[data-escolhepg]');
     if(ep)return escolhePagina(host,ep.dataset.escolhepg);
     const bb=t.closest('[data-btnblk]');
