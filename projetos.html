@@ -444,6 +444,13 @@ td.nm:hover{color:var(--accent1)}
 
 /* ---- blocos de mídia, índice, trilha, grade ---- */
 .mwrap{flex:1;min-width:0;padding:4px 0}
+.mwrap.mresize{flex:0 0 auto;min-width:140px;max-width:100%;position:relative}
+.mhandle{
+  position:absolute;top:50%;right:-3px;width:7px;height:38px;margin-top:-19px;
+  border-radius:4px;background:rgba(255,255,255,.14);cursor:ew-resize;opacity:0;transition:opacity .15s;
+}
+.mwrap.mresize:hover .mhandle{opacity:1}
+.mhandle:hover{background:var(--accent1)}
 .vazio{
   border:1px dashed var(--border-2);border-radius:11px;padding:16px 18px;cursor:pointer;
   font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.2px;color:var(--muted);
@@ -1407,8 +1414,10 @@ function ocultos(list){
 }
 function blockHTML(p,b,i,list){
   if(b.t==='divider')return `<div class="blk" data-t="divider" data-id="${b.id}">${gut(b.id)}<hr></div>`;
-  if(ehMidia(b.t))
-    return `<div class="blk" data-t="${b.t}" data-id="${b.id}">${gut(b.id)}<div class="mwrap">${midiaHTML(p,b)}</div></div>`;
+  if(ehMidia(b.t)){
+    const resizavel=(b.t==='image'||b.t==='video')&&b.text;
+    return `<div class="blk" data-t="${b.t}" data-id="${b.id}">${gut(b.id)}<div class="mwrap${resizavel?' mresize':''}"${resizavel?` style="width:${b.larg||100}%" data-mwrap="${b.id}"`:''}>${midiaHTML(p,b)}${resizavel?`<div class="mhandle" data-mresize="${b.id}" title="Arraste para redimensionar"></div>`:''}</div></div>`;
+  }
   if(b.t==='toc')
     return `<div class="blk" data-t="toc" data-id="${b.id}">${gut(b.id)}<div class="mwrap">${tocHTML(p)}</div></div>`;
   if(b.t==='breadcrumb')
@@ -2977,6 +2986,35 @@ document.addEventListener('mouseup',()=>{
   document.body.style.cursor='';
   if(redim.novo){redim.p.cols=redim.p.cols||{};redim.p.cols[redim.g]=redim.novo;save()}
   redim=null;
+});
+
+/* ---- redimensionar imagens e vídeos ---- */
+let midResize=null;
+document.addEventListener('mousedown',e=>{
+  const h=e.target.closest&&e.target.closest('[data-mresize]');
+  if(!h)return;
+  e.preventDefault();
+  const wrap=h.closest('[data-mwrap]'),blk=h.closest('.blk');
+  const host=hostOf(h),p=S.pages[host.dataset.pid];
+  const b=p.blocks.find(x=>x.id===h.dataset.mresize);
+  if(!b)return;
+  midResize={b,wrap,x0:e.clientX,w0:wrap.getBoundingClientRect().width,total:blk.getBoundingClientRect().width};
+  document.body.style.cursor='ew-resize';
+});
+document.addEventListener('mousemove',e=>{
+  if(!midResize)return;
+  const dx=e.clientX-midResize.x0;
+  const min=120,max=midResize.total;
+  const w=Math.max(min,Math.min(max,midResize.w0+dx));
+  const pct=(w/midResize.total)*100;
+  midResize.wrap.style.width=pct+'%';
+  midResize.novo=pct;
+});
+document.addEventListener('mouseup',()=>{
+  if(!midResize)return;
+  document.body.style.cursor='';
+  if(midResize.novo!=null){midResize.b.larg=Math.round(midResize.novo);save()}
+  midResize=null;
 });
 
 /* arrastar */
