@@ -1284,6 +1284,12 @@ async function load(){
 
   /* 3 · o que existir só neste navegador */
   try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)return j}}catch(e){}
+
+  /* 4 · conta autenticada, nuvem vazia, nada local: conta nova de
+     verdade — retorna em branco em vez de deixar o chamador semear
+     o conteúdo de exemplo */
+  if(nuv&&nuv.vazio)return estadoVazio();
+
   return null;
 }
 
@@ -1315,7 +1321,7 @@ window.addEventListener('soter:firebase-auth-changed',async function(){
       let local=null;
       try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)local=j}}catch(e){}
       if(local){S=local}
-      else{S={};seed();fixaChave()}
+      else{S=estadoVazio();fixaChave()}
       garanteAreas();
       if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
       S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
@@ -1369,6 +1375,11 @@ let iniciado=false;
 /* conteúdo de exemplo não sobe para a nuvem: se subisse, abrir o app num
    aparelho emprestado sujaria a conta e mascararia o trabalho de casa */
 function marcaReal(){if(iniciado&&S&&S.semente){delete S.semente;save()}}
+/* conta autenticada sem nada na nuvem = conta nova de verdade: começa
+   em branco, sem o tutorial de exemplo (que é só para quem nunca logou) */
+function estadoVazio(){
+  return {pages:{},activeId:null,peekId:null,openMode:'right',view:'page',graphLinks:true,graphHier:true};
+}
 function seed(){
   S={pages:{},activeId:null,peekId:null,openMode:'right',view:'page',graphLinks:true,graphHier:true};
   const root=mkPage('O primeiro inverno',null,'📖');
@@ -3714,7 +3725,7 @@ $('#btnSync').onclick=async e=>{
         try{await apagaNuvemRubrica()}catch(e){}
         try{const f=fb();if(f&&f.uid)localStorage.removeItem(KEY_BASE+':'+f.uid)}catch(e){}
         localStorage.removeItem(KEY_BASE);
-        S={};seed();fixaChave();garanteAreas();
+        S=estadoVazio();fixaChave();garanteAreas();
         S.activeId=Object.keys(S.pages)[0]||null;save();render();
         toast('dados da Rubrica apagados');
       }}
@@ -3738,7 +3749,7 @@ if(window.innerWidth<900)$('#togSide').style.display='block';
 /* ---------------- início ---------------- */
 (async function(){
   const d=await load();
-  if(d&&d.pages&&Object.keys(d.pages).length)S=d;else{S={};seed()}
+  if(d)S=d;else{S={};seed()}
   if(!S.openMode)S.openMode='right';
   const hashId=(location.hash.match(/p=([a-z0-9]+)/i)||[])[1];
   if(hashId&&S.pages[hashId]&&!S.pages[hashId].trashed)S.activeId=hashId;
