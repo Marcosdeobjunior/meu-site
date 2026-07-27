@@ -913,7 +913,29 @@ td.nm:hover{color:var(--accent1)}
              expanded, cover, created, updated}
    bloco  = {id, t, text, checked, icon}
    ============================================================ */
-const KEY='rubrica:v3';
+const KEY_BASE='rubrica:v3';
+/* o espelho local é por usuário: sem isso, perfis diferentes no mesmo
+   navegador leem e escrevem no mesmo balde e os dados vazam entre contas */
+let KEY=KEY_BASE;
+function chaveLocal(){
+  try{
+    const f=fb();
+    if(f&&f.uid)return KEY_BASE+':'+f.uid;
+  }catch(e){}
+  return KEY_BASE+':anon';
+}
+function fixaChave(){KEY=chaveLocal();return KEY}
+/* migração única: se existir o balde antigo compartilhado e o do usuário
+   ainda não, adota-o só para esta conta e remove o compartilhado */
+function migraChaveLocal(){
+  try{
+    const antigo=localStorage.getItem(KEY_BASE);
+    if(antigo&&!localStorage.getItem(KEY)){
+      localStorage.setItem(KEY,antigo);
+    }
+    if(antigo)localStorage.removeItem(KEY_BASE);
+  }catch(e){}
+}
 /* tipo · nome · ícone · descrição · grupo · sinônimos para a busca */
 const BLOCK_TYPES=[
   ['p','Texto','Aa','parágrafo corrido','Blocos básicos','paragrafo'],
@@ -1145,6 +1167,47 @@ function avisaNuvem(e){
 }
 
 /* ---- leitura ---- */
+/* apaga TODOS os documentos da Rubrica da conta logada (usado ao excluir a
+   conta ou ao zerar os dados). Devolve quantos apagou. */
+async function apagaNuvemRubrica(){
+  const f=fb();if(!f)return 0;
+  const snap=await f.raiz.get();
+  if(snap.empty)return 0;
+  let lote=f.db.batch(),n=0,total=0;
+  const docs=[];snap.forEach(d=>docs.push(d.id));
+  for(const id of docs){
+    lote.delete(f.raiz.doc(id));n++;total++;
+    if(n>=400){await lote.commit();lote=f.db.batch();n=0}
+  }
+  if(n)await lote.commit();
+  sincronizado=new Map();
+  return total;
+}
+
+/* o app-shell só apaga o siteState ao excluir a conta; ele não conhece a
+   coleção rubrica/. Envolvemos a função dele para limpar o que é nosso
+   ANTES de a conta ser removida — enquanto ainda há acesso. */
+(function envolveExclusao(){
+  function tenta(){
+    if(!(window.SoterStorage&&typeof window.SoterStorage.deleteFirebaseAccount==='function'))return false;
+    if(window.SoterStorage.__rubricaEnvolvido)return true;
+    const original=window.SoterStorage.deleteFirebaseAccount.bind(window.SoterStorage);
+    window.SoterStorage.deleteFirebaseAccount=async function(opts){
+      try{await apagaNuvemRubrica()}catch(e){}          /* limpa a Rubrica primeiro */
+      try{
+        const f=fb();
+        if(f&&f.uid)localStorage.removeItem(KEY_BASE+':'+f.uid);   /* e o espelho local */
+      }catch(e){}
+      return original(opts);                              /* depois exclui a conta */
+    };
+    window.SoterStorage.__rubricaEnvolvido=true;
+    return true;
+  }
+  if(!tenta()){
+    let t=0;const iv=setInterval(()=>{if(tenta()||++t>40)clearInterval(iv)},150);
+  }
+})();
+
 async function nuvemCarregar(){
   const f=await esperaLogin(8000);
   if(!f)return null;
@@ -1196,6 +1259,7 @@ async function nuvemGravar(){
 
 async function load(){
   await esperaShell(2500);
+  fixaChave();migraChaveLocal();
 
   /* 1 · a nuvem é a fonte da verdade quando existe */
   const nuv=await nuvemCarregar();
@@ -1240,10 +1304,25 @@ function save(){
 /* ao entrar na conta em outro aparelho, traz o que está na nuvem */
 window.addEventListener('soter:firebase-auth-changed',async function(){
   sincronizado=new Map();
+  const chaveAntes=KEY;
+  fixaChave();                       /* o usuário mudou: o balde local também muda */
   let d=null;
-  try{d=await nuvemCarregar()}catch(e){return}
-  /* conta nova, vazia ou dados incompletos: não mexe no que já está aberto */
-  if(!d||d.vazio||!d.pages||typeof d.pages!=='object'||!Object.keys(d.pages).length)return;
+  try{d=await nuvemCarregar()}catch(e){}
+  if(!d||d.vazio||!d.pages||typeof d.pages!=='object'||!Object.keys(d.pages).length){
+    /* nuvem vazia numa conta diferente da de antes: não deixa o texto da
+       conta anterior aparecer — abre o balde desta conta, ou vazio */
+    if(KEY!==chaveAntes){
+      let local=null;
+      try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)local=j}}catch(e){}
+      if(local){S=local}
+      else{S={};seed();fixaChave()}
+      garanteAreas();
+      if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
+      S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
+      render();
+    }
+    return;
+  }
   if(JSON.stringify(d.pages)===JSON.stringify(S.pages))return;
   if(document.querySelector('.ct:focus,[data-title]:focus'))return;
   S=d;garanteAreas();
@@ -3626,6 +3705,18 @@ $('#btnSync').onclick=async e=>{
         if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
         S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
         render();save();toast('trazido da sua conta');
+      }},
+    {label:'excluir todos os meus dados',ic:'🗑',
+      sub:'apaga a Rubrica desta conta, na nuvem e aqui',
+      run:async()=>{
+        if(!confirm('Apagar TODAS as páginas da Rubrica desta conta?\n\nIsto não tem volta. Considere exportar um backup antes.'))return;
+        if(!confirm('Tem certeza? Todas as páginas e espaços serão perdidos.'))return;
+        try{await apagaNuvemRubrica()}catch(e){}
+        try{const f=fb();if(f&&f.uid)localStorage.removeItem(KEY_BASE+':'+f.uid)}catch(e){}
+        localStorage.removeItem(KEY_BASE);
+        S={};seed();fixaChave();garanteAreas();
+        S.activeId=Object.keys(S.pages)[0]||null;save();render();
+        toast('dados da Rubrica apagados');
       }}
   ],'Sincronização');
 };
