@@ -1156,6 +1156,13 @@ async function esperaLogin(limite){
   while(Date.now()<fim){const f=fb();if(f)return f;await espera(100)}
   return fb();
 }
+/* true só quando há conta de verdade — usado para nunca deixar o
+   tutorial de exemplo aparecer pra quem está logado, mesmo que a
+   consulta ao Firestore falhe (regras, rede) em vez de vir vazia */
+async function estaLogado(){
+  if(!temShell()||typeof window.SoterStorage.getFirebaseAuthStatus!=='function')return false;
+  try{const st=await window.SoterStorage.getFirebaseAuthStatus();return !!(st&&st.signedIn)}catch(e){return false}
+}
 function avisaNuvem(e){
   const msg=String((e&&e.code)||(e&&e.message)||e||'');
   if(nuvemErro)return;
@@ -1285,10 +1292,13 @@ async function load(){
   /* 3 · o que existir só neste navegador */
   try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)return j}}catch(e){}
 
-  /* 4 · conta autenticada, nuvem vazia, nada local: conta nova de
-     verdade — retorna em branco em vez de deixar o chamador semear
-     o conteúdo de exemplo */
+  /* 4 · conta autenticada sem nada em lugar nenhum: conta nova de
+     verdade — retorna em branco em vez de deixar o chamador semear o
+     conteúdo de exemplo. Vale tanto quando a nuvem confirma vazio
+     quanto quando a consulta falhou (regras, rede) — quem tem conta
+     nunca deve ver o tutorial, só quem nunca logou. */
   if(nuv&&nuv.vazio)return estadoVazio();
+  if(await estaLogado())return estadoVazio();
 
   return null;
 }
@@ -1315,9 +1325,11 @@ window.addEventListener('soter:firebase-auth-changed',async function(){
   let d=null;
   try{d=await nuvemCarregar()}catch(e){}
   if(!d||d.vazio||!d.pages||typeof d.pages!=='object'||!Object.keys(d.pages).length){
-    /* nuvem vazia numa conta diferente da de antes: não deixa o texto da
-       conta anterior aparecer — abre o balde desta conta, ou vazio */
-    if(KEY!==chaveAntes){
+    /* nuvem vazia (ou consulta falhou) numa conta diferente da de antes,
+       ou a tela ainda mostra o tutorial de exemplo para quem já tem
+       conta: não deixa o texto da conta anterior (ou o exemplo) aparecer
+       — abre o balde desta conta, ou vazio */
+    if(KEY!==chaveAntes||(S&&S.semente&&await estaLogado())){
       let local=null;
       try{const r=localStorage.getItem(KEY);if(r){const j=JSON.parse(r);if(j&&j.pages)local=j}}catch(e){}
       if(local){S=local}
