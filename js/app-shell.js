@@ -718,6 +718,24 @@
     return runtime.userCollection || 'users';
   }
 
+  function deleteFirestoreUserSubcollection(uid, subcollectionName) {
+    if (!firebaseDbInstance || !uid) return Promise.resolve(null);
+    var ref = firebaseDbInstance.collection(getFirebaseUserRoot()).doc(String(uid)).collection(subcollectionName);
+    return ref.get().then(function (snap) {
+      if (snap.empty) return null;
+      var docs = snap.docs;
+      var chunks = [];
+      for (var i = 0; i < docs.length; i += 400) chunks.push(docs.slice(i, i + 400));
+      return chunks.reduce(function (chain, chunk) {
+        return chain.then(function () {
+          var batch = firebaseDbInstance.batch();
+          chunk.forEach(function (d) { batch.delete(d.ref); });
+          return batch.commit();
+        });
+      }, Promise.resolve());
+    });
+  }
+
   function getFirebaseAuthDisplayName(user) {
     if (!user) return '';
     return String(user.displayName || user.email || ('UID ' + String(user.uid || '').slice(0, 6))).trim();
@@ -5076,6 +5094,7 @@
             firebasePendingDeletedUid = uid;
             return Promise.resolve(firebaseDocRef ? firebaseDocRef.delete() : null)
               .catch(function () { return null; })
+              .then(function () { return deleteFirestoreUserSubcollection(uid, 'rubrica').catch(function () { return null; }); })
               .then(function () { return user.delete(); })
               .then(function () {
                 removeScopedStateForUser(uid);
