@@ -1240,11 +1240,13 @@ function save(){
 /* ao entrar na conta em outro aparelho, traz o que está na nuvem */
 window.addEventListener('soter:firebase-auth-changed',async function(){
   sincronizado=new Map();
-  const d=await nuvemCarregar();
-  if(!d||d.vazio||!d.pages)return;
+  let d=null;
+  try{d=await nuvemCarregar()}catch(e){return}
+  /* conta nova, vazia ou dados incompletos: não mexe no que já está aberto */
+  if(!d||d.vazio||!d.pages||typeof d.pages!=='object'||!Object.keys(d.pages).length)return;
   if(JSON.stringify(d.pages)===JSON.stringify(S.pages))return;
   if(document.querySelector('.ct:focus,[data-title]:focus'))return;
-  S=d;
+  S=d;garanteAreas();
   if(!S.pages[S.activeId])S.activeId=Object.keys(S.pages)[0]||null;
   S.peekId=null;if(S.view==='graph'||S.view==='trash')S.view='page';
   render();toast('sincronizado com a sua conta');
